@@ -1,35 +1,57 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) {
-            return undefined
-          }
+// Match the Firefox add-on minimum version and the Chromium equivalents for extension builds.
+const extensionBuildTarget = ['chrome109', 'edge109', 'firefox109']
 
-          if (id.includes('react-dom') || id.includes('/react/')) {
-            return 'react-vendor'
-          }
+const vendorChunkGroups = [
+  {
+    name: 'react-vendor',
+    test: /node_modules[\\/](?:react|react-dom)(?:[\\/]|$)/,
+    priority: 50,
+  },
+  {
+    name: 'validation-vendor',
+    test: /node_modules[\\/]zod(?:[\\/]|$)/,
+    priority: 40,
+  },
+  {
+    name: 'workspace-vendor',
+    test: /node_modules[\\/](?:zustand|idb)(?:[\\/]|$)/,
+    priority: 30,
+  },
+  {
+    name: 'import-export-vendor',
+    test: /node_modules[\\/]jszip(?:[\\/]|$)/,
+    priority: 20,
+  },
+  {
+    name: 'vendor',
+    test: /node_modules[\\/]/,
+    priority: 10,
+  },
+]
 
-          if (id.includes('/zod/')) {
-            return 'validation-vendor'
-          }
+export default defineConfig(({ mode }) => {
+  const isExtensionBuild = mode === 'extension'
 
-          if (id.includes('/zustand/') || id.includes('/idb/')) {
-            return 'workspace-vendor'
-          }
-
-          if (id.includes('/jszip/')) {
-            return 'import-export-vendor'
-          }
-
-          return 'vendor'
+  return {
+    build: {
+      target: isExtensionBuild ? extensionBuildTarget : undefined,
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: vendorChunkGroups,
+          },
         },
       },
     },
-  },
-  plugins: [react()],
+    plugins: [react()],
+    server: {
+      forwardConsole: {
+        unhandledErrors: true,
+        logLevels: ['warn', 'error'],
+      },
+    },
+  }
 })
