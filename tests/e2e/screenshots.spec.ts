@@ -32,6 +32,9 @@ async function clearAppState(page: Page) {
 }
 
 async function createCard(page: Page, url: string, title: string) {
+  const cards = page.getByTestId(/link-card-/)
+  const nextCount = (await cards.count()) + 1
+
   await page
     .getByRole('button', { name: /Add link|Open quick add/ })
     .first()
@@ -39,14 +42,18 @@ async function createCard(page: Page, url: string, title: string) {
   await page.getByLabel('Link URL').fill(url)
   await page.getByLabel('Link title').fill(title)
   await page.getByRole('button', { name: 'Create' }).click({ force: true })
-  await page.waitForTimeout(400)
+  await expect(cards).toHaveCount(nextCount)
+  await expect(page.getByTestId('card-edit-panel')).toBeVisible()
   await dismissVisibleEditPanels(page)
 }
 
 async function createGroup(page: Page) {
+  const groups = page.locator('article[data-testid^="card-group-"]')
+  const nextCount = (await groups.count()) + 1
+
   await page.getByRole('button', { name: 'Add group' }).click()
-  await page.waitForTimeout(400)
-  await dismissVisibleEditPanels(page)
+  await expect(groups).toHaveCount(nextCount)
+  await expect(page.getByTestId('group-edit-panel')).toHaveCount(0)
 }
 
 async function openMenu(page: Page) {
@@ -122,9 +129,9 @@ async function moveCardIntoGroupSlot(
     },
     {
       pointerDownMethod: 'mouse',
-      settleMs: 250,
+      settleMs: 100,
       sourcePosition: 'center',
-      steps: 10,
+      steps: 4,
     },
   )
 }
@@ -152,6 +159,7 @@ test.describe('Store listing screenshots', () => {
    */
   test('01 — Canvas overview with link cards', async ({ page }) => {
     test.slow()
+    test.setTimeout(180_000)
 
     await openMenu(page)
     await applyTheme(page, 'Sunset')

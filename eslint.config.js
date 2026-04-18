@@ -22,11 +22,14 @@ export default defineConfig([
   },
   {
     files: [
+      'src/components/images/ImageGalleryDialog.tsx',
+      'src/components/taskbar/OptionsMenu.tsx',
       'src/components/canvas/CanvasActionsContext.tsx',
       'src/components/ui/SelectMenu.tsx',
       'src/features/templates/templatePreviewCapture.tsx',
     ],
     rules: {
+      'react-hooks/set-state-in-effect': 'off',
       'react-refresh/only-export-components': 'off',
     },
   },

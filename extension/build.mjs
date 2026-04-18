@@ -2,7 +2,7 @@
  * Build script for the browser extension.
  *
  * 1. Verifies committed extension PNG icons exist in extension/icons/
- * 2. Runs vite build with base='./' → output to dist-extension/
+ * 2. Runs vite build in extension mode with base='./' → output to dist-extension/
  * 3. Copies extension/manifest.json and extension/icons/ into dist-extension/
  *
  * Usage: node extension/build.mjs
@@ -33,10 +33,13 @@ if (missingIcons.length > 0) {
 
 // 2. Vite build with relative base and extension output dir
 console.log('\nBuilding app for extension…')
-execSync('npx vite build --base ./ --outDir dist-extension --emptyOutDir', {
-  cwd: root,
-  stdio: 'inherit',
-})
+execSync(
+  'npx vite build --mode extension --base ./ --outDir dist-extension --emptyOutDir',
+  {
+    cwd: root,
+    stdio: 'inherit',
+  },
+)
 
 // 3. Copy manifest.json
 cpSync(resolve(__dirname, 'manifest.json'), resolve(outDir, 'manifest.json'))
