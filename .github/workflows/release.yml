@@ -1,0 +1,206 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch whose latest successful CI push run should be released
+        required: true
+        default: main
+      expected_version:
+        description: Optional guard to ensure the resolved CI run has the expected version
+        required: false
+      prerelease:
+        description: Create a GitHub pre-release instead of a stable release
+        type: boolean
+        default: false
+      notes:
+        description: Optional notes prepended to the generated release notes
+        required: false
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: release-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Resolve latest successful CI push run
+        id: latest-run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = '${{ inputs.branch }}'
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              branch,
+              event: 'push',
+              status: 'success',
+              per_page: 1,
+            })
+
+            if (data.workflow_runs.length === 0) {
+              core.setFailed(`No successful CI push run found on branch "${branch}".`)
+              return
+            }
+
+            const run = data.workflow_runs[0]
+            core.info(`Using CI run ${run.id} from ${run.head_sha}.`)
+            core.setOutput('run_id', String(run.id))
+            core.setOutput('head_sha', run.head_sha)
+            core.setOutput('head_branch', run.head_branch)
+            core.setOutput('run_url', run.html_url)
+
+      - name: Check out release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.latest-run.outputs.head_sha }}
+          fetch-depth: 0
+
+      - name: Determine release version and asset names
+        id: version
+        shell: bash
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+        run: |
+          set -euo pipefail
+
+          VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")
+
+          if [ -n "$EXPECTED_VERSION" ] && [ "$VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "Resolved CI run uses version $VERSION, expected $EXPECTED_VERSION."
+            exit 1
+          fi
+
+          TAG="v$VERSION"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "title=LinkHub $TAG" >> "$GITHUB_OUTPUT"
+          echo "app_zip=linkhub-app-$TAG.zip" >> "$GITHUB_OUTPUT"
+          echo "extension_zip=linkhub-extension-$TAG.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if the tag or release already exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Git tag $TAG already exists."
+            exit 1
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists."
+            exit 1
+          fi
+
+      - name: Download app artifact from latest CI run
+        uses: actions/download-artifact@v4
+        with:
+          name: linkhub-app-dist
+          path: artifacts/app
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.latest-run.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download extension artifact from latest CI run
+        uses: actions/download-artifact@v4
+        with:
+          name: linkhub-extension-dist
+          path: artifacts/extension
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.latest-run.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Package release ZIP assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p release-assets
+
+          (
+            cd artifacts/app
+            zip -r "../../release-assets/${{ steps.version.outputs.app_zip }}" .
+          )
+
+          (
+            cd artifacts/extension
+            zip -r "../../release-assets/${{ steps.version.outputs.extension_zip }}" .
+          )
+
+      - name: Prepare release notes preamble
+        id: notes
+        shell: bash
+        env:
+          EXTRA_NOTES: ${{ inputs.notes }}
+          RUN_URL: ${{ steps.latest-run.outputs.run_url }}
+          BRANCH: ${{ steps.latest-run.outputs.head_branch }}
+          HEAD_SHA: ${{ steps.latest-run.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+          SHORT_SHA="${HEAD_SHA:0:7}"
+
+          {
+            echo "Release source"
+            echo
+            echo "- CI run: $RUN_URL"
+            echo "- Branch: $BRANCH"
+            echo "- Commit: $SHORT_SHA"
+            if [ -n "$EXTRA_NOTES" ]; then
+              echo
+              echo "$EXTRA_NOTES"
+            fi
+          } > "$NOTES_FILE"
+
+          echo "file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          TITLE: ${{ steps.version.outputs.title }}
+          HEAD_SHA: ${{ steps.latest-run.outputs.head_sha }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          NOTES_FILE: ${{ steps.notes.outputs.file }}
+          APP_ZIP: ${{ steps.version.outputs.app_zip }}
+          EXTENSION_ZIP: ${{ steps.version.outputs.extension_zip }}
+        run: |
+          set -euo pipefail
+
+          ARGS=(
+            release
+            create
+            "$TAG"
+            "release-assets/$APP_ZIP"
+            "release-assets/$EXTENSION_ZIP"
+            --target
+            "$HEAD_SHA"
+            --title
+            "$TITLE"
+            --generate-notes
+            --notes-file
+            "$NOTES_FILE"
+          )
+
+          if [ "$PRERELEASE" = "true" ]; then
+            ARGS+=(--prerelease)
+          fi
+
+          gh "${ARGS[@]}"

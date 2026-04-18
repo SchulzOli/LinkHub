@@ -150,12 +150,12 @@ LinkHub is local-first.
 - Creating a link card requests a favicon from Google's public favicon service using the target hostname
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
-For deeper persistence details, see [doc/storage.md](doc/storage.md). The shipped privacy page lives at [public/privacy/index.html](public/privacy/index.html).
+For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The shipped privacy page lives at [public/privacy/index.html](public/privacy/index.html).
 
 ## Documentation
 
 - [doc/README.md](doc/README.md) for the documentation index
-- [doc/storage.md](doc/storage.md) for persistence, bundle, and migration details
+- [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [extension/EXTENSION.md](extension/EXTENSION.md) for extension packaging and release workflow
 - [extension/STORE_LISTING.md](extension/STORE_LISTING.md) for store-copy and reviewer notes
 - [public/privacy/index.html](public/privacy/index.html) for the standalone privacy page

@@ -102,9 +102,10 @@ On application startup:
 
 1. `AppProviders` loads a workspace session, not just a single workspace record.
 2. The repository loads the workspace directory and resolves the active workspace.
-3. IndexedDB is preferred; localStorage snapshots are used as fallback.
-4. Loaded workspace documents are normalized through migrations before hydration.
-5. After hydration, LinkHub records a local canvas-open event for the Statistics view.
+3. IndexedDB is used for the workspace directory and stored workspace records when available, with localStorage directory metadata as the fallback path.
+4. For the active workspace only, the latest `linkhub.workspace` localStorage snapshot is preferred when it matches the active workspace id because it may be newer than the last IndexedDB write.
+5. Loaded workspace documents are normalized through migrations before hydration.
+6. After hydration, LinkHub records a local canvas-open event for the Statistics view.
 
 Load orchestration:
 
@@ -379,36 +380,35 @@ Implementation: [../src/state/useWorkspaceStore.ts](../src/state/useWorkspaceSto
 
 Repository responsibilities are intentionally narrow.
 
-- workspaceRepository handles loading and saving the default workspace record
+- workspaceRepository handles workspace-session bootstrap, workspace record loading and saving, workspace-directory persistence, localStorage fallback snapshots, and workspace deletion
 - imageRepository handles image metadata and blob persistence
+- templateRepository handles template documents plus copied template image records
+- themeRepository handles persisted custom theme documents
 
 This separation keeps canvas editing logic out of persistence primitives.
 
 ## Repository Pattern
 
-All four repositories follow the same structural convention.
+The repositories share a consistent module style, but `workspaceRepository` is intentionally broader because it also owns session bootstrap and workspace-directory persistence.
 
 ### Common Operations
 
-| Operation | workspace                 | image                     | template                         | theme           |
-| --------- | ------------------------- | ------------------------- | -------------------------------- | --------------- |
-| list      | loadWorkspaceDirectory()  | listImageAssets()         | listTemplates()                  | listThemes()    |
-| get       | loadWorkspace(id)         | getImageAsset(id)         | getTemplate(id)                  | getTheme(id)    |
-| put       | saveWorkspace(ws)         | saveImageAsset({file, …}) | putTemplate({template, records}) | putTheme(theme) |
-| delete    | deleteWorkspaceRecord(id) | deleteImageAsset(id)      | deleteTemplate(id)               | deleteTheme(id) |
+| Operation | workspace                                   | image                                                            | template                           | theme           |
+| --------- | ------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------- | --------------- |
+| list      | loadWorkspaceDirectory()                    | listImageAssets()                                                | listTemplates()                    | listThemes()    |
+| get       | loadWorkspace(id)                           | getImageAsset(id), getStoredImageAssetRecord(id)                 | getTemplate(id)                    | getTheme(id)    |
+| bootstrap | loadWorkspaceSession()                      | -                                                                | -                                  | -               |
+| put       | saveWorkspace(ws), saveWorkspaceDirectory() | saveImageAsset({ file, ... }), putStoredImageAssetRecord(record) | putTemplate({ template, records }) | putTheme(theme) |
+| delete    | deleteWorkspaceRecord(id)                   | deleteImageAsset(id)                                             | deleteTemplate(id)                 | deleteTheme(id) |
 
 ### Conventions
 
 - Each repository is a module of plain async functions, not a class.
 - All data access goes through `openLinkHubDb()` from `db.ts`.
-- Put operations call a `toSerializable<Entity>()` helper to strip
-  non-serializable runtime state before writing to IndexedDB.
-- List operations validate each stored record through its Zod schema and
-  silently drop records that fail validation.
-- Delete operations use a single IndexedDB transaction to remove the
-  entity and any associated blob stores atomically.
-- workspaceRepository is the exception: it additionally writes a
-  localStorage fallback snapshot for crash resilience.
+- Workspace, template, and theme writes serialize plain JSON records before writing to IndexedDB. `imageRepository` instead normalizes image metadata and stores blobs in a separate object store.
+- Workspace reads normalize persisted data through `ensureLatestWorkspace()`. Template and theme list operations validate stored records with Zod and drop invalid entries. `imageRepository` returns the stored image metadata directly.
+- Repositories that own multiple object stores use a single IndexedDB transaction when deleting related records.
+- `workspaceRepository` also maintains localStorage fallback snapshots and persists workspace-directory metadata separately from individual workspace records.
 
 ### Why No Shared TypeScript Interface
 
