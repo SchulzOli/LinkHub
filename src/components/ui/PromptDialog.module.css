@@ -1,0 +1,98 @@
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.secondaryAction,
+.auxiliaryAction,
+.primaryAction {
+  min-height: 2.2rem;
+  padding-inline: 0.9rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.secondaryAction {
+  border-color: color-mix(in srgb, var(--menu-border) 76%, transparent);
+  background: color-mix(in srgb, var(--panel-bg) 88%, var(--bg-canvas));
+}
+
+.auxiliaryAction {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--menu-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 12%, var(--panel-bg)),
+    color-mix(in srgb, var(--accent) 8%, var(--button-active-bg))
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.primaryAction {
+  border-color: color-mix(in srgb, var(--accent) 62%, var(--menu-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 18%, var(--panel-bg)),
+    color-mix(in srgb, var(--accent) 12%, var(--button-active-bg))
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.primaryActionDanger {
+  border-color: #d78ea0;
+  background: linear-gradient(180deg, #fff0f4, #ffdbe5);
+  color: #922842;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 8px 18px rgba(190, 72, 96, 0.16);
+}
+
+.primaryActionDanger:hover {
+  border-color: #cb748a;
+  background: linear-gradient(180deg, #fff4f7, #ffe3eb);
+  color: #861d38;
+}
+
+.primaryActionDanger:active {
+  background: linear-gradient(180deg, #ffe7ef, #ffd2de);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 4px 10px rgba(190, 72, 96, 0.12);
+}
+
+:global(:root[data-theme-mode='dark']) .primaryActionDanger {
+  border-color: #94455a;
+  background: linear-gradient(180deg, #6c233b, #581b31);
+  color: #ffd8e2;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 18px rgba(113, 35, 59, 0.26);
+}
+
+:global(:root[data-theme-mode='dark']) .primaryActionDanger:hover {
+  border-color: #ab5970;
+  background: linear-gradient(180deg, #7a2845, #63203a);
+  color: #ffe4ea;
+}
+
+:global(:root[data-theme-mode='dark']) .primaryActionDanger:active {
+  background: linear-gradient(180deg, #5c1d34, #4b172a);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 10px rgba(113, 35, 59, 0.2);
+}
+
+@media (max-width: 768px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+}

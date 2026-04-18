@@ -1,0 +1,239 @@
+.galleryGrid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.themeCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.themeCard:hover {
+  border-color: var(--accent);
+  background: var(--button-hover-bg);
+}
+
+.themeCardActive {
+  composes: themeCard;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.themeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.themeName {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.themeBadge {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.themeDescription {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.swatchRow {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.swatch {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 50%, transparent);
+}
+
+.themeActions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.themeActionButton {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+}
+
+.galleryActions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.galleryActionButton {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+}
+
+.galleryHiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.statusMessage {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.statusError {
+  composes: statusMessage;
+  color: #e05555;
+}
+
+.statusSuccess {
+  composes: statusMessage;
+  color: var(--accent);
+}
+
+/* ── Token Editor ───────────────────────────────── */
+
+.tokenSection {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 50%, transparent);
+}
+
+.tokenSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tokenSectionTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tokenSectionChevron {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  transition: transform 160ms ease;
+}
+
+.tokenSectionChevronOpen {
+  composes: tokenSectionChevron;
+  transform: rotate(90deg);
+}
+
+.tokenGroupList {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+.tokenGroup {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.tokenGroupLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tokenRow {
+  display: grid;
+  grid-template-columns: 1fr 1.8rem auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.tokenLabel {
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tokenColorInput {
+  width: 1.8rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--input-border);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  background: none;
+}
+
+.tokenColorInput::-webkit-color-swatch-wrapper {
+  padding: 1px;
+}
+
+.tokenColorInput::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.15rem;
+}
+
+.tokenTextInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  font-family: monospace;
+}
+
+.tokenModeToggle {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.35rem;
+}
+
+.tokenModeButton {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+}
+
+.tokenModeButtonActive {
+  composes: tokenModeButton;
+  border-color: var(--accent);
+  background: var(--button-active-bg);
+}
+
+.tokenResetRow {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}

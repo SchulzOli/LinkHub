@@ -1,0 +1,4 @@
+- After code changes, at minimum run npm run build.
+- When behavior or logic changes, also run targeted Vitest and/or Playwright coverage relevant to the edited area.
+- Check edited files for TypeScript/CSS/ESLint problems and avoid unrelated refactors.
+- Preserve existing local-first persistence behavior and UI patterns unless the task explicitly changes them.

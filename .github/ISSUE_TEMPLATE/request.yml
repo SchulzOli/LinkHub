@@ -1,0 +1,66 @@
+name: Request
+description: Request a change, improvement, or new capability
+title: '[Request]: '
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      description: Please confirm the basics first.
+      options:
+        - label: I searched existing issues and discussions
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What change are you requesting?
+      placeholder: A short description of the request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or goal
+      description: What problem should this solve, or what outcome do you want?
+      placeholder: Describe the need behind the request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe your preferred solution, if you have one.
+      placeholder: What should change in the product, workflow, or UI?
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: User impact
+      description: How would this help users?
+      placeholder: Explain the benefit or improvement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fit
+    attributes:
+      label: Product fit
+      description: How does this fit the minimal, board-first direction of the project?
+      placeholder: Explain why this belongs in this product.
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: References or evidence
+      description: Add mockups, screenshots, links, or related discussions if helpful.
+      placeholder: Paste references or drag images here.
+    validations:
+      required: false

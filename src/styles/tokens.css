@@ -1,0 +1,31 @@
+:root {
+  --ui-font: Assistant, 'Segoe UI', system-ui, sans-serif;
+  --bg-canvas: #121212;
+  --bg-shell: #1c1c22;
+  --panel-bg: rgba(35, 35, 41, 0.96);
+  --panel-border: #3a3947;
+  --panel-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2);
+  --card-bg: #232329;
+  --card-border: #3a3947;
+  --input-bg: #1c1c22;
+  --input-border: #3a3947;
+  --grid-color: rgba(227, 227, 232, 0.07);
+  --text-primary: #e3e3e8;
+  --text-muted: #adadbf;
+  --accent: #a8a5ff;
+  --accent-strong: #cac8ff;
+  --button-hover-bg: #2e2d39;
+  --button-active-bg: #3b3a49;
+  --menu-bg: rgba(35, 35, 41, 0.98);
+  --menu-border: #3a3947;
+  --menu-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.24);
+  --menu-item-hover-bg: #2e2d39;
+  --tab-bg: #1a1a20;
+  --tab-active-bg: #2e2d39;
+  --tab-active-border: #a8a5ff;
+  --focus-ring: rgba(168, 165, 255, 0.24);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+}

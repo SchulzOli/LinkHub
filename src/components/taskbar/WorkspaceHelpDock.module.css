@@ -1,0 +1,293 @@
+.shell {
+  position: fixed;
+  right: 1.55rem;
+  bottom: 1.55rem;
+  z-index: 24;
+}
+
+.toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border-radius: 999px;
+  border-color: var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+}
+
+.toggle[aria-expanded='true'] {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--input-bg));
+  color: color-mix(in srgb, var(--accent-strong) 76%, var(--text-primary));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.toggleGlyph {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sectionLabel {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.9rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.modeBadge[data-mode='edit'] {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel-bg));
+}
+
+.modeBadge[data-mode='view'] {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--input-bg) 92%, transparent);
+}
+
+.backButton {
+  min-height: 2.1rem;
+  padding: 0.45rem 0.78rem;
+  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel-bg));
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.helpBody,
+.privacyBody {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.helpLead {
+  display: grid;
+  margin: 0;
+  gap: 0.55rem;
+}
+
+.helpLead p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.helpGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.sideColumn {
+  display: grid;
+  gap: 1rem;
+}
+
+.sectionBlock {
+  display: grid;
+  gap: 0.58rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 76%, transparent);
+  border-radius: calc(var(--radius-md) + 0.1rem);
+  background: color-mix(in srgb, var(--input-bg) 72%, transparent);
+}
+
+.shortcutTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0;
+}
+
+.shortcutTable thead th {
+  padding: 0.72rem 0.82rem;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--panel-border) 76%, transparent);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.shortcutTable tbody th,
+.shortcutTable tbody td {
+  padding: 0.82rem;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 62%, transparent);
+  vertical-align: middle;
+}
+
+.shortcutTable tbody tr:first-child th,
+.shortcutTable tbody tr:first-child td {
+  border-top: none;
+}
+
+.shortcutTable tbody th {
+  width: 1%;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.shortcutTable tbody td {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.comboCell {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.32rem;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
+.comboSegment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.comboJoin {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.comboCell kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--panel-bg) 84%, var(--bg-shell));
+  color: var(--text-primary);
+  font-family: var(--ui-font);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.linkList {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.linkRow,
+.linkRowButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--input-bg) 76%, transparent);
+  color: var(--text-primary);
+  text-decoration: none;
+  gap: 0.7rem;
+}
+
+.linkRowButton {
+  width: 100%;
+  text-align: left;
+}
+
+.linkIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--accent-strong);
+}
+
+.linkIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.privacySectionList {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.privacySection {
+  display: grid;
+  gap: 0.58rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 76%, transparent);
+  border-radius: calc(var(--radius-md) + 0.08rem);
+  background: color-mix(in srgb, var(--input-bg) 74%, transparent);
+}
+
+.privacySection h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+}
+
+.privacySection p,
+.privacySection li {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.58;
+}
+
+.privacySection ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .shell {
+    right: 0.95rem;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 5.2rem);
+  }
+
+  .helpGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .shortcutTable {
+    min-width: 31rem;
+  }
+}

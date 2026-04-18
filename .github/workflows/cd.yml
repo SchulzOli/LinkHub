@@ -1,0 +1,144 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to sync into package.json, package-lock.json, and extension/manifest.json
+        required: true
+        default: 1.0.0
+      deploy_firefox:
+        description: Deploy to Firefox Add-ons (AMO)
+        type: boolean
+        default: false
+      deploy_chrome:
+        description: Deploy to Chrome Web Store
+        type: boolean
+        default: false
+      deploy_edge:
+        description: Deploy to Edge Add-ons
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate version input
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid semver-like version: $RELEASE_VERSION"
+            exit 1
+          fi
+
+      - name: Sync package versions
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          CURRENT_VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")
+          if [ "$CURRENT_VERSION" = "$RELEASE_VERSION" ]; then
+            echo "package.json already uses version $RELEASE_VERSION; skipping npm version."
+            exit 0
+          fi
+
+          npm version "$RELEASE_VERSION" --no-git-tag-version
+
+      - name: Sync extension manifest version
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs'
+          const manifestPath = 'extension/manifest.json'
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+          manifest.version = process.env.RELEASE_VERSION
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+          EOF
+
+      - name: Commit synced versions
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json extension/manifest.json
+          if git diff --cached --quiet; then
+            echo "No version changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync release version to $RELEASE_VERSION"
+          git push
+
+  deploy-extension:
+    needs: sync-version
+    if: ${{ inputs.deploy_firefox || inputs.deploy_chrome || inputs.deploy_edge }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Pull latest (after version sync)
+        run: git pull
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build:extension
+
+      - name: Determine stores to deploy
+        id: stores
+        shell: bash
+        run: |
+          STORES=""
+          if [ "${{ inputs.deploy_firefox }}" = "true" ]; then STORES="firefox"; fi
+          if [ "${{ inputs.deploy_chrome }}" = "true" ]; then STORES="$STORES chrome"; fi
+          if [ "${{ inputs.deploy_edge }}" = "true" ]; then STORES="$STORES edge"; fi
+          STORES=$(echo "$STORES" | xargs)
+          echo "list=$STORES" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $STORES"
+
+      - name: Deploy to stores
+        env:
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          FIREFOX_EXT_ID: ${{ secrets.FIREFOX_EXT_ID }}
+          CHROME_EXT_ID: ${{ secrets.CHROME_EXT_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_JSON: ${{ secrets.CHROME_SERVICE_ACCOUNT_JSON }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+        run: node extension/deploy.mjs --publish-only ${{ steps.stores.outputs.list }}

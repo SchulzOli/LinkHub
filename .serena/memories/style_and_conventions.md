@@ -1,0 +1,6 @@
+- Use TypeScript and React function components.
+- Follow existing CSS Modules pattern for component styling.
+- Keep changes minimal and consistent with current UI tokens and layout classes.
+- Prefer immutable values (const) and existing naming conventions: PascalCase for components/types, camelCase for variables/functions, ALL_CAPS for constants when appropriate.
+- Use optional chaining and nullish coalescing where suitable.
+- Handle async work with try/catch and surface contextual errors/messages in UI state when needed.

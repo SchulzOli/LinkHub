@@ -1,0 +1,5 @@
+- LinkHub is a local-first canvas app for organizing links, groups, pictures, templates, and canvas data in a browser UI.
+- Stack: React 19, TypeScript, Vite, Zustand for state, idb for IndexedDB persistence, zod for contracts/validation, JSZip for import/export.
+- Main source layout: src/app for app shell/providers/routes, src/components for UI, src/features for domain logic, src/state for stores, src/storage for persistence repositories, src/contracts for schemas/types, src/styles for shared styling, src/utils for helpers.
+- Entrypoints: src/main.tsx and src/App.tsx.
+- Workspace also contains Playwright E2E tests under tests/e2e and Vitest unit tests under tests/unit and tests/contract.

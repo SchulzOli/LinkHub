@@ -1,0 +1,10 @@
+- Install deps: npm install
+- Start dev server: npm run dev
+- Production build: npm run build
+- Lint: npm run lint
+- Format: npm run format
+- Unit tests with coverage: npm test
+- Watch unit tests: npm run test:watch
+- E2E tests: npm run test:e2e
+- Preview production build: npm run preview
+- Windows shell basics: Get-ChildItem, Set-Location, rg, git status, git diff

@@ -1,0 +1,13 @@
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.controls label {
+  display: inline-grid;
+}
+
+.select {
+  min-width: 7.5rem;
+}

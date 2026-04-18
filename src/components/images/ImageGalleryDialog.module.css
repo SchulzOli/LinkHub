@@ -1,0 +1,330 @@
+.content {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1rem 1rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg-canvas) 42%, rgba(0, 0, 0, 0.42));
+  backdrop-filter: blur(8px);
+  z-index: 80;
+}
+
+.dialog {
+  display: grid;
+  gap: 0.9rem;
+  width: min(72rem, calc(100vw - 2rem));
+  max-height: min(86vh, 52rem);
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel-bg) 94%, var(--bg-canvas));
+  box-shadow: var(--menu-shadow);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.headerCopy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.closeButton {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.importButton {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.importIcon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.importSvg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.85rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.emptyState {
+  display: grid;
+  place-items: center;
+  min-height: 14rem;
+  padding: 1rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--panel-bg) 82%, transparent);
+}
+
+.cardActive {
+  border-color: color-mix(in srgb, var(--accent) 78%, var(--panel-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.previewFrame {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) - 0.15rem);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent),
+    color-mix(in srgb, var(--input-bg) 78%, transparent);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.previewPlaceholder {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.name {
+  margin: 0;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.metaLine {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.renameForm {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.renameInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.2rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--input-bg) 84%, var(--panel-bg));
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.renameInput::placeholder {
+  color: var(--text-muted);
+}
+
+.renameInput:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--input-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.renameActions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.secondaryAction {
+  min-height: 2rem;
+  padding-inline: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.actionButton {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-bg) 88%, var(--bg-canvas));
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+}
+
+.actionButtonPrimary {
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--panel-border));
+  color: var(--accent-strong);
+}
+
+.actionButtonDanger {
+  border-color: color-mix(in srgb, #d65a5a 68%, var(--panel-border));
+  color: color-mix(in srgb, #ff8d8d 72%, var(--text-primary));
+}
+
+.actionIcon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.actionSvg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.secondaryAction.importButton {
+  min-width: 2.25rem;
+  padding-inline: 0;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 0 0.85rem 0.85rem;
+  }
+
+  .overlay {
+    padding: 0.5rem;
+  }
+
+  .dialog {
+    width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+    padding: 0.85rem;
+  }
+
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .renameForm {
+    flex-wrap: wrap;
+  }
+
+  .renameActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

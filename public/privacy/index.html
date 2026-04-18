@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkHub Privacy Policy</title>
+    <link rel="icon" type="image/svg+xml" href="../linkhub-mark.svg" />
+    <style>
+      :root {
+        --bg-top: #0d1117;
+        --bg-bottom: #171d29;
+        --panel: rgba(12, 18, 28, 0.82);
+        --panel-border: rgba(214, 221, 230, 0.14);
+        --text-main: #eef3f8;
+        --text-muted: #aeb8c4;
+        --accent: #d6dde6;
+        --accent-soft: rgba(214, 221, 230, 0.14);
+        --shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          'Avenir Next', 'Segoe UI Variable Display', 'Trebuchet MS', sans-serif;
+        color: var(--text-main);
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(214, 221, 230, 0.14),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at top right,
+            rgba(157, 184, 216, 0.1),
+            transparent 28%
+          ),
+          linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 24px 24px;
+        opacity: 0.32;
+        pointer-events: none;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        width: min(880px, calc(100% - 32px));
+        margin: 48px auto;
+      }
+
+      .hero,
+      section {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .hero {
+        padding: 32px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 18px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .mark {
+        width: 18px;
+        height: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 5vw, 4rem);
+        line-height: 0.98;
+        letter-spacing: -0.05em;
+      }
+
+      .intro {
+        max-width: 58ch;
+        margin: 18px 0 0;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .meta span,
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.94rem;
+      }
+
+      section {
+        padding: 28px;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 1.25rem;
+        letter-spacing: -0.03em;
+      }
+
+      p,
+      li {
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      ul {
+        margin: 12px 0 0;
+        padding-left: 20px;
+      }
+
+      strong {
+        color: var(--text-main);
+      }
+
+      .note {
+        border-left: 3px solid var(--accent);
+        padding-left: 16px;
+      }
+
+      @media (max-width: 640px) {
+        main {
+          width: min(100% - 20px, 880px);
+          margin: 20px auto 32px;
+        }
+
+        .hero,
+        section {
+          border-radius: 22px;
+          padding: 22px;
+        }
+
+        h1 {
+          line-height: 1.04;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article>
+        <header class="hero">
+          <p class="eyebrow">
+            <img class="mark" src="../linkhub-mark.svg" alt="" />
+            LinkHub Privacy Policy
+          </p>
+          <h1>Local-first by design.</h1>
+          <p class="intro">
+            LinkHub stores your workspace data locally in your browser on your
+            device. It does not send your boards, templates, themes, images, or
+            local usage statistics to LinkHub servers. When you create a link
+            card, LinkHub may request a favicon from Google's public favicon
+            service using the target domain.
+          </p>
+          <div class="meta">
+            <span>Last updated: 2026-04-18</span>
+            <a class="back-link" href="../">Open LinkHub</a>
+          </div>
+        </header>
+
+        <section>
+          <h2>1. Scope</h2>
+          <p>
+            This policy applies to the LinkHub browser extension and to hosted
+            web builds of LinkHub that use the same local-first storage model.
+          </p>
+        </section>
+
+        <section>
+          <h2>2. What LinkHub stores</h2>
+          <p>
+            LinkHub may store the content you create or import directly inside
+            your browser so the app can function between sessions.
+          </p>
+          <ul>
+            <li>Workspaces and workspace names</li>
+            <li>
+              Link cards, groups, picture nodes, layout positions, and board
+              settings
+            </li>
+            <li>Uploaded images and image gallery items</li>
+            <li>Templates, custom themes, and appearance preferences</li>
+            <li>Local usage statistics such as canvas opens and link opens</li>
+            <li>
+              Import and export metadata needed to restore your data correctly
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>3. Where that data is stored</h2>
+          <p>
+            LinkHub stores data locally in browser-managed storage on the
+            current device, including browser storage mechanisms such as
+            IndexedDB and local storage when required for the product to work.
+          </p>
+          <p class="note">
+            Your LinkHub data stays isolated to the browser profile and device
+            where you use it, unless you explicitly export it yourself.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. What LinkHub does not do</h2>
+          <ul>
+            <li>It does not require an account or sign-in.</li>
+            <li>
+              It does not upload your workspace content or local usage
+              statistics to LinkHub servers.
+            </li>
+            <li>It does not include third-party advertising.</li>
+            <li>
+              It does not use third-party analytics or behavioral tracking.
+            </li>
+            <li>
+              It does not sell or share your workspace data with external
+              parties.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. External requests</h2>
+          <p>
+            When you create a link card, LinkHub may request a favicon from
+            Google's public favicon service using the target domain so the card
+            can show a site icon.
+          </p>
+          <p class="note">
+            That request does not upload your canvas content, templates, themes,
+            imported bundles, or gallery images.
+          </p>
+        </section>
+
+        <section>
+          <h2>6. Imports and exports</h2>
+          <p>
+            If you choose to export data, LinkHub creates files on your device
+            only when you explicitly trigger the export action. If you choose to
+            import data, LinkHub reads the file you selected so it can restore
+            that content into local browser storage.
+          </p>
+          <p>
+            These import and export actions are user-initiated. LinkHub does not
+            perform automatic cloud backup or remote synchronization.
+          </p>
+        </section>
+
+        <section>
+          <h2>7. Browser and store providers</h2>
+          <p>
+            Your browser vendor, extension store provider, or hosting provider
+            may collect their own operational, telemetry, or transaction data
+            under their own policies. That data handling is outside the LinkHub
+            application itself.
+          </p>
+        </section>
+
+        <section>
+          <h2>8. Changes to this policy</h2>
+          <p>
+            If LinkHub's data handling changes materially, this page should be
+            updated before or at the same time as the corresponding product
+            release.
+          </p>
+        </section>
+
+        <section>
+          <h2>9. Contact</h2>
+          <p>
+            For privacy-related questions, use the contact information provided
+            in the LinkHub store listing, project repository, or release page
+            where LinkHub is distributed.
+          </p>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
