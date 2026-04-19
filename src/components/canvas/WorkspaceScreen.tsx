@@ -70,6 +70,7 @@ export function WorkspaceScreen() {
       workspaceSummaries: state.workspaceSummaries,
     })),
   )
+  const viewport = useWorkspaceStore((state) => state.viewport)
   const { workspaceCards, workspaceGroups, workspacePictures } =
     useWorkspaceStore(
       useShallow((state) => ({
@@ -199,6 +200,7 @@ export function WorkspaceScreen() {
     updateGroup,
     updatePicture,
     updatePictures,
+    viewport,
     workspace,
     workspaceCards,
     workspaceGroups,
@@ -463,7 +465,11 @@ export function WorkspaceScreen() {
         placement={canvasPlacementActions}
       >
         <InfiniteCanvas
-          workspace={workspace}
+          cards={workspace.cards}
+          groups={workspace.groups}
+          pictures={workspace.pictures}
+          viewport={viewport}
+          placementGuide={workspace.placementGuide}
           interactionMode={interactionMode}
           selectedCardIds={selectedCardIds}
           selectedGroupIds={selectedGroupIds}

@@ -6,7 +6,7 @@ export function usePlacementStore() {
   return useWorkspaceStore(
     useShallow((state) => ({
       placementGuide: state.workspace.placementGuide,
-      viewport: state.workspace.viewport,
+      viewport: state.viewport,
       setPlacementGuide: state.setPlacementGuide,
       setViewport: state.setViewport,
     })),

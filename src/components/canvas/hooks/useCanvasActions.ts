@@ -7,7 +7,7 @@ import {
 import type { ImageAsset } from '../../../contracts/imageAsset'
 import type { CardSize, LinkCard } from '../../../contracts/linkCard'
 import type { PictureNode } from '../../../contracts/pictureNode'
-import type { Workspace } from '../../../contracts/workspace'
+import type { Viewport, Workspace } from '../../../contracts/workspace'
 import { getCardColorsFromAppearance } from '../../../features/appearance/cardColorPalette'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
 import { createCardGroup } from '../../../features/groups/groupCreation'
@@ -120,6 +120,7 @@ type UseCanvasActionsArgs = {
     }>,
   ) => void
   workspace: Workspace
+  viewport: Viewport
   workspaceCards: LinkCard[]
   workspaceGroups: CardGroup[]
   workspacePictures: PictureNode[]
@@ -144,6 +145,7 @@ export function useCanvasActions({
   updatePicture,
   updatePictures,
   workspace,
+  viewport,
   workspaceCards,
   workspaceGroups,
   workspacePictures,
@@ -247,7 +249,7 @@ export function useCanvasActions({
     (url: string, title = '') => {
       const center = screenPointToCanvas(
         { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-        workspace.viewport,
+        viewport,
       )
       const cardSize = getCardPixelDimensions(
         workspace.appearance.defaultCardSize,
@@ -303,14 +305,14 @@ export function useCanvasActions({
       setAutoEditTarget,
       workspace.appearance,
       workspace.placementGuide,
-      workspace.viewport,
+      viewport,
     ],
   )
 
   const createGroupAtViewportCenter = useCallback(() => {
     const center = screenPointToCanvas(
       { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-      workspace.viewport,
+      viewport,
     )
     const groupSize = getDefaultGroupSize(
       workspace.appearance.defaultCardSize,
@@ -352,7 +354,7 @@ export function useCanvasActions({
     toggleInteractionMode,
     workspace.appearance,
     workspace.placementGuide,
-    workspace.viewport,
+    viewport,
     workspaceGroups.length,
   ])
 
@@ -429,11 +431,11 @@ export function useCanvasActions({
         [asset],
         screenPointToCanvas(
           { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-          workspace.viewport,
+          viewport,
         ),
       )
     },
-    [placePictureAssetsAtCanvasPoint, workspace.viewport],
+    [placePictureAssetsAtCanvasPoint, viewport],
   )
 
   const handleUpdateCard = useCallback(

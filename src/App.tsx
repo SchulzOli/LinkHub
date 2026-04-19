@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { WorkspaceScreen } from './components/canvas/WorkspaceScreen'
 import { applyAppearanceStyle } from './features/appearance/stylePresets'
 import { useWorkspaceStore } from './state/useWorkspaceStore'
+import { getPersistedWorkspace } from './state/workspaceStoreHelpers'
 import {
   loadWorkspaceSession,
   saveWorkspace,
@@ -18,14 +19,10 @@ function App() {
   const recordCanvasOpen = useWorkspaceStore((state) => state.recordCanvasOpen)
   const setStatus = useWorkspaceStore((state) => state.setStatus)
   const workspace = useWorkspaceStore((state) => state.workspace)
+  const viewport = useWorkspaceStore((state) => state.viewport)
   const status = useWorkspaceStore((state) => state.status)
   const hydratedRef = useRef(false)
   const resumePendingRef = useRef(false)
-  const workspaceRef = useRef(workspace)
-
-  useEffect(() => {
-    workspaceRef.current = workspace
-  }, [workspace])
 
   useEffect(() => {
     if (status !== 'ready' || !hydratedRef.current) {
@@ -33,8 +30,12 @@ function App() {
     }
 
     const flushWorkspace = () => {
-      void saveWorkspace(workspaceRef.current)
-      saveWorkspaceSnapshot(workspaceRef.current)
+      const persistedWorkspace = getPersistedWorkspace(
+        useWorkspaceStore.getState(),
+      )
+
+      void saveWorkspace(persistedWorkspace)
+      saveWorkspaceSnapshot(persistedWorkspace)
     }
 
     const handleVisibilityChange = () => {
@@ -123,18 +124,18 @@ function App() {
     }
 
     const snapshotHandle = window.setTimeout(() => {
-      saveWorkspaceSnapshot(workspaceRef.current)
+      saveWorkspaceSnapshot(getPersistedWorkspace(useWorkspaceStore.getState()))
     }, 100)
 
     const dbHandle = window.setTimeout(() => {
-      void saveWorkspace(workspaceRef.current)
+      void saveWorkspace(getPersistedWorkspace(useWorkspaceStore.getState()))
     }, 300)
 
     return () => {
       window.clearTimeout(snapshotHandle)
       window.clearTimeout(dbHandle)
     }
-  }, [status, workspace])
+  }, [status, workspace, viewport])
 
   return <WorkspaceScreen />
 }

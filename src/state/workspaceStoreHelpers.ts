@@ -12,6 +12,15 @@ import type {
 
 export const MAX_UNDO_HISTORY = 100
 
+/**
+ * Returns the workspace merged with the current session viewport, so
+ * persistence layers see the latest pan/zoom without the viewport being
+ * part of the hot-path workspace reference.
+ */
+export function getPersistedWorkspace(state: WorkspaceState): Workspace {
+  return { ...state.workspace, viewport: state.viewport }
+}
+
 export function createUndoSnapshot(
   workspace: Workspace,
 ): WorkspaceUndoSnapshot {

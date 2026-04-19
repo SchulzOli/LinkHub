@@ -3,7 +3,6 @@ import type { StateCreator } from 'zustand'
 import {
   replaceAppearance,
   replacePlacementGuide,
-  replaceViewport,
 } from '../../contracts/workspace'
 import {
   getDefaultCardColorPresetMap,
@@ -26,8 +25,8 @@ export const createWorkspaceAppearanceSlice: StateCreator<
   [],
   WorkspaceAppearanceState
 > = (set) => ({
-  setViewport: (viewport) =>
-    set((state) => ({ workspace: replaceViewport(state.workspace, viewport) })),
+  viewport: { x: 0, y: 0, zoom: 1 },
+  setViewport: (viewport) => set({ viewport }),
   setThemeMode: (themeMode) =>
     set((state) => ({
       ...commitWorkspaceChange(

@@ -212,6 +212,7 @@ export function OptionsMenu({
   const [savedThemeCount, setSavedThemeCount] = useState(0)
   const [templates, setTemplates] = useState<TemplateDocument[]>([])
   const workspace = useWorkspaceStore((state) => state.workspace)
+  const viewport = useWorkspaceStore((state) => state.viewport)
   const activeWorkspaceId = useWorkspaceStore(
     (state) => state.activeWorkspaceId,
   )
@@ -382,15 +383,15 @@ export function OptionsMenu({
 
   const centerViewportOnBounds = useCallback(
     (bounds: { height: number; left: number; top: number; width: number }) => {
-      const zoom = workspace.viewport.zoom
+      const zoom = viewport.zoom
 
       setViewport({
-        ...workspace.viewport,
+        ...viewport,
         x: bounds.left + bounds.width / 2 - window.innerWidth / (2 * zoom),
         y: bounds.top + bounds.height / 2 - window.innerHeight / (2 * zoom),
       })
     },
-    [setViewport, workspace.viewport],
+    [setViewport, viewport],
   )
 
   const handleRequestClose = useCallback(() => {
@@ -656,7 +657,7 @@ export function OptionsMenu({
           bundle: materializedTemplate.bundle,
           point: screenPointToCanvas(
             { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-            workspace.viewport,
+            viewport,
           ),
           workspace,
         })
@@ -701,6 +702,7 @@ export function OptionsMenu({
       centerViewportOnBounds,
       interactionMode,
       toggleInteractionMode,
+      viewport,
       workspace,
     ],
   )
