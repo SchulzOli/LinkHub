@@ -2,7 +2,6 @@ import { memo, type CSSProperties } from 'react'
 
 import styles from './PictureNode.module.css'
 
-import type { CardSize } from '../../contracts/linkCard'
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../features/appearance/themeTokens'
 import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
+import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import {
   useResizePlacement,
@@ -27,19 +27,8 @@ import {
 } from '../canvas/CanvasActionsContext'
 import { EditIcon } from '../ui/EditIcon'
 
-type PlaceableCanvasItem = {
-  id: string
-  positionX: number
-  positionY: number
-  size: CardSize
-  collapsed?: boolean
-  kind?: 'card' | 'group'
-  parentGroupId?: string
-}
-
 type PictureNodeProps = {
   picture: import('../../contracts/pictureNode').PictureNode
-  items: PlaceableCanvasItem[]
   guide: PlacementGuide
   isSelected: boolean
   interactionMode: InteractionMode
@@ -48,7 +37,6 @@ type PictureNodeProps = {
 
 export const PictureNode = memo(function PictureNode({
   picture,
-  items,
   guide,
   isSelected,
   interactionMode,
@@ -70,7 +58,7 @@ export const PictureNode = memo(function PictureNode({
     cardId: picture.id,
     cardSize: picture.size,
     position: { x: picture.positionX, y: picture.positionY },
-    cards: items,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
@@ -90,7 +78,7 @@ export const PictureNode = memo(function PictureNode({
       positionY: picture.positionY,
       size: picture.size,
     },
-    cards: items,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>

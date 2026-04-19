@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import type { CardSize } from '../../contracts/linkCard'
 import type { PlacementGuide } from '../../contracts/placementGuide'
@@ -15,7 +15,13 @@ type DragOptions = {
   cardId: string
   cardSize: CardSize
   position: { x: number; y: number }
-  cards: PlaceableItem[]
+  /**
+   * Called lazily at pointerdown time to produce the placement-neighborhood
+   * snapshot used for snapping. Passing a getter (instead of a `cards` array
+   * prop) prevents every sibling node from re-rendering when the workspace
+   * changes.
+   */
+  getCards: () => PlaceableItem[]
   enabled: boolean
   guide: PlacementGuide
   isOccupiedItemBlocking?: PlacementBlockPredicate
@@ -75,7 +81,7 @@ export function useDragPlacement({
   cardId,
   cardSize,
   position,
-  cards,
+  getCards,
   enabled,
   guide,
   isOccupiedItemBlocking,
@@ -83,6 +89,11 @@ export function useDragPlacement({
   onMove,
   onPreviewChange,
 }: DragOptions) {
+  const getCardsRef = useRef(getCards)
+  useEffect(() => {
+    getCardsRef.current = getCards
+  }, [getCards])
+
   return useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       if (!enabled) {
@@ -99,6 +110,7 @@ export function useDragPlacement({
       const startPoint = { x: event.clientX, y: event.clientY }
       const startPosition = position
       let currentPosition = startPosition
+      const cards = getCardsRef.current()
       let currentPreview = getSnapTargetPosition(
         startPosition,
         guide,
@@ -220,7 +232,6 @@ export function useDragPlacement({
     [
       cardId,
       cardSize,
-      cards,
       enabled,
       guide,
       isOccupiedItemBlocking,

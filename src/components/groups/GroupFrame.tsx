@@ -179,12 +179,13 @@ export const GroupFrame = memo(function GroupFrame({
       ),
     [descendantGroupIds, group.id, groups],
   )
-  const placementGroups = useMemo(() => {
-    return getGroupPlacementFrames(groups).filter(
+  const getGroupPlacementSnapshot = useCallback(() => {
+    const liveGroups = useWorkspaceStore.getState().workspace.groups
+    return getGroupPlacementFrames(liveGroups).filter(
       (candidate) =>
         candidate.id !== group.id && !descendantGroupIds.has(candidate.id),
     )
-  }, [descendantGroupIds, group.id, groups])
+  }, [descendantGroupIds, group.id])
   const size = getCardPixelDimensions(layoutSize, guide.gridSize)
   const chromeMetrics = getGroupChromeMetrics(layoutSize, guide.gridSize)
   const resolvedCornerRadius =
@@ -215,7 +216,7 @@ export const GroupFrame = memo(function GroupFrame({
     cardId: group.id,
     cardSize: layoutSize,
     position: { x: group.positionX, y: group.positionY },
-    cards: placementGroups,
+    getCards: getGroupPlacementSnapshot,
     enabled: isEditMode && !isEditing,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
@@ -234,7 +235,7 @@ export const GroupFrame = memo(function GroupFrame({
       ...group,
       size: layoutSize,
     },
-    cards: placementGroups,
+    getCards: getGroupPlacementSnapshot,
     enabled: isEditMode && !isEditing && !isCollapsed,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>

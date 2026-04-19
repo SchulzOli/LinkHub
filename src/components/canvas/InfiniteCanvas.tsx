@@ -7,7 +7,6 @@ import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
 import { getCardPixelDimensions } from '../../features/appearance/themeTokens'
 import {
-  getGroupPlacementFrames,
   getRootSelectedGroupIds,
   getSelectedGroupSubtree,
   getVisibleCards,
@@ -110,15 +109,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
     [cards, groups],
   )
   const visibleGroups = useMemo(() => getVisibleGroups(groups), [groups])
-  const groupPlacementFrames = useMemo(
-    () => getGroupPlacementFrames(groups),
-    [groups],
-  )
   const visiblePictures = pictures
-  const placeableItems = useMemo(
-    () => [...visibleCards, ...visiblePictures, ...groupPlacementFrames],
-    [groupPlacementFrames, visibleCards, visiblePictures],
-  )
   const selectedCardIdSet = useMemo(
     () => new Set(selectedCardIds),
     [selectedCardIds],
@@ -555,7 +546,6 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         <LinkCard
           key={card.id}
           card={card}
-          cards={placeableItems}
           guide={placementGuide}
           isSelected={selectedCardIdSet.has(card.id)}
           interactionMode={interactionMode}
@@ -566,7 +556,6 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         <PictureNode
           key={picture.id}
           picture={picture}
-          items={placeableItems}
           guide={placementGuide}
           isSelected={selectedPictureIdSet.has(picture.id)}
           interactionMode={interactionMode}

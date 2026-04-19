@@ -18,7 +18,6 @@ import {
   CARD_SIZE_LIMITS,
   clampCardCornerRadius,
   parseCardSizeDraft,
-  type CardSize,
   type LinkCard as LinkCardModel,
 } from '../../contracts/linkCard'
 import type { PlacementGuide } from '../../contracts/placementGuide'
@@ -60,6 +59,7 @@ import {
   normalizeUrl,
 } from '../../features/links/urlValidation'
 import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
+import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import {
   useResizePlacement,
@@ -82,15 +82,6 @@ import { SelectMenu, isSelectMenuPortalTarget } from '../ui/SelectMenu'
 
 type LinkCardProps = {
   card: LinkCardModel
-  cards: Array<{
-    id: string
-    positionX: number
-    positionY: number
-    size: CardSize
-    collapsed?: boolean
-    kind?: 'card' | 'group'
-    parentGroupId?: string
-  }>
   guide: PlacementGuide
   isSelected: boolean
   interactionMode: InteractionMode
@@ -109,7 +100,6 @@ function roundToDevicePixel(value: number) {
 
 export const LinkCard = memo(function LinkCard({
   card,
-  cards,
   guide,
   isSelected,
   interactionMode,
@@ -201,7 +191,7 @@ export const LinkCard = memo(function LinkCard({
     cardId: card.id,
     cardSize: card.size,
     position: { x: card.positionX, y: card.positionY },
-    cards,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode && !isEditing,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
@@ -216,7 +206,7 @@ export const LinkCard = memo(function LinkCard({
   })
   const createResizePointerDown = useResizePlacement({
     card,
-    cards,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode && !isEditing,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
