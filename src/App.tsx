@@ -1,10 +1,10 @@
 import { AppProviders } from './app/providers/AppProviders'
-import { WorkspaceRoute } from './app/routes/WorkspaceRoute'
+import { WorkspaceScreen } from './components/canvas/WorkspaceScreen'
 
 function App() {
   return (
     <AppProviders>
-      <WorkspaceRoute />
+      <WorkspaceScreen />
     </AppProviders>
   )
 }
