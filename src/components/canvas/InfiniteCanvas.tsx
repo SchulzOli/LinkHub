@@ -1,10 +1,22 @@
-import { memo, useMemo, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 
 import { getGroupLayoutSize, type CardGroup } from '../../contracts/cardGroup'
 import type { LinkCard as LinkCardContract } from '../../contracts/linkCard'
 import type { PictureNode as PictureNodeContract } from '../../contracts/pictureNode'
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
+import {
+  getCardUpdatesFromFormatPainter,
+  getGroupUpdatesFromFormatPainter,
+  isFormatPainterSourceMatch,
+} from '../../features/appearance/formatPainter'
 import { getCardPixelDimensions } from '../../features/appearance/themeTokens'
 import {
   getRootSelectedGroupIds,
@@ -29,7 +41,10 @@ import {
 import { LinkCard } from '../cards/LinkCard'
 import { GroupFrame } from '../groups/GroupFrame'
 import { PictureNode } from '../pictures/PictureNode'
-import type { CanvasDragPreview } from './CanvasActionsContext'
+import {
+  useCanvasEditActions,
+  type CanvasDragPreview,
+} from './CanvasActionsContext'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 2.5
@@ -97,6 +112,52 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
   const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const clearFormatPainter = useWorkspaceStore(
     (state) => state.clearFormatPainter,
+  )
+  const { onUpdateCard, onUpdateGroup } = useCanvasEditActions()
+  const handleFormatPainterCapture = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (event.button !== 0 || !formatPainter) {
+        return
+      }
+
+      const target = event.target as HTMLElement | null
+      if (!target) {
+        return
+      }
+
+      if (target.closest('button, input, select, textarea, a, label')) {
+        return
+      }
+
+      const entityEl = target.closest<HTMLElement>('[data-entity-kind]')
+      if (!entityEl || !canvasRef.current?.contains(entityEl)) {
+        return
+      }
+
+      const kind = entityEl.dataset.entityKind
+      const id = entityEl.dataset.entityId
+      if (!id || (kind !== 'card' && kind !== 'group' && kind !== 'picture')) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (kind === 'picture') {
+        return
+      }
+
+      if (isFormatPainterSourceMatch(formatPainter, { id, kind })) {
+        return
+      }
+
+      if (kind === 'card') {
+        onUpdateCard(id, getCardUpdatesFromFormatPainter(formatPainter))
+      } else {
+        onUpdateGroup(id, getGroupUpdatesFromFormatPainter(formatPainter))
+      }
+    },
+    [formatPainter, onUpdateCard, onUpdateGroup],
   )
   const fileDragDepthRef = useRef(0)
   const [canvasInteraction, setCanvasInteraction] =
@@ -271,6 +332,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       data-format-painter={formatPainter ? 'active' : 'idle'}
       data-mode={interactionMode}
       data-testid="infinite-canvas"
+      onPointerDownCapture={handleFormatPainterCapture}
       onContextMenu={(event) => {
         if (
           interactionMode === 'edit' ||
@@ -477,7 +539,19 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           height: 0,
         })
 
-        const handleMove = (moveEvent: PointerEvent) => {
+        let marqueeFrameId: number | null = null
+        let pendingMoveEvent: PointerEvent | null = null
+
+        const processMarquee = () => {
+          marqueeFrameId = null
+
+          if (!pendingMoveEvent) {
+            return
+          }
+
+          const moveEvent = pendingMoveEvent
+          pendingMoveEvent = null
+
           const currentLocalPoint = getLocalPoint(
             moveEvent.clientX,
             moveEvent.clientY,
@@ -486,6 +560,14 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           setSelectionMarquee(
             createSelectionMarquee(startLocalPoint, currentLocalPoint),
           )
+        }
+
+        const handleMove = (moveEvent: PointerEvent) => {
+          pendingMoveEvent = moveEvent
+
+          if (marqueeFrameId === null) {
+            marqueeFrameId = requestAnimationFrame(processMarquee)
+          }
         }
 
         const handlePointerUp = (upEvent: PointerEvent) => {
@@ -519,6 +601,11 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         }
 
         const cleanup = () => {
+          if (marqueeFrameId !== null) {
+            cancelAnimationFrame(marqueeFrameId)
+            marqueeFrameId = null
+          }
+
           setCanvasInteraction('idle')
           setSelectionMarquee(null)
           window.removeEventListener('pointermove', handleMove)

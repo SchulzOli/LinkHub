@@ -16,10 +16,7 @@ import {
   useResizePlacement,
   type ResizeDirection,
 } from '../../features/placement/useResizePlacement'
-import {
-  useWorkspaceStore,
-  type InteractionMode,
-} from '../../state/useWorkspaceStore'
+import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
   useCanvasEditActions,
   useCanvasPlacementActions,
@@ -42,7 +39,6 @@ export const PictureNode = memo(function PictureNode({
   interactionMode,
   viewport,
 }: PictureNodeProps) {
-  const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const { onSelectPicture: onSelect } = useCanvasSelectionActions()
   const {
     onRemovePicture: onRemove,
@@ -131,18 +127,14 @@ export const PictureNode = memo(function PictureNode({
   return (
     <article
       className={`${styles.node} ${isEditMode ? styles.nodeEdit : ''} ${isSelected ? styles.nodeSelected : ''}`}
+      data-entity-id={picture.id}
+      data-entity-kind="picture"
       data-mode={interactionMode}
       data-selected={isSelected}
       data-testid={`picture-node-${picture.id}`}
       style={nodeStyle}
       onPointerDown={(event) => {
         if (event.button !== 0) {
-          return
-        }
-
-        if (formatPainter) {
-          event.preventDefault()
-          event.stopPropagation()
           return
         }
 

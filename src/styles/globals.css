@@ -231,6 +231,11 @@ select:focus-visible {
   cursor: copy;
 }
 
+.canvasRoot[data-format-painter='active'] [data-role='resize-handle'],
+.canvasRoot[data-format-painter='active'] [data-role='action-bar'] {
+  display: none;
+}
+
 .canvasRoot[data-canvas-interaction='panning'] {
   cursor: grabbing;
 }

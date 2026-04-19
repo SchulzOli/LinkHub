@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -30,11 +29,7 @@ import {
   clampSurfaceTransparency,
 } from '../../contracts/surfaceEffects'
 import type { Viewport } from '../../contracts/workspace'
-import {
-  createFormatPainterFromCard,
-  getCardUpdatesFromFormatPainter,
-  isFormatPainterSourceMatch,
-} from '../../features/appearance/formatPainter'
+import { createFormatPainterFromCard } from '../../features/appearance/formatPainter'
 import {
   applyColorOpacity,
   getReadableTextColor,
@@ -118,7 +113,6 @@ export const LinkCard = memo(function LinkCard({
   } = useCanvasEditActions()
   const { onMoveCard: onMove, onPreviewChange } = useCanvasPlacementActions()
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
-  const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const startFormatPainter = useWorkspaceStore(
     (state) => state.startFormatPainter,
   )
@@ -1007,35 +1001,6 @@ export const LinkCard = memo(function LinkCard({
     setIsEditing(false)
   }, [hideUrlTooltip])
 
-  const handleFormatPainterPointerDownCapture = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || !formatPainter) {
-        return
-      }
-
-      const target = event.target as HTMLElement | null
-
-      if (target?.closest('button, input, select, textarea, a, label')) {
-        return
-      }
-
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (
-        isFormatPainterSourceMatch(formatPainter, {
-          id: card.id,
-          kind: 'card',
-        })
-      ) {
-        return
-      }
-
-      onUpdate(card.id, getCardUpdatesFromFormatPainter(formatPainter))
-    },
-    [card.id, formatPainter, onUpdate],
-  )
-
   const content = (
     <>
       {showCardImage ? (
@@ -1397,6 +1362,8 @@ export const LinkCard = memo(function LinkCard({
         }
         data-circular-shape={String(resolvedCornerRadius >= 48)}
         data-card-image-layout={cardImageLayout}
+        data-entity-id={card.id}
+        data-entity-kind="card"
         data-mode={interactionMode}
         data-selected={isSelected}
         data-shadow-style={resolvedShadowStyle}
@@ -1406,7 +1373,6 @@ export const LinkCard = memo(function LinkCard({
         onBlur={hideUrlTooltip}
         onFocus={scheduleUrlTooltip}
         onPointerEnter={scheduleUrlTooltip}
-        onPointerDownCapture={handleFormatPainterPointerDownCapture}
         onPointerDown={(event) => {
           if (event.button !== 0) {
             return
@@ -1434,64 +1400,61 @@ export const LinkCard = memo(function LinkCard({
       >
         {isEditMode ? (
           <>
-            {!formatPainter
-              ? resizeHandles.map((direction) => (
-                  <button
-                    aria-label={`Resize ${direction}`}
-                    className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
-                    key={direction}
-                    onPointerDown={createResizePointerDown(direction)}
-                    tabIndex={-1}
-                    type="button"
-                  />
-                ))
-              : null}
+            {resizeHandles.map((direction) => (
+              <button
+                aria-label={`Resize ${direction}`}
+                className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
+                data-role="resize-handle"
+                key={direction}
+                onPointerDown={createResizePointerDown(direction)}
+                tabIndex={-1}
+                type="button"
+              />
+            ))}
             <div className={linkClassName} data-layout={cardLayout}>
               {content}
             </div>
-            {!formatPainter ? (
-              <div className={styles.actionBar}>
-                <button
-                  aria-label="Update"
-                  className={styles.actionButton}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    handleOpenEditor()
-                  }}
-                  title="Update"
-                  type="button"
-                >
-                  <span aria-hidden="true" className={styles.actionIcon}>
-                    <EditIcon className={styles.actionSvg} />
-                  </span>
-                </button>
-                <button
-                  aria-label="Delete"
-                  className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    onRemove(card.id)
-                  }}
-                  title="Delete"
-                  type="button"
-                >
-                  <span aria-hidden="true" className={styles.actionIcon}>
-                    <svg
-                      viewBox="0 0 24 24"
-                      focusable="false"
-                      className={styles.actionSvg}
-                    >
-                      <path
-                        d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </span>
-                </button>
-              </div>
-            ) : null}
+            <div className={styles.actionBar} data-role="action-bar">
+              <button
+                aria-label="Update"
+                className={styles.actionButton}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  handleOpenEditor()
+                }}
+                title="Update"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.actionIcon}>
+                  <EditIcon className={styles.actionSvg} />
+                </span>
+              </button>
+              <button
+                aria-label="Delete"
+                className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onRemove(card.id)
+                }}
+                title="Delete"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.actionIcon}>
+                  <svg
+                    viewBox="0 0 24 24"
+                    focusable="false"
+                    className={styles.actionSvg}
+                  >
+                    <path
+                      d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </>
         ) : (
           <a

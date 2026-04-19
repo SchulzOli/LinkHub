@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -36,11 +35,7 @@ import {
   SURFACE_TRANSPARENCY_LIMITS,
 } from '../../contracts/surfaceEffects'
 import type { Viewport } from '../../contracts/workspace'
-import {
-  createFormatPainterFromGroup,
-  getGroupUpdatesFromFormatPainter,
-  isFormatPainterSourceMatch,
-} from '../../features/appearance/formatPainter'
+import { createFormatPainterFromGroup } from '../../features/appearance/formatPainter'
 import {
   getSurfaceLayerColor,
   getSurfaceShadow,
@@ -107,7 +102,6 @@ export const GroupFrame = memo(function GroupFrame({
     useCanvasEditActions()
   const { onMoveGroup: onMove, onPreviewChange } = useCanvasPlacementActions()
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
-  const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const startFormatPainter = useWorkspaceStore(
     (state) => state.startFormatPainter,
   )
@@ -566,35 +560,6 @@ export const GroupFrame = memo(function GroupFrame({
     setIsEditing(false)
   }, [])
 
-  const handleFormatPainterPointerDownCapture = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || !formatPainter) {
-        return
-      }
-
-      const target = event.target as HTMLElement | null
-
-      if (target?.closest('button, input, select, textarea, a, label')) {
-        return
-      }
-
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (
-        isFormatPainterSourceMatch(formatPainter, {
-          id: group.id,
-          kind: 'group',
-        })
-      ) {
-        return
-      }
-
-      onUpdate(group.id, getGroupUpdatesFromFormatPainter(formatPainter))
-    },
-    [formatPainter, group.id, onUpdate],
-  )
-
   const editPanel =
     isEditing && typeof document !== 'undefined'
       ? createPortal(
@@ -807,18 +772,20 @@ export const GroupFrame = memo(function GroupFrame({
         ref={articleRef}
         className={`${styles.group} ${isEditMode ? styles.groupEdit : ''} ${isSelected ? styles.groupSelected : ''}`}
         data-collapsed={String(isCollapsed)}
+        data-entity-id={group.id}
+        data-entity-kind="group"
         data-selected={isSelected}
         data-surface-transparency={String(resolvedSurfaceTransparency)}
         data-shadow-style={resolvedShadowStyle}
         data-testid={`card-group-${group.id}`}
-        onPointerDownCapture={handleFormatPainterPointerDownCapture}
         style={groupStyle}
       >
-        {isEditMode && !formatPainter && !isCollapsed
+        {isEditMode && !isCollapsed
           ? resizeHandles.map((direction) => (
               <button
                 aria-label={`Resize group ${direction}`}
                 className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
+                data-role="resize-handle"
                 key={direction}
                 onPointerDown={createResizePointerDown(direction)}
                 tabIndex={-1}
@@ -896,8 +863,8 @@ export const GroupFrame = memo(function GroupFrame({
             data-testid={`card-group-body-${group.id}`}
           />
         ) : null}
-        {isEditMode && !formatPainter ? (
-          <div className={styles.actionBar}>
+        {isEditMode ? (
+          <div className={styles.actionBar} data-role="action-bar">
             <button
               aria-label="Update group"
               className={`${styles.actionButton} ${styles.actionButtonEdit}`}
