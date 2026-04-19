@@ -236,6 +236,32 @@ export const createWorkspaceDataSlice: StateCreator<
         getGroupSubtreeIds(state.workspace, groupId),
       )
       const now = new Date().toISOString()
+
+      // Precompute which cards and pictures belong to the moved subtree so we
+      // can skip rewriting arrays that have no affected items — key insight
+      // from ARCHITECTURE-REVIEW §3.2 (membership check once, rewrite only
+      // the actual members).
+      const affectedCardIds = new Set<string>()
+      for (const card of state.workspace.cards) {
+        if (card.groupId && affectedGroupIds.has(card.groupId)) {
+          affectedCardIds.add(card.id)
+        }
+      }
+
+      const affectedPictureIdSet = new Set(
+        pictureIds ??
+          (state.workspace.pictures.length === 0
+            ? []
+            : getPictureIdsWithinGroupBodies(
+                state.workspace.pictures,
+                state.workspace.groups.filter((candidate) =>
+                  affectedGroupIds.has(candidate.id),
+                ),
+                state.workspace.placementGuide.gridSize,
+                { useExpandedBody: true },
+              )),
+      )
+
       const movedGroups = state.workspace.groups.map((candidate) =>
         affectedGroupIds.has(candidate.id)
           ? {
@@ -246,54 +272,50 @@ export const createWorkspaceDataSlice: StateCreator<
             }
           : candidate,
       )
-      const movedCards = state.workspace.cards.map((card) =>
-        card.groupId && affectedGroupIds.has(card.groupId)
-          ? {
-              ...card,
-              positionX: card.positionX + delta.x,
-              positionY: card.positionY + delta.y,
-              updatedAt: now,
-            }
-          : card,
-      )
-      const affectedPictureIdSet = new Set(
-        pictureIds ??
-          getPictureIdsWithinGroupBodies(
-            state.workspace.pictures,
-            state.workspace.groups.filter((candidate) =>
-              affectedGroupIds.has(candidate.id),
-            ),
-            state.workspace.placementGuide.gridSize,
-            { useExpandedBody: true },
-          ),
-      )
-      const movedPictures = state.workspace.pictures.map((picture) =>
-        affectedPictureIdSet.has(picture.id)
-          ? {
-              ...picture,
-              positionX: picture.positionX + delta.x,
-              positionY: picture.positionY + delta.y,
-              updatedAt: now,
-            }
-          : picture,
-      )
+      const movedCards =
+        affectedCardIds.size === 0
+          ? state.workspace.cards
+          : state.workspace.cards.map((card) =>
+              affectedCardIds.has(card.id)
+                ? {
+                    ...card,
+                    positionX: card.positionX + delta.x,
+                    positionY: card.positionY + delta.y,
+                    updatedAt: now,
+                  }
+                : card,
+            )
+      const movedPictures =
+        affectedPictureIdSet.size === 0
+          ? state.workspace.pictures
+          : state.workspace.pictures.map((picture) =>
+              affectedPictureIdSet.has(picture.id)
+                ? {
+                    ...picture,
+                    positionX: picture.positionX + delta.x,
+                    positionY: picture.positionY + delta.y,
+                    updatedAt: now,
+                  }
+                : picture,
+            )
       const syncedGroups = syncGroupParentsForIds(
         state.workspace,
         [groupId],
         movedGroups,
       )
 
+      let nextWorkspace = replaceGroups(state.workspace, syncedGroups)
+
+      if (movedCards !== state.workspace.cards) {
+        nextWorkspace = replaceCards(nextWorkspace, movedCards)
+      }
+
+      if (movedPictures !== state.workspace.pictures) {
+        nextWorkspace = replacePictures(nextWorkspace, movedPictures)
+      }
+
       return {
-        ...commitWorkspaceChange(
-          state,
-          replacePictures(
-            replaceCards(
-              replaceGroups(state.workspace, syncedGroups),
-              movedCards,
-            ),
-            movedPictures,
-          ),
-        ),
+        ...commitWorkspaceChange(state, nextWorkspace),
       }
     }),
   toggleGroupCollapsed: (groupId) =>
