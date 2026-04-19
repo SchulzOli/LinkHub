@@ -100,7 +100,7 @@ Implementation:
 
 On application startup:
 
-1. `AppProviders` loads a workspace session, not just a single workspace record.
+1. `App` loads a workspace session, not just a single workspace record.
 2. The repository loads the workspace directory and resolves the active workspace.
 3. IndexedDB is used for the workspace directory and stored workspace records when available, with localStorage directory metadata as the fallback path.
 4. For the active workspace only, the latest `linkhub.workspace` localStorage snapshot is preferred when it matches the active workspace id because it may be newer than the last IndexedDB write.
@@ -109,7 +109,7 @@ On application startup:
 
 Load orchestration:
 
-- [../src/app/providers/AppProviders.tsx](../src/app/providers/AppProviders.tsx)
+- [../src/App.tsx](../src/App.tsx)
 - [../src/storage/workspaceRepository.ts](../src/storage/workspaceRepository.ts)
 - [../src/storage/storageMigrations.ts](../src/storage/storageMigrations.ts)
 
@@ -126,7 +126,7 @@ This gives fast crash resilience without making every UI update wait on IndexedD
 
 Save orchestration:
 
-- [../src/app/providers/AppProviders.tsx](../src/app/providers/AppProviders.tsx)
+- [../src/App.tsx](../src/App.tsx)
 
 ### Local analytics
 
