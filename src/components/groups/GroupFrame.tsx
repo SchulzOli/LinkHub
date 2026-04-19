@@ -69,7 +69,11 @@ import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
-import { useCanvasActionsContext } from '../canvas/CanvasActionsContext'
+import {
+  useCanvasEditActions,
+  useCanvasPlacementActions,
+  useCanvasSelectionActions,
+} from '../canvas/CanvasActionsContext'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
 import { EditIcon } from '../ui/EditIcon'
 import { FormatPainterIcon } from '../ui/FormatPainterIcon'
@@ -97,12 +101,11 @@ export const GroupFrame = memo(function GroupFrame({
   const {
     autoEditTarget,
     onClearAutoEditTarget: clearAutoEditTarget,
-    onMoveGroup: onMove,
-    onPreviewChange,
-    onRemoveGroup: onRemove,
     onSelectGroup: onSelect,
-    onUpdateGroup: onUpdate,
-  } = useCanvasActionsContext()
+  } = useCanvasSelectionActions()
+  const { onRemoveGroup: onRemove, onUpdateGroup: onUpdate } =
+    useCanvasEditActions()
+  const { onMoveGroup: onMove, onPreviewChange } = useCanvasPlacementActions()
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
   const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const startFormatPainter = useWorkspaceStore(

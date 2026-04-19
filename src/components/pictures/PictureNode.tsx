@@ -20,7 +20,11 @@ import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
-import { useCanvasActionsContext } from '../canvas/CanvasActionsContext'
+import {
+  useCanvasEditActions,
+  useCanvasPlacementActions,
+  useCanvasSelectionActions,
+} from '../canvas/CanvasActionsContext'
 import { EditIcon } from '../ui/EditIcon'
 
 type PlaceableCanvasItem = {
@@ -51,14 +55,13 @@ export const PictureNode = memo(function PictureNode({
   viewport,
 }: PictureNodeProps) {
   const formatPainter = useWorkspaceStore((state) => state.formatPainter)
+  const { onSelectPicture: onSelect } = useCanvasSelectionActions()
   const {
-    onMovePicture: onMove,
-    onPreviewChange,
     onRemovePicture: onRemove,
     onRequestPictureImagePicker: onRequestImagePicker,
-    onSelectPicture: onSelect,
     onUpdatePicture: onUpdate,
-  } = useCanvasActionsContext()
+  } = useCanvasEditActions()
+  const { onMovePicture: onMove, onPreviewChange } = useCanvasPlacementActions()
   const isEditMode = interactionMode === 'edit'
   const imageUrl = useImageAssetUrl(picture.imageId)
   const size = getCardPixelDimensions(picture.size, guide.gridSize)

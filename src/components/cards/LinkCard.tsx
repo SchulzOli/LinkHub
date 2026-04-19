@@ -70,7 +70,11 @@ import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
-import { useCanvasActionsContext } from '../canvas/CanvasActionsContext'
+import {
+  useCanvasEditActions,
+  useCanvasPlacementActions,
+  useCanvasSelectionActions,
+} from '../canvas/CanvasActionsContext'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
 import { EditIcon } from '../ui/EditIcon'
 import { FormatPainterIcon } from '../ui/FormatPainterIcon'
@@ -114,14 +118,15 @@ export const LinkCard = memo(function LinkCard({
   const {
     autoEditTarget,
     onClearAutoEditTarget: clearAutoEditTarget,
+    onSelectCard: onSelect,
+  } = useCanvasSelectionActions()
+  const {
     onRecordLinkOpen: recordLinkOpen,
-    onMoveCard: onMove,
-    onPreviewChange,
     onRemoveCard: onRemove,
     onRequestCardImageOverridePicker: onRequestImageOverridePicker,
-    onSelectCard: onSelect,
     onUpdateCard: onUpdate,
-  } = useCanvasActionsContext()
+  } = useCanvasEditActions()
+  const { onMoveCard: onMove, onPreviewChange } = useCanvasPlacementActions()
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
   const formatPainter = useWorkspaceStore((state) => state.formatPainter)
   const startFormatPainter = useWorkspaceStore(

@@ -14,10 +14,27 @@ export type CanvasDragPreview = {
   position: { x: number; y: number }
 }
 
-export type CanvasActionsContextValue = {
+export type CanvasSelectionActions = {
   autoEditTarget: AutoEditTarget
   onClearAutoEditTarget: () => void
+  onSelectCard: (cardId: string, additive: boolean) => void
+  onSelectGroup: (groupId: string, additive: boolean) => void
+  onSelectPicture: (pictureId: string, additive: boolean) => void
+}
+
+export type CanvasEditActions = {
   onRecordLinkOpen: (cardId: string) => void
+  onRemoveCard: (cardId: string) => void
+  onRemoveGroup: (groupId: string) => void
+  onRemovePicture: (pictureId: string) => void
+  onRequestCardImageOverridePicker: (cardId: string) => void
+  onRequestPictureImagePicker: (pictureId: string) => void
+  onUpdateCard: (cardId: string, updates: CardUpdateFields) => void
+  onUpdateGroup: (groupId: string, updates: GroupUpdateFields) => void
+  onUpdatePicture: (pictureId: string, updates: PictureUpdateFields) => void
+}
+
+export type CanvasPlacementActions = {
   onMoveCard: (cardId: string, position: { x: number; y: number }) => void
   onMoveGroup: (
     groupId: string,
@@ -26,45 +43,68 @@ export type CanvasActionsContextValue = {
   ) => void
   onMovePicture: (pictureId: string, position: { x: number; y: number }) => void
   onPreviewChange: (preview: CanvasDragPreview | null) => void
-  onRemoveCard: (cardId: string) => void
-  onRemoveGroup: (groupId: string) => void
-  onRemovePicture: (pictureId: string) => void
-  onRequestCardImageOverridePicker: (cardId: string) => void
-  onRequestPictureImagePicker: (pictureId: string) => void
-  onSelectCard: (cardId: string, additive: boolean) => void
-  onSelectGroup: (groupId: string, additive: boolean) => void
-  onSelectPicture: (pictureId: string, additive: boolean) => void
-  onUpdateCard: (cardId: string, updates: CardUpdateFields) => void
-  onUpdateGroup: (groupId: string, updates: GroupUpdateFields) => void
-  onUpdatePicture: (pictureId: string, updates: PictureUpdateFields) => void
 }
 
-const CanvasActionsContext = createContext<CanvasActionsContextValue | null>(
-  null,
-)
+const CanvasSelectionActionsContext =
+  createContext<CanvasSelectionActions | null>(null)
+const CanvasEditActionsContext = createContext<CanvasEditActions | null>(null)
+const CanvasPlacementActionsContext =
+  createContext<CanvasPlacementActions | null>(null)
 
 type CanvasActionsProviderProps = {
   children: ReactNode
-  value: CanvasActionsContextValue
+  selection: CanvasSelectionActions
+  edit: CanvasEditActions
+  placement: CanvasPlacementActions
 }
 
 export function CanvasActionsProvider({
   children,
-  value,
+  selection,
+  edit,
+  placement,
 }: CanvasActionsProviderProps) {
   return (
-    <CanvasActionsContext.Provider value={value}>
-      {children}
-    </CanvasActionsContext.Provider>
+    <CanvasSelectionActionsContext.Provider value={selection}>
+      <CanvasEditActionsContext.Provider value={edit}>
+        <CanvasPlacementActionsContext.Provider value={placement}>
+          {children}
+        </CanvasPlacementActionsContext.Provider>
+      </CanvasEditActionsContext.Provider>
+    </CanvasSelectionActionsContext.Provider>
   )
 }
 
-export function useCanvasActionsContext() {
-  const value = useContext(CanvasActionsContext)
+export function useCanvasSelectionActions() {
+  const value = useContext(CanvasSelectionActionsContext)
 
   if (!value) {
     throw new Error(
-      'useCanvasActionsContext must be used within a CanvasActionsProvider.',
+      'useCanvasSelectionActions must be used within a CanvasActionsProvider.',
+    )
+  }
+
+  return value
+}
+
+export function useCanvasEditActions() {
+  const value = useContext(CanvasEditActionsContext)
+
+  if (!value) {
+    throw new Error(
+      'useCanvasEditActions must be used within a CanvasActionsProvider.',
+    )
+  }
+
+  return value
+}
+
+export function useCanvasPlacementActions() {
+  const value = useContext(CanvasPlacementActionsContext)
+
+  if (!value) {
+    throw new Error(
+      'useCanvasPlacementActions must be used within a CanvasActionsProvider.',
     )
   }
 

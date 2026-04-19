@@ -378,37 +378,36 @@ export function WorkspaceScreen() {
     [selectPictureExclusive, togglePictureSelection],
   )
 
-  const canvasActionsContextValue = useMemo(
+  const canvasSelectionActions = useMemo(
     () => ({
       autoEditTarget,
       onClearAutoEditTarget: clearAutoEditTarget,
+      onSelectCard: handleSelectCard,
+      onSelectGroup: handleSelectGroup,
+      onSelectPicture: handleSelectPicture,
+    }),
+    [
+      autoEditTarget,
+      clearAutoEditTarget,
+      handleSelectCard,
+      handleSelectGroup,
+      handleSelectPicture,
+    ],
+  )
+
+  const canvasEditActions = useMemo(
+    () => ({
       onRecordLinkOpen: recordLinkOpen,
-      onMoveCard: handleMoveCard,
-      onMoveGroup: handleMoveGroup,
-      onMovePicture: handleMovePicture,
-      onPreviewChange: handleDragPreviewChange,
       onRemoveCard: removeCard,
       onRemoveGroup: removeGroup,
       onRemovePicture: removePicture,
       onRequestCardImageOverridePicker: openCardImageOverridePicker,
       onRequestPictureImagePicker: openPictureImagePicker,
-      onSelectCard: handleSelectCard,
-      onSelectGroup: handleSelectGroup,
-      onSelectPicture: handleSelectPicture,
       onUpdateCard: handleUpdateCard,
       onUpdateGroup: handleUpdateGroup,
       onUpdatePicture: handleUpdatePicture,
     }),
     [
-      autoEditTarget,
-      clearAutoEditTarget,
-      handleDragPreviewChange,
-      handleMoveCard,
-      handleMoveGroup,
-      handleMovePicture,
-      handleSelectCard,
-      handleSelectGroup,
-      handleSelectPicture,
       handleUpdateCard,
       handleUpdateGroup,
       handleUpdatePicture,
@@ -418,6 +417,21 @@ export function WorkspaceScreen() {
       removeCard,
       removeGroup,
       removePicture,
+    ],
+  )
+
+  const canvasPlacementActions = useMemo(
+    () => ({
+      onMoveCard: handleMoveCard,
+      onMoveGroup: handleMoveGroup,
+      onMovePicture: handleMovePicture,
+      onPreviewChange: handleDragPreviewChange,
+    }),
+    [
+      handleDragPreviewChange,
+      handleMoveCard,
+      handleMoveGroup,
+      handleMovePicture,
     ],
   )
 
@@ -443,7 +457,11 @@ export function WorkspaceScreen() {
         getFallbackText={getFallbackText}
         onText={handlePastedText}
       />
-      <CanvasActionsProvider value={canvasActionsContextValue}>
+      <CanvasActionsProvider
+        selection={canvasSelectionActions}
+        edit={canvasEditActions}
+        placement={canvasPlacementActions}
+      >
         <InfiniteCanvas
           workspace={workspace}
           interactionMode={interactionMode}
