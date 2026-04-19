@@ -21,7 +21,9 @@ import { createPictureNode } from '../../../features/images/pictureCreation'
 import { createLinkCard } from '../../../features/links/linkCreation'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
 import {
+  addItemToOccupancyIndex,
   applySnap,
+  createOccupancyIndex,
   isPlacementAvailable,
 } from '../../../features/placement/snapEngine'
 import type { AutoEditTarget } from '../../../state/workspaceStoreTypes'
@@ -367,11 +369,17 @@ export function useCanvasActions({
         return
       }
 
-      let occupiedItems = nodePlacementFrames
-
       if (interactionMode !== 'edit') {
         toggleInteractionMode('edit')
       }
+
+      // Build the occupancy index once and extend it as pictures are placed,
+      // so every subsequent snap in this paste sees the prior placements
+      // without rebuilding the index (ARCHITECTURE-REVIEW §3.2.3).
+      const occupancyIndex = createOccupancyIndex(
+        nodePlacementFrames,
+        workspace.placementGuide,
+      )
 
       assets.forEach((asset, index) => {
         const picture = createPictureNode({
@@ -397,7 +405,7 @@ export function useCanvasActions({
           picture.size,
           {
             force: true,
-            cards: occupiedItems,
+            occupancyIndex,
             isOccupiedItemBlocking: (candidate, occupiedItem, guide) =>
               isPlacementBlockedByOccupiedItem({
                 candidate,
@@ -413,7 +421,7 @@ export function useCanvasActions({
         }
 
         addPicture(placedPicture)
-        occupiedItems = [...occupiedItems, placedPicture]
+        addItemToOccupancyIndex(occupancyIndex, placedPicture)
       })
     },
     [
