@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
 
 // Match the Firefox add-on minimum version and the Chromium equivalents for extension builds.
@@ -39,6 +40,7 @@ const vendorChunkGroups = [
 
 export default defineConfig(({ mode }) => {
   const isExtensionBuild = mode === 'extension'
+  const analyzeBundle = mode === 'analyze'
 
   return {
     build: {
@@ -51,7 +53,20 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      ...(analyzeBundle
+        ? [
+            visualizer({
+              brotliSize: true,
+              filename: 'dist/bundle-analysis.html',
+              gzipSize: true,
+              open: false,
+              template: 'treemap',
+            }),
+          ]
+        : []),
+    ],
     server: {
       forwardConsole: {
         unhandledErrors: true,
