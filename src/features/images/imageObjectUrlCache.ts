@@ -1,4 +1,9 @@
-import { getImageBlob } from '../../storage/imageRepository'
+import {
+  getImageBlob,
+  getImageThumbnailBlob,
+} from '../../storage/imageRepository'
+
+export type ImageObjectUrlVariant = 'thumbnail' | 'full'
 
 type ImageObjectUrlCacheEntry = {
   promise: Promise<string | null>
@@ -9,9 +14,14 @@ type ImageObjectUrlCacheEntry = {
 // Modul-Scope-Cache. Mehrere Nodes, die dasselbe `imageId` referenzieren
 // (z. B. Card-Favicon-Override + Picture-Node + Gallery-Dialog), teilen
 // sich eine einzige `URL.createObjectURL`-Instanz und einen einzigen
-// IDB-Read. Einträge werden erst revoked, wenn der letzte Consumer den
-// RefCount auf 0 senkt.
+// IDB-Read pro Variante. Thumbnail- und Full-Variante werden separat
+// gehalten, damit ein Gallery-Detail-View nicht ungewollt den
+// Render-Pfad der Canvas-Nodes belastet.
 const cache = new Map<string, ImageObjectUrlCacheEntry>()
+
+function cacheKey(imageId: string, variant: ImageObjectUrlVariant) {
+  return `${variant}:${imageId}`
+}
 
 function canCreateObjectUrl() {
   return typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
@@ -23,25 +33,47 @@ function revokeObjectUrl(url: string) {
   }
 }
 
-function createEntry(imageId: string): ImageObjectUrlCacheEntry {
+async function fetchVariantBlob(
+  imageId: string,
+  variant: ImageObjectUrlVariant,
+) {
+  if (variant === 'full') {
+    return getImageBlob(imageId)
+  }
+
+  // Thumbnail-Variante: erst Thumbnail-Blob (inkl. Lazy-Backfill) probieren;
+  // wenn keines existiert oder erzeugt werden kann, auf Full-Blob zurueckfallen.
+  const thumbnail = await getImageThumbnailBlob(imageId)
+  if (thumbnail) {
+    return thumbnail
+  }
+  return getImageBlob(imageId)
+}
+
+function createEntry(
+  imageId: string,
+  variant: ImageObjectUrlVariant,
+): ImageObjectUrlCacheEntry {
   const entry: ImageObjectUrlCacheEntry = {
     promise: Promise.resolve(null),
     refCount: 0,
     url: null,
   }
 
+  const key = cacheKey(imageId, variant)
+
   entry.promise = (async () => {
     try {
-      const blob = await getImageBlob(imageId)
+      const blob = await fetchVariantBlob(imageId, variant)
 
       if (!blob || !canCreateObjectUrl()) {
         return null
       }
 
-      // Während des awaits kann der Eintrag invalidiert worden sein
-      // (z. B. Image wurde gelöscht). Keinen Object-URL erzeugen,
+      // Waehrend des awaits kann der Eintrag invalidiert worden sein
+      // (z. B. Image wurde geloescht). Keinen Object-URL erzeugen,
       // damit nichts geleakt wird.
-      if (cache.get(imageId) !== entry) {
+      if (cache.get(key) !== entry) {
         return null
       }
 
@@ -56,20 +88,28 @@ function createEntry(imageId: string): ImageObjectUrlCacheEntry {
   return entry
 }
 
-export function acquireImageObjectUrl(imageId: string): Promise<string | null> {
-  let entry = cache.get(imageId)
+export function acquireImageObjectUrl(
+  imageId: string,
+  variant: ImageObjectUrlVariant = 'thumbnail',
+): Promise<string | null> {
+  const key = cacheKey(imageId, variant)
+  let entry = cache.get(key)
 
   if (!entry) {
-    entry = createEntry(imageId)
-    cache.set(imageId, entry)
+    entry = createEntry(imageId, variant)
+    cache.set(key, entry)
   }
 
   entry.refCount += 1
   return entry.promise
 }
 
-export function releaseImageObjectUrl(imageId: string) {
-  const entry = cache.get(imageId)
+export function releaseImageObjectUrl(
+  imageId: string,
+  variant: ImageObjectUrlVariant = 'thumbnail',
+) {
+  const key = cacheKey(imageId, variant)
+  const entry = cache.get(key)
 
   if (!entry) {
     return
@@ -81,19 +121,27 @@ export function releaseImageObjectUrl(imageId: string) {
     if (entry.url) {
       revokeObjectUrl(entry.url)
     }
-    cache.delete(imageId)
+    cache.delete(key)
   }
 }
 
+/**
+ * Invalidiert beide Varianten (Thumbnail + Full) eines Bildes. Wird beim
+ * Loeschen eines Assets aufgerufen, damit bestehende Object-URLs nicht
+ * auf mittlerweile geloeschte Blobs zeigen.
+ */
 export function invalidateImageObjectUrl(imageId: string) {
-  const entry = cache.get(imageId)
+  for (const variant of ['thumbnail', 'full'] as const) {
+    const key = cacheKey(imageId, variant)
+    const entry = cache.get(key)
 
-  if (!entry) {
-    return
-  }
+    if (!entry) {
+      continue
+    }
 
-  if (entry.url) {
-    revokeObjectUrl(entry.url)
+    if (entry.url) {
+      revokeObjectUrl(entry.url)
+    }
+    cache.delete(key)
   }
-  cache.delete(imageId)
 }

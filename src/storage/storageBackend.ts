@@ -3,6 +3,7 @@ import type { IDBPDatabase, IDBPObjectStore, IDBPTransaction } from 'idb'
 export const STORAGE_STORES = {
   imageAsset: 'image_assets',
   imageBlob: 'image_blobs',
+  imageThumbnailBlob: 'image_thumbnail_blobs',
   template: 'templates',
   templateImageAsset: 'template_image_assets',
   templateImageBlob: 'template_image_blobs',

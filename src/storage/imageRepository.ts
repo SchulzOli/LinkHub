@@ -1,11 +1,16 @@
 import type { ImageAsset } from '../contracts/imageAsset'
 import { resolveSupportedImageUploadMimeType } from '../contracts/imageAsset'
+import {
+  generateImageThumbnail,
+  type GeneratedImageThumbnail,
+} from '../features/images/imageThumbnail'
 import { createId } from '../utils/id'
 import { openLinkHubDb, STORAGE_STORES } from './db'
 
 export type StoredImageAssetRecord = {
   asset: ImageAsset
   blob: Blob
+  thumbnailBlob?: Blob | null
 }
 
 function deriveAssetName(file: File) {
@@ -101,6 +106,10 @@ export async function saveImageAsset(input: {
 
   const now = new Date().toISOString()
   const dimensions = await readImageDimensions(normalizedFile)
+  const thumbnail = await generateImageThumbnail(
+    normalizedFile,
+    resolvedMimeType,
+  )
   const asset: ImageAsset = {
     id: createId(),
     name: input.name?.trim() || deriveAssetName(normalizedFile),
@@ -113,17 +122,36 @@ export async function saveImageAsset(input: {
     isAnimated:
       resolvedMimeType === 'image/gif' ||
       normalizedFile.name.toLowerCase().endsWith('.gif'),
+    thumbnail: thumbnail
+      ? {
+          width: thumbnail.width,
+          height: thumbnail.height,
+          byteSize: thumbnail.byteSize,
+          mimeType: thumbnail.mimeType,
+        }
+      : undefined,
     createdAt: now,
     updatedAt: now,
   }
   const db = await openLinkHubDb()
   const transaction = db.transaction(
-    [STORAGE_STORES.imageAsset, STORAGE_STORES.imageBlob],
+    [
+      STORAGE_STORES.imageAsset,
+      STORAGE_STORES.imageBlob,
+      STORAGE_STORES.imageThumbnailBlob,
+    ],
     'readwrite',
   )
 
   await transaction.objectStore(STORAGE_STORES.imageAsset).put(asset, asset.id)
-  await transaction.objectStore(STORAGE_STORES.imageBlob).put(normalizedFile, asset.id)
+  await transaction
+    .objectStore(STORAGE_STORES.imageBlob)
+    .put(normalizedFile, asset.id)
+  if (thumbnail) {
+    await transaction
+      .objectStore(STORAGE_STORES.imageThumbnailBlob)
+      .put(thumbnail.blob, asset.id)
+  }
   await transaction.done
 
   return asset
@@ -159,21 +187,116 @@ export async function getImageAsset(imageId: string) {
   const db = await openLinkHubDb()
 
   return (
-    ((await db.get(STORAGE_STORES.imageAsset, imageId)) as ImageAsset | undefined) ??
-    null
+    ((await db.get(STORAGE_STORES.imageAsset, imageId)) as
+      | ImageAsset
+      | undefined) ?? null
   )
 }
 
 export async function getImageBlob(imageId: string) {
   const db = await openLinkHubDb()
 
-  return ((await db.get(STORAGE_STORES.imageBlob, imageId)) as Blob | undefined) ?? null
+  return (
+    ((await db.get(STORAGE_STORES.imageBlob, imageId)) as Blob | undefined) ??
+    null
+  )
+}
+
+async function readThumbnailBlobFromStore(imageId: string) {
+  const db = await openLinkHubDb()
+  return (
+    ((await db.get(STORAGE_STORES.imageThumbnailBlob, imageId)) as
+      | Blob
+      | undefined) ?? null
+  )
+}
+
+async function persistBackfilledThumbnail(
+  imageId: string,
+  asset: ImageAsset,
+  generated: GeneratedImageThumbnail,
+) {
+  const db = await openLinkHubDb()
+  const transaction = db.transaction(
+    [STORAGE_STORES.imageAsset, STORAGE_STORES.imageThumbnailBlob],
+    'readwrite',
+  )
+
+  // Asset kann zwischenzeitlich gel\u00f6scht oder ge\u00e4ndert worden sein;
+  // in dem Fall verwerfen wir das Backfill-Ergebnis.
+  const currentAsset = (await transaction
+    .objectStore(STORAGE_STORES.imageAsset)
+    .get(imageId)) as ImageAsset | undefined
+
+  if (!currentAsset || currentAsset.updatedAt !== asset.updatedAt) {
+    await transaction.done
+    return
+  }
+
+  await transaction.objectStore(STORAGE_STORES.imageAsset).put(
+    {
+      ...currentAsset,
+      thumbnail: {
+        width: generated.width,
+        height: generated.height,
+        byteSize: generated.byteSize,
+        mimeType: generated.mimeType,
+      },
+    } satisfies ImageAsset,
+    imageId,
+  )
+  await transaction
+    .objectStore(STORAGE_STORES.imageThumbnailBlob)
+    .put(generated.blob, imageId)
+  await transaction.done
+}
+
+/**
+ * Liefert den gespeicherten Thumbnail-Blob. F\u00fcllt transparent Altbest\u00e4nde
+ * nach (generiert Thumbnail + persistiert), wenn das Asset noch kein
+ * Thumbnail hat. Gibt `null` zur\u00fcck, wenn weder Thumbnail existiert noch
+ * eines erzeugt werden kann (z. B. GIF/SVG oder Umgebung ohne Canvas);
+ * Consumer sollten dann auf `getImageBlob` zur\u00fcckfallen.
+ */
+export async function getImageThumbnailBlob(imageId: string) {
+  const existing = await readThumbnailBlobFromStore(imageId)
+
+  if (existing) {
+    return existing
+  }
+
+  const asset = await getImageAsset(imageId)
+
+  if (!asset) {
+    return null
+  }
+
+  const fullBlob = await getImageBlob(imageId)
+
+  if (!fullBlob) {
+    return null
+  }
+
+  const generated = await generateImageThumbnail(fullBlob, asset.mimeType)
+
+  if (!generated) {
+    return null
+  }
+
+  try {
+    await persistBackfilledThumbnail(imageId, asset, generated)
+  } catch {
+    // Backfill ist best-effort: Lesepfad liefert trotzdem den Thumb-Blob.
+  }
+
+  return generated.blob
 }
 
 export async function getStoredImageAssetRecord(imageId: string) {
-  const [asset, blob] = await Promise.all([
+  const [asset, blob, thumbnailBlob] = await Promise.all([
     getImageAsset(imageId),
     getImageBlob(imageId),
+    readThumbnailBlobFromStore(imageId),
   ])
 
   if (!asset || !blob) {
@@ -183,22 +306,102 @@ export async function getStoredImageAssetRecord(imageId: string) {
   return {
     asset,
     blob,
+    thumbnailBlob: thumbnailBlob ?? undefined,
   } satisfies StoredImageAssetRecord
 }
 
+type ResolvedThumbnailPut =
+  | { kind: 'keep' }
+  | { kind: 'delete' }
+  | {
+      kind: 'write'
+      blob: Blob
+      metadata: NonNullable<ImageAsset['thumbnail']>
+    }
+
+async function resolveThumbnailForPut(
+  input: StoredImageAssetRecord,
+): Promise<ResolvedThumbnailPut> {
+  // Expliziter Wunsch: Thumbnail entfernen.
+  if (input.thumbnailBlob === null) {
+    return { kind: 'delete' }
+  }
+
+  // Expliziter Blob mitgegeben: als Thumbnail \u00fcbernehmen. Metadaten m\u00fcssen
+  // aus dem Asset stammen; fehlen sie, leiten wir sie bestm\u00f6glich her.
+  if (input.thumbnailBlob) {
+    const metadata = input.asset.thumbnail ?? {
+      width: input.asset.width ?? 0,
+      height: input.asset.height ?? 0,
+      byteSize: input.thumbnailBlob.size,
+      mimeType: input.thumbnailBlob.type || input.asset.mimeType,
+    }
+
+    if (metadata.width > 0 && metadata.height > 0) {
+      return { kind: 'write', blob: input.thumbnailBlob, metadata }
+    }
+  }
+
+  // Kein Thumbnail mitgegeben: versuchen, eines aus dem Full-Blob zu erzeugen.
+  const generated = await generateImageThumbnail(
+    input.blob,
+    input.asset.mimeType,
+  )
+
+  if (generated) {
+    return {
+      kind: 'write',
+      blob: generated.blob,
+      metadata: {
+        width: generated.width,
+        height: generated.height,
+        byteSize: generated.byteSize,
+        mimeType: generated.mimeType,
+      },
+    }
+  }
+
+  // Thumbnail nicht erzeugbar (GIF/SVG/Canvas fehlt). Bestehenden Eintrag
+  // belassen, damit Lazy-Backfill sp\u00e4ter erneut versuchen kann.
+  return { kind: 'keep' }
+}
+
 export async function putStoredImageAssetRecord(input: StoredImageAssetRecord) {
+  const resolvedThumbnail = await resolveThumbnailForPut(input)
+  const assetToWrite: ImageAsset =
+    resolvedThumbnail.kind === 'write'
+      ? { ...input.asset, thumbnail: resolvedThumbnail.metadata }
+      : resolvedThumbnail.kind === 'delete'
+        ? { ...input.asset, thumbnail: undefined }
+        : input.asset
+
   const db = await openLinkHubDb()
   const transaction = db.transaction(
-    [STORAGE_STORES.imageAsset, STORAGE_STORES.imageBlob],
+    [
+      STORAGE_STORES.imageAsset,
+      STORAGE_STORES.imageBlob,
+      STORAGE_STORES.imageThumbnailBlob,
+    ],
     'readwrite',
   )
 
   await transaction
     .objectStore(STORAGE_STORES.imageAsset)
-    .put(input.asset, input.asset.id)
+    .put(assetToWrite, assetToWrite.id)
   await transaction
     .objectStore(STORAGE_STORES.imageBlob)
-    .put(normalizeStoredImageBlob(input.asset, input.blob), input.asset.id)
+    .put(normalizeStoredImageBlob(assetToWrite, input.blob), assetToWrite.id)
+
+  if (resolvedThumbnail.kind === 'write') {
+    await transaction
+      .objectStore(STORAGE_STORES.imageThumbnailBlob)
+      .put(resolvedThumbnail.blob, assetToWrite.id)
+  } else if (resolvedThumbnail.kind === 'delete') {
+    await transaction
+      .objectStore(STORAGE_STORES.imageThumbnailBlob)
+      .delete(assetToWrite.id)
+  }
+
   await transaction.done
 }
 
@@ -243,6 +446,7 @@ export async function updateImageAsset(
   await putStoredImageAssetRecord({
     asset,
     blob: storedRecord.blob,
+    thumbnailBlob: storedRecord.thumbnailBlob ?? undefined,
   })
 
   return asset
@@ -251,11 +455,18 @@ export async function updateImageAsset(
 export async function deleteImageAsset(imageId: string) {
   const db = await openLinkHubDb()
   const transaction = db.transaction(
-    [STORAGE_STORES.imageAsset, STORAGE_STORES.imageBlob],
+    [
+      STORAGE_STORES.imageAsset,
+      STORAGE_STORES.imageBlob,
+      STORAGE_STORES.imageThumbnailBlob,
+    ],
     'readwrite',
   )
 
   await transaction.objectStore(STORAGE_STORES.imageAsset).delete(imageId)
   await transaction.objectStore(STORAGE_STORES.imageBlob).delete(imageId)
+  await transaction
+    .objectStore(STORAGE_STORES.imageThumbnailBlob)
+    .delete(imageId)
   await transaction.done
 }
