@@ -26,6 +26,11 @@ const vendorChunkGroups = [
     priority: 20,
   },
   {
+    name: 'html-to-image-vendor',
+    test: /node_modules[\\/]html-to-image(?:[\\/]|$)/,
+    priority: 20,
+  },
+  {
     name: 'vendor',
     test: /node_modules[\\/]/,
     priority: 10,

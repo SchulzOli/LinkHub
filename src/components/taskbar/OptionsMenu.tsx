@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import styles from './OptionsMenu.module.css'
 
@@ -49,9 +58,24 @@ import { LinkHubMark } from '../ui/LinkHubMark'
 import { PromptDialog } from '../ui/PromptDialog'
 import { isSelectMenuPortalTarget } from '../ui/SelectMenu'
 import { OptionsAppearanceSection } from './OptionsAppearanceSection'
-import { OptionsDataSection } from './OptionsDataSection'
-import { StatisticsPanel } from './StatisticsPanel'
-import { ThemeGallery } from './ThemeGallery'
+
+const OptionsDataSection = lazy(async () => {
+  const module = await import('./OptionsDataSection')
+
+  return { default: module.OptionsDataSection }
+})
+
+const StatisticsPanel = lazy(async () => {
+  const module = await import('./StatisticsPanel')
+
+  return { default: module.StatisticsPanel }
+})
+
+const ThemeGallery = lazy(async () => {
+  const module = await import('./ThemeGallery')
+
+  return { default: module.ThemeGallery }
+})
 
 type OptionsMenuProps = {
   cardCount: number
@@ -1340,492 +1364,500 @@ export function OptionsMenu({
               })}
             </div>
           </div>
-          {activeTab === 'options' ? (
-            <OptionsAppearanceSection
-              activeColorSettings={activeColorSettings}
-              appearance={appearance}
-              menuId={menuId}
-              resetAppearanceOptions={resetAppearanceOptions}
-              setBorderPresets={setBorderPresets}
-              setDefaultBorderPresetIndex={setDefaultBorderPresetIndex}
-              setDefaultCardCornerRadius={setDefaultCardCornerRadius}
-              setDefaultCardShowImage={setDefaultCardShowImage}
-              setDefaultCardOpenInNewTab={setDefaultCardOpenInNewTab}
-              setDefaultCardShowTitle={setDefaultCardShowTitle}
-              setDefaultCardSize={setDefaultCardSize}
-              setDefaultFillPresetIndex={setDefaultFillPresetIndex}
-              setDefaultSurfaceShadowStyle={setDefaultSurfaceShadowStyle}
-              setDefaultSurfaceTransparency={setDefaultSurfaceTransparency}
-              setFillPresets={setFillPresets}
-              setThemeMode={setThemeMode}
-              tabListId={tabListId}
-            />
-          ) : activeTab === 'themes' ? (
-            <ThemeGallery
-              appearance={appearance}
-              applyTheme={applyTheme}
-              menuId={menuId}
-              tabListId={tabListId}
-              setStyleToken={setStyleToken}
-              resetStyleTokens={resetStyleTokens}
-            />
-          ) : activeTab === 'templates' ? (
-            <div
-              aria-labelledby={`${tabListId}-templates`}
-              className={styles.panelBody}
-              data-testid="templates-panel"
-              id={`${menuId}-templates`}
-              role="tabpanel"
-            >
-              <div className={styles.templatesGrid}>
-                <section
-                  className={`${styles.templateCard} ${styles.templateSelectionCard}`}
-                >
-                  <div
-                    className={`${styles.sectionHeader} ${styles.templateSelectionHeader}`}
+          <Suspense fallback={null}>
+            {activeTab === 'options' ? (
+              <OptionsAppearanceSection
+                activeColorSettings={activeColorSettings}
+                appearance={appearance}
+                menuId={menuId}
+                resetAppearanceOptions={resetAppearanceOptions}
+                setBorderPresets={setBorderPresets}
+                setDefaultBorderPresetIndex={setDefaultBorderPresetIndex}
+                setDefaultCardCornerRadius={setDefaultCardCornerRadius}
+                setDefaultCardShowImage={setDefaultCardShowImage}
+                setDefaultCardOpenInNewTab={setDefaultCardOpenInNewTab}
+                setDefaultCardShowTitle={setDefaultCardShowTitle}
+                setDefaultCardSize={setDefaultCardSize}
+                setDefaultFillPresetIndex={setDefaultFillPresetIndex}
+                setDefaultSurfaceShadowStyle={setDefaultSurfaceShadowStyle}
+                setDefaultSurfaceTransparency={setDefaultSurfaceTransparency}
+                setFillPresets={setFillPresets}
+                setThemeMode={setThemeMode}
+                tabListId={tabListId}
+              />
+            ) : activeTab === 'themes' ? (
+              <ThemeGallery
+                appearance={appearance}
+                applyTheme={applyTheme}
+                menuId={menuId}
+                tabListId={tabListId}
+                setStyleToken={setStyleToken}
+                resetStyleTokens={resetStyleTokens}
+              />
+            ) : activeTab === 'templates' ? (
+              <div
+                aria-labelledby={`${tabListId}-templates`}
+                className={styles.panelBody}
+                data-testid="templates-panel"
+                id={`${menuId}-templates`}
+                role="tabpanel"
+              >
+                <div className={styles.templatesGrid}>
+                  <section
+                    className={`${styles.templateCard} ${styles.templateSelectionCard}`}
                   >
-                    <h4 className={styles.sectionTitle}>Selection</h4>
-                    <span className={styles.sectionMeta}>
-                      {hasTemplateSelection
-                        ? 'Ready to save'
-                        : 'Nothing selected'}
-                    </span>
-                  </div>
-                  <p
-                    className={`${styles.fieldHint} ${styles.templateSelectionHint}`}
-                  >
-                    Save the current card, group and picture selection as a
-                    reusable local template.
-                  </p>
-                  <div
-                    className={`${styles.dataMetrics} ${styles.templateSelectionMetrics}`}
-                  >
-                    <span className={styles.dataMetric}>
-                      Cards: {selectedEntitySelection.bundle.cards.length}
-                    </span>
-                    <span className={styles.dataMetric}>
-                      Groups: {selectedEntitySelection.bundle.groups.length}
-                    </span>
-                    <span className={styles.dataMetric}>
-                      Pictures: {selectedEntitySelection.bundle.pictures.length}
-                    </span>
-                    <span className={styles.dataMetric}>
-                      Images: {selectedBundleImageIds.length}
-                    </span>
-                  </div>
-                  <div
-                    className={`${styles.dataActions} ${styles.templateSelectionActions}`}
-                  >
-                    <button
-                      className={`${styles.dataPrimaryButton} ${styles.templateSelectionPrimaryButton}`}
-                      data-testid="open-template-create"
-                      disabled={
-                        !hasTemplateSelection || templateStatus.kind === 'busy'
-                      }
-                      onClick={openCreateTemplateEditor}
-                      type="button"
+                    <div
+                      className={`${styles.sectionHeader} ${styles.templateSelectionHeader}`}
                     >
-                      Save selection as template
-                    </button>
-                  </div>
-                </section>
+                      <h4 className={styles.sectionTitle}>Selection</h4>
+                      <span className={styles.sectionMeta}>
+                        {hasTemplateSelection
+                          ? 'Ready to save'
+                          : 'Nothing selected'}
+                      </span>
+                    </div>
+                    <p
+                      className={`${styles.fieldHint} ${styles.templateSelectionHint}`}
+                    >
+                      Save the current card, group and picture selection as a
+                      reusable local template.
+                    </p>
+                    <div
+                      className={`${styles.dataMetrics} ${styles.templateSelectionMetrics}`}
+                    >
+                      <span className={styles.dataMetric}>
+                        Cards: {selectedEntitySelection.bundle.cards.length}
+                      </span>
+                      <span className={styles.dataMetric}>
+                        Groups: {selectedEntitySelection.bundle.groups.length}
+                      </span>
+                      <span className={styles.dataMetric}>
+                        Pictures:{' '}
+                        {selectedEntitySelection.bundle.pictures.length}
+                      </span>
+                      <span className={styles.dataMetric}>
+                        Images: {selectedBundleImageIds.length}
+                      </span>
+                    </div>
+                    <div
+                      className={`${styles.dataActions} ${styles.templateSelectionActions}`}
+                    >
+                      <button
+                        className={`${styles.dataPrimaryButton} ${styles.templateSelectionPrimaryButton}`}
+                        data-testid="open-template-create"
+                        disabled={
+                          !hasTemplateSelection ||
+                          templateStatus.kind === 'busy'
+                        }
+                        onClick={openCreateTemplateEditor}
+                        type="button"
+                      >
+                        Save selection as template
+                      </button>
+                    </div>
+                  </section>
 
-                {templateEditor ? (
+                  {templateEditor ? (
+                    <section className={styles.templateCard}>
+                      <div className={styles.sectionHeader}>
+                        <h4 className={styles.sectionTitle}>
+                          {templateEditor.mode === 'create'
+                            ? 'Create template'
+                            : 'Edit template'}
+                        </h4>
+                      </div>
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>Name</span>
+                        <input
+                          aria-label="Template name"
+                          className={styles.select}
+                          value={templateEditor.name}
+                          onChange={(event) => {
+                            const nextValue = event.currentTarget.value
+
+                            setTemplateEditor((current) =>
+                              current
+                                ? { ...current, name: nextValue }
+                                : current,
+                            )
+                          }}
+                        />
+                      </label>
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>Description</span>
+                        <textarea
+                          aria-label="Template description"
+                          className={styles.templateTextarea}
+                          rows={4}
+                          value={templateEditor.description}
+                          onChange={(event) => {
+                            const nextValue = event.currentTarget.value
+
+                            setTemplateEditor((current) =>
+                              current
+                                ? {
+                                    ...current,
+                                    description: nextValue,
+                                  }
+                                : current,
+                            )
+                          }}
+                        />
+                      </label>
+                      <div className={styles.dataActions}>
+                        <button
+                          className={styles.dataPrimaryButton}
+                          disabled={templateStatus.kind === 'busy'}
+                          onClick={() => {
+                            void handleTemplateEditorSubmit()
+                          }}
+                          type="button"
+                        >
+                          {templateEditor.mode === 'create'
+                            ? 'Create template'
+                            : 'Save details'}
+                        </button>
+                        <button
+                          disabled={templateStatus.kind === 'busy'}
+                          onClick={() => setTemplateEditor(null)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </section>
+                  ) : null}
+
                   <section className={styles.templateCard}>
                     <div className={styles.sectionHeader}>
-                      <h4 className={styles.sectionTitle}>
-                        {templateEditor.mode === 'create'
-                          ? 'Create template'
-                          : 'Edit template'}
-                      </h4>
+                      <h4 className={styles.sectionTitle}>Saved templates</h4>
+                      <span className={styles.sectionMeta}>
+                        {templates.length} total
+                      </span>
                     </div>
-                    <label className={styles.field}>
-                      <span className={styles.fieldLabel}>Name</span>
-                      <input
-                        aria-label="Template name"
-                        className={styles.select}
-                        value={templateEditor.name}
-                        onChange={(event) => {
-                          const nextValue = event.currentTarget.value
-
-                          setTemplateEditor((current) =>
-                            current ? { ...current, name: nextValue } : current,
-                          )
-                        }}
-                      />
-                    </label>
-                    <label className={styles.field}>
-                      <span className={styles.fieldLabel}>Description</span>
-                      <textarea
-                        aria-label="Template description"
-                        className={styles.templateTextarea}
-                        rows={4}
-                        value={templateEditor.description}
-                        onChange={(event) => {
-                          const nextValue = event.currentTarget.value
-
-                          setTemplateEditor((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  description: nextValue,
-                                }
-                              : current,
-                          )
-                        }}
-                      />
-                    </label>
-                    <div className={styles.dataActions}>
-                      <button
-                        className={styles.dataPrimaryButton}
-                        disabled={templateStatus.kind === 'busy'}
-                        onClick={() => {
-                          void handleTemplateEditorSubmit()
-                        }}
-                        type="button"
-                      >
-                        {templateEditor.mode === 'create'
-                          ? 'Create template'
-                          : 'Save details'}
-                      </button>
-                      <button
-                        disabled={templateStatus.kind === 'busy'}
-                        onClick={() => setTemplateEditor(null)}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </section>
-                ) : null}
-
-                <section className={styles.templateCard}>
-                  <div className={styles.sectionHeader}>
-                    <h4 className={styles.sectionTitle}>Saved templates</h4>
-                    <span className={styles.sectionMeta}>
-                      {templates.length} total
-                    </span>
-                  </div>
-                  {templates.length === 0 ? (
-                    <p className={styles.emptyState}>
-                      No templates yet. Select content on the canvas and save
-                      the first one.
-                    </p>
-                  ) : (
-                    <div className={styles.templateList}>
-                      {templates.map((template) => (
-                        <article
-                          className={styles.templateListItem}
-                          key={template.id}
-                        >
-                          <div className={styles.templatePreviewFrame}>
-                            {template.previewDataUrl ? (
-                              <img
-                                alt={`Template preview for ${template.name}`}
-                                className={styles.templatePreviewImage}
-                                loading="lazy"
-                                src={template.previewDataUrl}
-                              />
-                            ) : (
-                              <div className={styles.templatePreviewFallback}>
-                                <span
-                                  className={
-                                    styles.templatePreviewFallbackLabel
+                    {templates.length === 0 ? (
+                      <p className={styles.emptyState}>
+                        No templates yet. Select content on the canvas and save
+                        the first one.
+                      </p>
+                    ) : (
+                      <div className={styles.templateList}>
+                        {templates.map((template) => (
+                          <article
+                            className={styles.templateListItem}
+                            key={template.id}
+                          >
+                            <div className={styles.templatePreviewFrame}>
+                              {template.previewDataUrl ? (
+                                <img
+                                  alt={`Template preview for ${template.name}`}
+                                  className={styles.templatePreviewImage}
+                                  loading="lazy"
+                                  src={template.previewDataUrl}
+                                />
+                              ) : (
+                                <div className={styles.templatePreviewFallback}>
+                                  <span
+                                    className={
+                                      styles.templatePreviewFallbackLabel
+                                    }
+                                  >
+                                    No preview
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className={styles.templateContent}>
+                              <div className={styles.templateHeader}>
+                                <div className={styles.templateText}>
+                                  <strong
+                                    className={`${styles.templateTitle} ${template.description ? styles.templateTitleWithTooltip : ''}`}
+                                    title={template.description ?? undefined}
+                                  >
+                                    {template.name}
+                                  </strong>
+                                  <span className={styles.templateMeta}>
+                                    Updated{' '}
+                                    {DATE_TIME_FORMATTER.format(
+                                      new Date(template.updatedAt),
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className={styles.dataMetrics}>
+                                <span className={styles.dataMetric}>
+                                  Cards: {template.content.cards.length}
+                                </span>
+                                <span className={styles.dataMetric}>
+                                  Groups: {template.content.groups.length}
+                                </span>
+                                <span className={styles.dataMetric}>
+                                  Pictures: {template.content.pictures.length}
+                                </span>
+                                <span className={styles.dataMetric}>
+                                  Images: {template.content.images.length}
+                                </span>
+                              </div>
+                              <div className={styles.templateActions}>
+                                <button
+                                  aria-label="Insert"
+                                  className={`${styles.templateActionButton} ${styles.templateActionButtonPrimary}`}
+                                  disabled={templateStatus.kind === 'busy'}
+                                  onClick={() => {
+                                    void handleInsertTemplate(template)
+                                  }}
+                                  title="Insert template"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      focusable="false"
+                                      className={styles.templateActionSvg}
+                                    >
+                                      <path
+                                        d="M11 4a1 1 0 1 1 2 0v8.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4Z"
+                                        fill="currentColor"
+                                      />
+                                      <path
+                                        d="M5 18a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </span>
+                                </button>
+                                <button
+                                  aria-label="Download"
+                                  className={styles.templateActionButton}
+                                  disabled={templateStatus.kind === 'busy'}
+                                  onClick={() => {
+                                    void handleDownloadTemplate(template)
+                                  }}
+                                  title="Download template"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      focusable="false"
+                                      className={styles.templateActionSvg}
+                                    >
+                                      <path
+                                        d="M11 4a1 1 0 1 1 2 0v7.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4Z"
+                                        fill="currentColor"
+                                      />
+                                      <path
+                                        d="M5.75 16A1.75 1.75 0 0 0 4 17.75v.5C4 19.22 4.78 20 5.75 20h12.5c.97 0 1.75-.78 1.75-1.75v-.5A1.75 1.75 0 0 0 18.25 16h-1.5a1 1 0 1 0 0 2h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25H5.75a.25.25 0 0 1-.25-.25v-.5a.25.25 0 0 1 .25-.25h1.5a1 1 0 1 0 0-2h-1.5Z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </span>
+                                </button>
+                                <button
+                                  aria-label="Edit"
+                                  className={styles.templateActionButton}
+                                  disabled={templateStatus.kind === 'busy'}
+                                  onClick={() =>
+                                    openEditTemplateEditor(template)
                                   }
+                                  title="Edit template details"
+                                  type="button"
                                 >
-                                  No preview
-                                </span>
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <EditIcon
+                                      className={styles.templateActionSvg}
+                                    />
+                                  </span>
+                                </button>
+                                <button
+                                  aria-label="Replace content"
+                                  className={styles.templateActionButton}
+                                  disabled={
+                                    !hasTemplateSelection ||
+                                    templateStatus.kind === 'busy'
+                                  }
+                                  onClick={() => {
+                                    void handleOverwriteTemplate(template)
+                                  }}
+                                  title="Replace template content with current selection"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      focusable="false"
+                                      className={styles.templateActionSvg}
+                                    >
+                                      <path
+                                        d="M7.41 5.59a1 1 0 0 1 0 1.41L5.41 9H15a4 4 0 1 1 0 8h-1a1 1 0 1 1 0-2h1a2 2 0 1 0 0-4H5.41l2 2a1 1 0 1 1-1.42 1.41l-3.7-3.7a1 1 0 0 1 0-1.41l3.7-3.71a1 1 0 0 1 1.42 0Z"
+                                        fill="currentColor"
+                                      />
+                                      <path
+                                        d="M17 3a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0V5h-3a1 1 0 1 1 0-2h4Z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </span>
+                                </button>
+                                <button
+                                  aria-label="Duplicate"
+                                  className={styles.templateActionButton}
+                                  disabled={templateStatus.kind === 'busy'}
+                                  onClick={() => {
+                                    void handleDuplicateTemplate(template)
+                                  }}
+                                  title="Duplicate template"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      focusable="false"
+                                      className={styles.templateActionSvg}
+                                    >
+                                      <path
+                                        d="M8.75 4A1.75 1.75 0 0 0 7 5.75v8.5C7 15.22 7.78 16 8.75 16h8.5c.97 0 1.75-.78 1.75-1.75v-8.5C19 4.78 18.22 4 17.25 4h-8.5Zm0 1.5h8.5c.14 0 .25.11.25.25v8.5a.25.25 0 0 1-.25.25h-8.5a.25.25 0 0 1-.25-.25v-8.5c0-.14.11-.25.25-.25Z"
+                                        fill="currentColor"
+                                      />
+                                      <path
+                                        d="M5.75 8A1.75 1.75 0 0 0 4 9.75v8.5C4 19.22 4.78 20 5.75 20h8.5a1 1 0 1 0 0-2h-8.5a.25.25 0 0 1-.25-.25v-8.5A.25.25 0 0 1 5.75 9h.5a1 1 0 1 0 0-2h-.5Z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </span>
+                                </button>
+                                <button
+                                  aria-label="Delete"
+                                  className={`${styles.templateActionButton} ${styles.templateActionButtonDanger}`}
+                                  disabled={templateStatus.kind === 'busy'}
+                                  onClick={() => {
+                                    void handleDeleteTemplate(template)
+                                  }}
+                                  title="Delete template"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={styles.templateActionIcon}
+                                  >
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      focusable="false"
+                                      className={styles.templateActionSvg}
+                                    >
+                                      <path
+                                        d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
+                                        fill="currentColor"
+                                      />
+                                    </svg>
+                                  </span>
+                                </button>
                               </div>
-                            )}
-                          </div>
-                          <div className={styles.templateContent}>
-                            <div className={styles.templateHeader}>
-                              <div className={styles.templateText}>
-                                <strong
-                                  className={`${styles.templateTitle} ${template.description ? styles.templateTitleWithTooltip : ''}`}
-                                  title={template.description ?? undefined}
-                                >
-                                  {template.name}
-                                </strong>
-                                <span className={styles.templateMeta}>
-                                  Updated{' '}
-                                  {DATE_TIME_FORMATTER.format(
-                                    new Date(template.updatedAt),
-                                  )}
-                                </span>
-                              </div>
                             </div>
-                            <div className={styles.dataMetrics}>
-                              <span className={styles.dataMetric}>
-                                Cards: {template.content.cards.length}
-                              </span>
-                              <span className={styles.dataMetric}>
-                                Groups: {template.content.groups.length}
-                              </span>
-                              <span className={styles.dataMetric}>
-                                Pictures: {template.content.pictures.length}
-                              </span>
-                              <span className={styles.dataMetric}>
-                                Images: {template.content.images.length}
-                              </span>
-                            </div>
-                            <div className={styles.templateActions}>
-                              <button
-                                aria-label="Insert"
-                                className={`${styles.templateActionButton} ${styles.templateActionButtonPrimary}`}
-                                disabled={templateStatus.kind === 'busy'}
-                                onClick={() => {
-                                  void handleInsertTemplate(template)
-                                }}
-                                title="Insert template"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M11 4a1 1 0 1 1 2 0v8.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4Z"
-                                      fill="currentColor"
-                                    />
-                                    <path
-                                      d="M5 18a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Download"
-                                className={styles.templateActionButton}
-                                disabled={templateStatus.kind === 'busy'}
-                                onClick={() => {
-                                  void handleDownloadTemplate(template)
-                                }}
-                                title="Download template"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M11 4a1 1 0 1 1 2 0v7.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4Z"
-                                      fill="currentColor"
-                                    />
-                                    <path
-                                      d="M5.75 16A1.75 1.75 0 0 0 4 17.75v.5C4 19.22 4.78 20 5.75 20h12.5c.97 0 1.75-.78 1.75-1.75v-.5A1.75 1.75 0 0 0 18.25 16h-1.5a1 1 0 1 0 0 2h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25H5.75a.25.25 0 0 1-.25-.25v-.5a.25.25 0 0 1 .25-.25h1.5a1 1 0 1 0 0-2h-1.5Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Edit"
-                                className={styles.templateActionButton}
-                                disabled={templateStatus.kind === 'busy'}
-                                onClick={() => openEditTemplateEditor(template)}
-                                title="Edit template details"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <EditIcon
-                                    className={styles.templateActionSvg}
-                                  />
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Replace content"
-                                className={styles.templateActionButton}
-                                disabled={
-                                  !hasTemplateSelection ||
-                                  templateStatus.kind === 'busy'
-                                }
-                                onClick={() => {
-                                  void handleOverwriteTemplate(template)
-                                }}
-                                title="Replace template content with current selection"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M7.41 5.59a1 1 0 0 1 0 1.41L5.41 9H15a4 4 0 1 1 0 8h-1a1 1 0 1 1 0-2h1a2 2 0 1 0 0-4H5.41l2 2a1 1 0 1 1-1.42 1.41l-3.7-3.7a1 1 0 0 1 0-1.41l3.7-3.71a1 1 0 0 1 1.42 0Z"
-                                      fill="currentColor"
-                                    />
-                                    <path
-                                      d="M17 3a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0V5h-3a1 1 0 1 1 0-2h4Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Duplicate"
-                                className={styles.templateActionButton}
-                                disabled={templateStatus.kind === 'busy'}
-                                onClick={() => {
-                                  void handleDuplicateTemplate(template)
-                                }}
-                                title="Duplicate template"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M8.75 4A1.75 1.75 0 0 0 7 5.75v8.5C7 15.22 7.78 16 8.75 16h8.5c.97 0 1.75-.78 1.75-1.75v-8.5C19 4.78 18.22 4 17.25 4h-8.5Zm0 1.5h8.5c.14 0 .25.11.25.25v8.5a.25.25 0 0 1-.25.25h-8.5a.25.25 0 0 1-.25-.25v-8.5c0-.14.11-.25.25-.25Z"
-                                      fill="currentColor"
-                                    />
-                                    <path
-                                      d="M5.75 8A1.75 1.75 0 0 0 4 9.75v8.5C4 19.22 4.78 20 5.75 20h8.5a1 1 0 1 0 0-2h-8.5a.25.25 0 0 1-.25-.25v-8.5A.25.25 0 0 1 5.75 9h.5a1 1 0 1 0 0-2h-.5Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Delete"
-                                className={`${styles.templateActionButton} ${styles.templateActionButtonDanger}`}
-                                disabled={templateStatus.kind === 'busy'}
-                                onClick={() => {
-                                  void handleDeleteTemplate(template)
-                                }}
-                                title="Delete template"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                {templateStatus.message ? (
-                  <section
-                    className={`${styles.dataStatus} ${
-                      templateStatus.kind === 'error'
-                        ? styles.dataStatusError
-                        : templateStatus.kind === 'success'
-                          ? styles.dataStatusSuccess
-                          : templateStatus.kind === 'busy'
-                            ? styles.dataStatusBusy
-                            : ''
-                    }`}
-                    data-testid="template-status"
-                  >
-                    {templateStatus.message}
+                          </article>
+                        ))}
+                      </div>
+                    )}
                   </section>
-                ) : null}
+
+                  {templateStatus.message ? (
+                    <section
+                      className={`${styles.dataStatus} ${
+                        templateStatus.kind === 'error'
+                          ? styles.dataStatusError
+                          : templateStatus.kind === 'success'
+                            ? styles.dataStatusSuccess
+                            : templateStatus.kind === 'busy'
+                              ? styles.dataStatusBusy
+                              : ''
+                      }`}
+                      data-testid="template-status"
+                    >
+                      {templateStatus.message}
+                    </section>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ) : activeTab === 'statistics' ? (
-            <div
-              aria-labelledby={`${tabListId}-statistics`}
-              className={styles.panelBody}
-              id={`${menuId}-statistics`}
-              role="tabpanel"
-            >
-              <StatisticsPanel
-                cardCount={cardCount}
-                statistics={statistics}
-                storageMessage={storageStatistics.message}
-                storageSnapshot={storageStatistics.snapshot}
-                storageStatus={storageStatistics.kind}
+            ) : activeTab === 'statistics' ? (
+              <div
+                aria-labelledby={`${tabListId}-statistics`}
+                className={styles.panelBody}
+                id={`${menuId}-statistics`}
+                role="tabpanel"
+              >
+                <StatisticsPanel
+                  cardCount={cardCount}
+                  statistics={statistics}
+                  storageMessage={storageStatistics.message}
+                  storageSnapshot={storageStatistics.snapshot}
+                  storageStatus={storageStatistics.kind}
+                />
+              </div>
+            ) : (
+              <OptionsDataSection
+                activeWorkspaceId={activeWorkspaceId}
+                dataStatus={dataStatus}
+                handleExportCanvas={handleExportCanvas}
+                handleImportCanvasFile={handleImportCanvasFile}
+                importFileInputRef={importFileInputRef}
+                interactionMode={interactionMode}
+                menuId={menuId}
+                onCancelWorkspaceEditor={handleCancelWorkspaceEdit}
+                onDeleteWorkspace={handleDeleteWorkspace}
+                onMoveWorkspace={(workspaceId, direction) => {
+                  const workspaceSummary = workspaceSummaries.find(
+                    (candidate) => candidate.id === workspaceId,
+                  )
+
+                  if (!workspaceSummary) {
+                    return
+                  }
+
+                  handleMoveWorkspace(workspaceSummary, direction)
+                }}
+                onRequestEditMode={() => toggleInteractionMode('edit')}
+                onStartWorkspaceEdit={handleStartWorkspaceEdit}
+                onSubmitWorkspaceEditor={handleSubmitWorkspaceEditor}
+                onUpdateWorkspaceEditorName={(name) => {
+                  setWorkspaceEditor((current) =>
+                    current
+                      ? {
+                          ...current,
+                          name,
+                        }
+                      : current,
+                  )
+                }}
+                referencedImageCount={referencedImageIds.length}
+                savedThemeCount={savedThemeCount}
+                savedTemplateCount={savedTemplateCount}
+                tabListId={tabListId}
+                workspaceEditor={workspaceEditor}
+                workspaceEntityCounts={{
+                  cards: workspace.cards.length,
+                  groups: workspace.groups.length,
+                  pictures: workspace.pictures.length,
+                }}
+                workspaceStatus={workspaceStatus}
+                workspaceSummaries={workspaceSummaries}
               />
-            </div>
-          ) : (
-            <OptionsDataSection
-              activeWorkspaceId={activeWorkspaceId}
-              dataStatus={dataStatus}
-              handleExportCanvas={handleExportCanvas}
-              handleImportCanvasFile={handleImportCanvasFile}
-              importFileInputRef={importFileInputRef}
-              interactionMode={interactionMode}
-              menuId={menuId}
-              onCancelWorkspaceEditor={handleCancelWorkspaceEdit}
-              onDeleteWorkspace={handleDeleteWorkspace}
-              onMoveWorkspace={(workspaceId, direction) => {
-                const workspaceSummary = workspaceSummaries.find(
-                  (candidate) => candidate.id === workspaceId,
-                )
-
-                if (!workspaceSummary) {
-                  return
-                }
-
-                handleMoveWorkspace(workspaceSummary, direction)
-              }}
-              onRequestEditMode={() => toggleInteractionMode('edit')}
-              onStartWorkspaceEdit={handleStartWorkspaceEdit}
-              onSubmitWorkspaceEditor={handleSubmitWorkspaceEditor}
-              onUpdateWorkspaceEditorName={(name) => {
-                setWorkspaceEditor((current) =>
-                  current
-                    ? {
-                        ...current,
-                        name,
-                      }
-                    : current,
-                )
-              }}
-              referencedImageCount={referencedImageIds.length}
-              savedThemeCount={savedThemeCount}
-              savedTemplateCount={savedTemplateCount}
-              tabListId={tabListId}
-              workspaceEditor={workspaceEditor}
-              workspaceEntityCounts={{
-                cards: workspace.cards.length,
-                groups: workspace.groups.length,
-                pictures: workspace.pictures.length,
-              }}
-              workspaceStatus={workspaceStatus}
-              workspaceSummaries={workspaceSummaries}
-            />
-          )}
+            )}
+          </Suspense>
         </section>
       ) : null}
       {promptDialog ? (

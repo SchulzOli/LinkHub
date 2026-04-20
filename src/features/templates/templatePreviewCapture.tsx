@@ -1,4 +1,4 @@
-import { toPng } from 'html-to-image'
+import type { toPng as toPngType } from 'html-to-image'
 import type { CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import type { Root } from 'react-dom/client'
@@ -33,6 +33,24 @@ export const TEMPLATE_PREVIEW_PADDING = 10
 export const TEMPLATE_PREVIEW_GRID_SIZE = 24
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   'data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA='
+
+let htmlToImageModulePromise: Promise<typeof toPngType> | null = null
+
+async function loadToPng(): Promise<typeof toPngType> {
+  htmlToImageModulePromise ??= import('html-to-image').then(
+    (module) => module.toPng,
+  )
+
+  return htmlToImageModulePromise
+}
+
+/**
+ * Warms the `html-to-image` chunk without invoking it. Safe to call from
+ * idle-callback prefetch paths on initial load.
+ */
+export function prefetchTemplatePreviewCapture() {
+  void loadToPng()
+}
 
 export type TemplatePreviewAppearance = Pick<
   AppearanceProfile,
@@ -676,6 +694,8 @@ export async function captureTemplatePreviewDataUrl(input: {
     await waitForNextPaint()
 
     try {
+      const toPng = await loadToPng()
+
       return await toPng(previewNode, {
         cacheBust: true,
         canvasHeight: TEMPLATE_PREVIEW_HEIGHT,

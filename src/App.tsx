@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { WorkspaceScreen } from './components/canvas/WorkspaceScreen'
 import { applyAppearanceStyle } from './features/appearance/stylePresets'
+import { prefetchTemplatePreviewCapture } from './features/templates/templatePreviewCapture'
 import { useWorkspaceStore } from './state/useWorkspaceStore'
 import { getPersistedWorkspace } from './state/workspaceStoreHelpers'
 import {
@@ -11,6 +12,45 @@ import {
 } from './storage/workspaceRepository'
 
 let workspaceLoadPromise: ReturnType<typeof loadWorkspaceSession> | null = null
+
+type IdleWindow = Window & {
+  requestIdleCallback?: (
+    callback: () => void,
+    options?: { timeout: number },
+  ) => number
+  cancelIdleCallback?: (handle: number) => void
+}
+
+function schedulePostPaintPrefetch(run: () => void) {
+  if (typeof window === 'undefined') {
+    return () => {}
+  }
+
+  const idleWindow = window as IdleWindow
+
+  if (typeof idleWindow.requestIdleCallback === 'function') {
+    const handle = idleWindow.requestIdleCallback(run, { timeout: 2000 })
+
+    return () => {
+      idleWindow.cancelIdleCallback?.(handle)
+    }
+  }
+
+  const timeoutHandle = window.setTimeout(run, 1500)
+
+  return () => {
+    window.clearTimeout(timeoutHandle)
+  }
+}
+
+function prefetchLazyBundles() {
+  // html-to-image: needed for template-preview capture on first template apply.
+  prefetchTemplatePreviewCapture()
+  // Taskbar submodules rendered lazily in OptionsMenu.
+  void import('./components/taskbar/ThemeGallery')
+  void import('./components/taskbar/StatisticsPanel')
+  void import('./components/taskbar/OptionsDataSection')
+}
 
 function App() {
   const initializeWorkspaceSession = useWorkspaceStore(
@@ -117,6 +157,14 @@ function App() {
   useEffect(() => {
     applyAppearanceStyle(document.documentElement, workspace.appearance)
   }, [workspace.appearance])
+
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+
+    return schedulePostPaintPrefetch(prefetchLazyBundles)
+  }, [status])
 
   useEffect(() => {
     if (status !== 'ready' || !hydratedRef.current) {
