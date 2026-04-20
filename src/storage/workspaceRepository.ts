@@ -33,12 +33,8 @@ function getFallbackWorkspaceKey(workspaceId: string) {
   return `${FALLBACK_WORKSPACE_KEY_PREFIX}${workspaceId}`
 }
 
-function toSerializableWorkspace(workspace: Workspace) {
-  return JSON.parse(JSON.stringify(workspace))
-}
-
 function serializeWorkspaceSnapshot(workspace: Workspace) {
-  return JSON.stringify(toSerializableWorkspace(workspace))
+  return JSON.stringify(workspace)
 }
 
 function estimateLocalStorageStringBytes(value: string) {
@@ -225,13 +221,11 @@ export function getWorkspaceSnapshotByteSize(workspace: Workspace) {
 }
 
 export async function saveWorkspace(workspace: Workspace) {
-  const serializable = toSerializableWorkspace(workspace)
-
   writeWorkspaceFallbackRecord(workspace)
 
   try {
     const db = await openLinkHubDb()
-    await db.put(STORAGE_STORES.workspace, serializable, workspace.id)
+    await db.put(STORAGE_STORES.workspace, workspace, workspace.id)
   } catch {
     // localStorage fallback already written
   }
