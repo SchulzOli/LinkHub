@@ -38,8 +38,8 @@ import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
-import { LinkCard } from '../cards/LinkCard'
-import { GroupFrame } from '../groups/GroupFrame'
+import { LinkCardContainer as LinkCard } from '../cards/LinkCardContainer'
+import { GroupFrameContainer as GroupFrame } from '../groups/GroupFrameContainer'
 import { PictureNode } from '../pictures/PictureNode'
 import {
   useCanvasEditActions,

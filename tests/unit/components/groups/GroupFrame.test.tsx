@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { CanvasActionsProvider } from '../../../../src/components/canvas/CanvasActionsContext'
-import { GroupFrame } from '../../../../src/components/groups/GroupFrame'
+import { GroupFrameContainer as GroupFrame } from '../../../../src/components/groups/GroupFrameContainer'
 import { defaultAppearanceProfile } from '../../../../src/contracts/appearanceProfile'
 import type { CardGroup } from '../../../../src/contracts/cardGroup'
 import type { PlacementGuide } from '../../../../src/contracts/placementGuide'
