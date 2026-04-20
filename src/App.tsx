@@ -125,11 +125,11 @@ function App() {
 
     const snapshotHandle = window.setTimeout(() => {
       saveWorkspaceSnapshot(getPersistedWorkspace(useWorkspaceStore.getState()))
-    }, 100)
+    }, 400)
 
     const dbHandle = window.setTimeout(() => {
       void saveWorkspace(getPersistedWorkspace(useWorkspaceStore.getState()))
-    }, 300)
+    }, 400)
 
     return () => {
       window.clearTimeout(snapshotHandle)
