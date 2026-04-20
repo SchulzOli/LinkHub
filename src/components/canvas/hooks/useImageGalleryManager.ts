@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ImageAsset } from '../../../contracts/imageAsset'
 import type { LinkCard } from '../../../contracts/linkCard'
 import type { PictureNode } from '../../../contracts/pictureNode'
+import { invalidateImageObjectUrl } from '../../../features/images/imageObjectUrlCache'
 import {
   formatImageDeleteConfirmation,
   getImageUsageSummaryMapForEntities,
@@ -170,6 +171,7 @@ export function useImageGalleryManager({
             }
 
             await deleteImageAsset(asset.id)
+            invalidateImageObjectUrl(asset.id)
             await refreshImageAssets()
           })().catch((error) => {
             showNotice(

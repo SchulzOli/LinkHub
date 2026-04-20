@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { getImageBlob } from '../../storage/imageRepository'
+import {
+  acquireImageObjectUrl,
+  releaseImageObjectUrl,
+} from './imageObjectUrlCache'
 
 export function useImageAssetUrl(imageId: string | undefined) {
   const [assetState, setAssetState] = useState<{
@@ -12,29 +15,17 @@ export function useImageAssetUrl(imageId: string | undefined) {
   })
 
   useEffect(() => {
-    let active = true
-    let currentObjectUrl: string | null = null
-
-    if (
-      !imageId ||
-      typeof URL === 'undefined' ||
-      typeof URL.createObjectURL !== 'function'
-    ) {
+    if (!imageId) {
       return
     }
 
-    void getImageBlob(imageId)
-      .then((blob) => {
-        if (!active || !blob) {
-          if (active) {
-            setAssetState({ imageId, url: null })
-          }
+    let active = true
 
-          return
+    void acquireImageObjectUrl(imageId)
+      .then((url) => {
+        if (active) {
+          setAssetState({ imageId, url })
         }
-
-        currentObjectUrl = URL.createObjectURL(blob)
-        setAssetState({ imageId, url: currentObjectUrl })
       })
       .catch(() => {
         if (active) {
@@ -44,10 +35,7 @@ export function useImageAssetUrl(imageId: string | undefined) {
 
     return () => {
       active = false
-
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl)
-      }
+      releaseImageObjectUrl(imageId)
     }
   }, [imageId])
 
