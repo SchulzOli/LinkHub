@@ -29,6 +29,7 @@ import {
 import type { StyleTokensByMode } from '../contracts/theme'
 import {
   createDefaultWorkspace,
+  LATEST_WORKSPACE_SCHEMA_VERSION,
   WorkspaceSchema,
   type Workspace,
 } from '../contracts/workspace'
@@ -297,13 +298,23 @@ function migratePictures(rawPictures: unknown): PictureNode[] {
  * Normalizes persisted workspace data from any supported historic shape into
  * the current contract. This is the central migration entry point used when
  * loading stored user data.
+ *
+ * Records, die bereits mit der aktuellen `LATEST_WORKSPACE_SCHEMA_VERSION`
+ * getagged sind, werden ohne Coercer-Lauf zurückgegeben. Alle anderen Pfade
+ * stempeln das Ergebnis mit `schemaVersion: LATEST_WORKSPACE_SCHEMA_VERSION`,
+ * damit der nächste Read die Schnell-Pfad-Prüfung nimmt.
  */
 export function ensureLatestWorkspace(raw: unknown): Workspace {
   const parsed = WorkspaceSchema.safeParse(raw)
 
   if (parsed.success) {
+    if (parsed.data.schemaVersion === LATEST_WORKSPACE_SCHEMA_VERSION) {
+      return parsed.data
+    }
+
     return {
       ...parsed.data,
+      schemaVersion: LATEST_WORKSPACE_SCHEMA_VERSION,
       pictures: migratePictures(parsed.data.pictures),
     }
   }
@@ -319,6 +330,7 @@ export function ensureLatestWorkspace(raw: unknown): Workspace {
 
     return createDefaultWorkspace({
       ...workspace,
+      schemaVersion: LATEST_WORKSPACE_SCHEMA_VERSION,
       appearance: migrateAppearance(workspace.appearance),
       analytics: coerceWorkspaceAnalytics(workspace.analytics),
       groups: migrateGroups(workspace.groups),
