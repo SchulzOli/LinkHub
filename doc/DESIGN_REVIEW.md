@@ -1,11 +1,3 @@
-### P2 – Komponenten-Feinschliff
-
-10. **LinkCard-Hierarchie**.
-    - Card-Edit-Modus zeigt viele Controls (`ColorPresetPicker`, `SelectMenu`, Größen-Inputs, Format-Painter). Gefahr: visuelles Rauschen. Empfehlung: Sekundär-Controls (Corner-Radius, Transparency) in einen ausklappbaren „Mehr"-Abschnitt verschieben oder Tabs (Inhalt / Style / Layout).
-    - Resize-Handles haben `opacity: 0.28` im Hover – schwer sichtbar auf dunklen Cards. Kontrast erhöhen (`0.55`) oder Rahmen-Outline auf der Card statt nur Handles.
-
-### P2 – Architektur & Wartbarkeit
-
 14. **Inline-SVG-Icons** sind überall dupliziert (Taskbar, Rail-Pin, Chevron). Extrahieren nach `src/components/ui/icons/` mit einheitlicher API (`<Icon name="chevron-down" size={16} />`). Reduziert LOC und sichert konsistente `stroke-width`/`viewBox`.
 15. **CSS-Module-Konventionen**. Beobachtet: `modeButton`, `modeSvg`, `modeSvgLarge`, `modeIcon` – zu viele Varianten ohne klare Semantik. Vorschlag: BEM-ähnliche Benennung (`iconButton`, `iconButton--lg`, `iconButton--primary`) oder `data-size="sm|md|lg"` Attribute.
 16. **Inline-Styles via `style`-Prop in `LinkCard`**. `editPanelStyle`, `urlTooltipStyle`, `--card-translate-x` etc. sind technisch nötig (Portal-Positionierung), aber mind. dokumentieren, welche Custom-Properties offizielles Interface sind. `CardStyleContract.md` oder JSDoc an `LinkCard`.

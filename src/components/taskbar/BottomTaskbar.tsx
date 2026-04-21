@@ -59,7 +59,43 @@ export function BottomTaskbar({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const workspaceRailRef = useRef<HTMLDivElement | null>(null)
   const workspaceRailToggleRef = useRef<HTMLButtonElement | null>(null)
+  const workspaceTabsRef = useRef<HTMLDivElement | null>(null)
   const workspaceRailId = useId()
+
+  // Drive the left/right fade gradients on the workspace tab strip based on
+  // actual scroll position so the overflow is discoverable even when the
+  // native scrollbar is hidden or subtle. Uses ResizeObserver to react to
+  // tab additions, rail open/close, and viewport resizes.
+  useEffect(() => {
+    const el = workspaceTabsRef.current
+
+    if (!el) {
+      return
+    }
+
+    const update = () => {
+      const overflow = el.scrollWidth > el.clientWidth + 1
+      const atStart = el.scrollLeft <= 1
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1
+
+      el.dataset.overflowStart = overflow && !atStart ? 'true' : 'false'
+      el.dataset.overflowEnd = overflow && !atEnd ? 'true' : 'false'
+    }
+
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+
+    const resizeObserver = new ResizeObserver(update)
+    resizeObserver.observe(el)
+    for (const child of Array.from(el.children)) {
+      resizeObserver.observe(child)
+    }
+
+    return () => {
+      el.removeEventListener('scroll', update)
+      resizeObserver.disconnect()
+    }
+  }, [workspaceSummaries.length, workspaceRailOpen])
 
   useEffect(() => {
     if (!workspaceRailOpen || workspaceRailPinned) {
@@ -126,6 +162,7 @@ export function BottomTaskbar({
         <div
           aria-label="Workspaces"
           className={styles.workspaceTabs}
+          ref={workspaceTabsRef}
           role="tablist"
         >
           {workspaceSummaries.map((workspaceSummary) => (

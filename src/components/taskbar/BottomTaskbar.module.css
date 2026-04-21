@@ -50,6 +50,9 @@
 
 .workspaceTabs {
   composes: scrollArea from global;
+  --tabs-fade-size: 1.1rem;
+  --tabs-fade-start: 0px;
+  --tabs-fade-end: 0px;
   display: flex;
   gap: 0.38rem;
   align-items: center;
@@ -62,6 +65,31 @@
   scroll-behavior: smooth;
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--tabs-fade-start),
+    #000 calc(100% - var(--tabs-fade-end)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--tabs-fade-start),
+    #000 calc(100% - var(--tabs-fade-end)),
+    transparent 100%
+  );
+  transition:
+    mask-image 160ms ease,
+    -webkit-mask-image 160ms ease;
+}
+
+.workspaceTabs[data-overflow-start='true'] {
+  --tabs-fade-start: var(--tabs-fade-size);
+}
+
+.workspaceTabs[data-overflow-end='true'] {
+  --tabs-fade-end: var(--tabs-fade-size);
 }
 
 .workspaceTab,
@@ -366,5 +394,28 @@
   .taskbar :global(.quickAddForm button) {
     width: 100%;
     min-width: 0;
+  }
+}
+
+/*
+ * Narrow viewports (< 520px): the rail toggle's negative top offset makes it
+ * protrude past the taskbar chrome and collide with the viewport edge or the
+ * OS home-indicator gesture area. Anchor the toggle flush with the taskbar's
+ * top edge so it stays fully inside the bar while keeping its role as the
+ * rail-seam handle. Width shrinks further to preserve a WCAG-minimum hit
+ * target without dominating the row.
+ */
+@media (max-width: 519px) {
+  .workspaceRailToggle {
+    top: 0;
+    width: 2.6rem;
+    height: 0.9rem;
+    border-radius: 0 0 999px 999px;
+  }
+
+  .workspaceRail {
+    /* Tighten overlap so the now-flush toggle does not reveal a gap line. */
+    margin-bottom: -0.55rem;
+    padding-bottom: 0.95rem;
   }
 }
