@@ -29,35 +29,12 @@ export type WorkspaceSession = {
   workspaceSummaries: WorkspaceSummary[]
 }
 
-// IndexedDB-Health: solange `null`, ist der Zustand unbekannt und
-// localStorage wird als defensiver Fallback weiter beschrieben.
-// Nach einem erfolgreichen IDB-Write → `true` → localStorage-Writes
-// im Hot-Path entfallen. Nach einem IDB-Fehler → `false` → localStorage
-// bleibt als last-known-good erhalten.
-let indexedDbHealthy: boolean | null = null
-
-function markIndexedDbHealthy() {
-  indexedDbHealthy = true
-}
-
-function markIndexedDbUnhealthy() {
-  indexedDbHealthy = false
-}
-
-// Einmaliger IDB-Probe beim Modul-Load, damit `saveWorkspaceSnapshot`
-// möglichst schnell in den IDB-only-Modus schaltet.
-void (async () => {
-  try {
-    await openLinkHubDb()
-    if (indexedDbHealthy === null) {
-      markIndexedDbHealthy()
-    }
-  } catch {
-    if (indexedDbHealthy === null) {
-      markIndexedDbUnhealthy()
-    }
-  }
-})()
+// Persistenz-Strategie: IDB ist Primärquelle beim Laden, aber
+// `saveWorkspace` läuft asynchron und ist beim `pagehide`/Reload
+// nicht garantiert flushbar. Deshalb schreibt `saveWorkspaceSnapshot`
+// immer synchron nach localStorage als last-known-good. Bei einem
+// IDB-Fehler springt der Fallback automatisch ein – ohne separates
+// Health-Flag, weil jeder Write-Pfad seinen eigenen try/catch hat.
 
 function getFallbackWorkspaceKey(workspaceId: string) {
   return `${FALLBACK_WORKSPACE_KEY_PREFIX}${workspaceId}`
@@ -284,11 +261,9 @@ function writeActiveWorkspaceFallback(workspace: Workspace) {
 }
 
 export function saveWorkspaceSnapshot(workspace: Workspace) {
-  // IDB ist Primärpfad, aber `saveWorkspace` läuft asynchron und ist
-  // auf `pagehide`/Reload nicht mehr garantiert flushbar. Deshalb
-  // schreibt der Snapshot immer synchron nach localStorage als
-  // last-known-good, damit ein Reload jede Mutation wieder sieht,
-  // selbst wenn die IDB-Transaktion beim Unload abbricht.
+  // Immer synchron nach localStorage schreiben. Das asynchrone
+  // `saveWorkspace` kann auf `pagehide`/Reload abbrechen; dieser
+  // Snapshot bleibt als last-known-good für den nächsten App-Start.
   writeActiveWorkspaceFallback(workspace)
   writeWorkspaceFallbackRecord(workspace)
 }
@@ -301,9 +276,7 @@ export async function saveWorkspace(workspace: Workspace) {
   try {
     const db = await openLinkHubDb()
     await db.put(STORAGE_STORES.workspace, workspace, workspace.id)
-    markIndexedDbHealthy()
   } catch {
-    markIndexedDbUnhealthy()
     // Last-known-good in localStorage sichern, damit der nächste
     // App-Start auch ohne IDB einen Workspace wiederherstellen kann.
     writeWorkspaceFallbackRecord(workspace)
@@ -319,9 +292,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
       directory,
       WORKSPACE_DIRECTORY_KEY,
     )
-    markIndexedDbHealthy()
   } catch {
-    markIndexedDbUnhealthy()
     window.localStorage.setItem(
       FALLBACK_DIRECTORY_KEY,
       JSON.stringify(directory),
@@ -336,12 +307,10 @@ export async function deleteWorkspaceRecord(workspaceId: string) {
 
     await transaction.objectStore(STORAGE_STORES.workspace).delete(workspaceId)
     await transaction.done
-    markIndexedDbHealthy()
     // Altbestand im localStorage-Fallback aufräumen, falls ein
-    // früherer Unhealthy-Lauf dort noch einen Eintrag hinterlassen hat.
+    // früherer Fehlerlauf dort noch einen Eintrag hinterlassen hat.
     window.localStorage.removeItem(getFallbackWorkspaceKey(workspaceId))
   } catch {
-    markIndexedDbUnhealthy()
     window.localStorage.removeItem(getFallbackWorkspaceKey(workspaceId))
   }
 }
