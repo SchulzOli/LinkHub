@@ -103,6 +103,7 @@ test('uses a gallery override image on a max-radius card and keeps the title ins
   page,
 }) => {
   await dropTestImage(page, 'override-circle.png')
+  await expect(page.getByTestId(/picture-node-/).first()).toBeVisible()
 
   await page.getByRole('button', { name: 'Add link' }).click()
   await page
