@@ -119,8 +119,9 @@
 .workspaceRailAction {
   display: inline-grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  /* WCAG 2.2 target size: minimum 24px AA, 44px AAA. */
+  width: 2.4rem;
+  height: 2.4rem;
   padding: 0;
   border-radius: var(--radius-md);
   flex: 0 0 auto;
@@ -164,12 +165,15 @@
 .workspaceRailToggle {
   position: absolute;
   left: 50%;
-  top: -0.66rem;
+  /* Recentered for the new 2.4rem touch target so the toggle still overlaps
+     the taskbar edge symmetrically (≈(2.4/2) - 0.03rem). */
+  top: -1.2rem;
   transform: translateX(-50%);
   display: inline-grid;
   place-items: center;
-  width: 2.1rem;
-  height: 1.26rem;
+  /* WCAG 2.2 minimum target size; inner SVG remains 0.92rem. */
+  width: 2.4rem;
+  height: 2.4rem;
   padding: 0;
   border-radius: 999px;
   box-shadow: var(--panel-shadow);

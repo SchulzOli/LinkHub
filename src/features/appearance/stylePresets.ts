@@ -60,7 +60,7 @@ const darkExcalidrawTokens: AppearanceStyleTokens = {
   inputBorder: '#3a3947',
   gridColor: 'rgba(227, 227, 232, 0.07)',
   textPrimary: '#e3e3e8',
-  textMuted: '#adadbf',
+  textMuted: '#c4c3d4',
   accent: '#a8a5ff',
   accentStrong: '#cac8ff',
   buttonHoverBg: '#2e2d39',

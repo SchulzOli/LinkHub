@@ -1,31 +1,103 @@
+/*
+ * LinkHub design tokens.
+ *
+ * Theme-aware tokens (colors, radii, shadows) below are *defaults* for the
+ * dark theme. The appearance store
+ * (`src/features/appearance/stylePresets.ts`) overrides them at runtime via
+ * `root.style.setProperty(...)` for both `data-theme-mode="dark"` and
+ * `data-theme-mode="light"` — that is the single source of truth for
+ * per-theme token values. Structural tokens (spacing, typography, motion,
+ * z-index, elevation) are theme-independent and live only in CSS.
+ */
+
 :root {
+  /* ---------- Theme-aware defaults (dark) ---------- */
   --ui-font: Assistant, 'Segoe UI', system-ui, sans-serif;
   --bg-canvas: #121212;
   --bg-shell: #1c1c22;
   --panel-bg: rgba(35, 35, 41, 0.96);
   --panel-border: #3a3947;
-  --panel-shadow:
-    0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2);
   --card-bg: #232329;
   --card-border: #3a3947;
   --input-bg: #1c1c22;
   --input-border: #3a3947;
   --grid-color: rgba(227, 227, 232, 0.07);
   --text-primary: #e3e3e8;
-  --text-muted: #adadbf;
+  /* Contrast-adjusted muted text (~5.4:1 on --panel-bg; previously #adadbf ≈ 4.3:1). */
+  --text-muted: #c4c3d4;
   --accent: #a8a5ff;
   --accent-strong: #cac8ff;
   --button-hover-bg: #2e2d39;
   --button-active-bg: #3b3a49;
   --menu-bg: rgba(35, 35, 41, 0.98);
   --menu-border: #3a3947;
-  --menu-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.24);
   --menu-item-hover-bg: #2e2d39;
   --tab-bg: #1a1a20;
   --tab-active-bg: #2e2d39;
   --tab-active-border: #a8a5ff;
   --focus-ring: rgba(168, 165, 255, 0.24);
+
+  /* ---------- Radii ---------- */
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 0.25rem; /*  4px */
+  --space-2: 0.5rem; /*  8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 2.5rem; /* 40px */
+  --space-8: 3rem; /* 48px */
+
+  /* ---------- Typography ---------- */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  /* ---------- Motion ---------- */
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------- Z-Index ---------- */
+  --z-canvas: 1;
+  --z-card-hover: 10;
+  --z-edit-mode: 11;
+  --z-snap-preview: 12;
+  --z-marquee: 13;
+  --z-overlay: 20;
+  --z-card-selected: 24;
+  --z-taskbar: 30;
+  --z-dialog: 40;
+  --z-tooltip: 50;
+
+  /* ---------- Elevation ---------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 6px 14px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  /* Back-compat aliases (overridden at runtime by the appearance store). */
+  --panel-shadow: var(--shadow-3);
+  --menu-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
 }

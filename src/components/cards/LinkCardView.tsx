@@ -154,6 +154,19 @@ export const LinkCardView = memo(function LinkCardView({
           ? `${styles.card} ${styles.cardEdit} ${isSelected ? styles.cardSelected : ''}`
           : `${styles.card} ${styles.cardView}`
       }
+      // Discoverability hints for assistive tech: in edit mode the card can be
+      // dragged with the mouse, and when selected the global canvas key handler
+      // (see `useCanvasClipboard`) nudges it with the arrow keys.
+      aria-roledescription={
+        isEditMode
+          ? 'Draggable link card. Use mouse to drag, or arrow keys to nudge when selected.'
+          : undefined
+      }
+      aria-keyshortcuts={
+        isEditMode && isSelected
+          ? 'ArrowUp ArrowDown ArrowLeft ArrowRight'
+          : undefined
+      }
       data-circular-shape={String(viewModel.isCircularShape)}
       data-card-image-layout={viewModel.cardImageLayout}
       data-entity-id={card.id}

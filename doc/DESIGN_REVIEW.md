@@ -1,69 +1,3 @@
-# LinkHub – Design & Frontend Review
-
-Stand: April 2026
-Scope: `src/styles/`, `src/components/` (Taskbar, Canvas, Cards, Groups, UI, Onboarding)
-Ziel: Visuelle Konsistenz, UX-Feinschliff, Accessibility und Wartbarkeit des React-Frontends.
-
----
-
-## 1. Gesamteindruck
-
-LinkHub hat eine klare, dunkle „Canvas-App"-Ästhetik mit einem Akzent-Violett (`--accent: #a8a5ff`), Glas-Panels (`backdrop-filter: blur`) und konsistenten Radii. Die Struktur ist sauber in CSS-Module aufgeteilt, Tokens sind zentral in `tokens.css`. Das Fundament ist solide – die folgenden Verbesserungen fokussieren Konsistenz, Hierarchie, Accessibility und Skalierbarkeit des Design-Systems.
-
-**Stärken**
-- Zentrale Design-Tokens, `color-mix()` für abgeleitete Farben.
-- Saubere Trennung von Logik und Styles (CSS-Module pro Komponente).
-- Durchdachte Edit-/View-Modi inkl. visueller Kennzeichnung (`[data-mode='edit']`).
-- Respektvolle Micro-Interactions (Hover-Lift, Marquee-Animation, Snap-Preview).
-
-**Hauptschwächen**
-- Token-Set ist zu schmal: keine Spacing-, Typografie-, Z-Index-, Motion-Token.
-- Light-Mode ist deklariert (`color-scheme`), aber Tokens decken nur Dark ab.
-- Accessibility-Lücken (Kontrast `--text-muted`, `prefers-reduced-motion`, Focus-Styles inkonsistent).
-- Harte Werte (`clamp`, `rem`, `px`, `%`) gemischt ohne Spacing-Skala.
-- Keine sichtbare Empty-/Loading-/Error-State-Strategie über `EmptyCanvasGuide` hinaus.
-
----
-
-## 2. Priorisierte Verbesserungen
-
-Legende: **P1** = sollte vor dem nächsten Release, **P2** = mittelfristig, **P3** = Nice-to-have.
-
-### P1 – Design-System härten
-
-1. **Token-Skala erweitern** in `src/styles/tokens.css`:
-   - Spacing: `--space-1` … `--space-8` (4px-Basis).
-   - Typografie: `--font-size-xs/sm/md/lg/xl`, `--font-weight-regular/medium/semibold`, `--line-height-tight/normal`.
-   - Motion: `--motion-fast: 120ms`, `--motion-base: 160ms`, `--motion-slow: 240ms`, `--ease-standard: cubic-bezier(.2,.0,.0,1)`.
-   - Z-Index: `--z-canvas`, `--z-card-selected`, `--z-overlay`, `--z-taskbar`, `--z-dialog`, `--z-tooltip` (aktuell magic numbers 1/10/11/12/13/20/24).
-   - Elevation: `--shadow-1/2/3` statt mehrfach duplizierter `0 20px 44px …`.
-2. **Light-Theme vervollständigen**. `color-scheme: light` ist gesetzt, aber Tokens werden nicht überschrieben. Entweder:
-   - `:root[data-theme-mode='light'] { … }` mit vollständigem Token-Overlay, **oder**
-   - Dokumentieren, dass Themes ausschließlich über den Theme-Store gesteuert werden und `color-scheme: light` entfernen, um Inkonsistenzen (System-Scrollbars, native Controls) zu vermeiden.
-3. **Focus-States vereinheitlichen**. Aktuell:
-   - Buttons/Inputs bekommen `box-shadow: 0 0 0 3px var(--focus-ring)` in `globals.css`.
-   - Viele Komponenten (Workspace-Tabs, Resize-Handles, Rail-Toggle) überschreiben das implizit.
-   - Einheitlicher Mixin/Klasse `:focus-visible` mit 2px Outline + `outline-offset` statt Border-Color-Shift (Border-Shift verschiebt Layout-Anmut nicht, aber verdeckt Selected-State bei Cards).
-4. **Kontrast prüfen**. `--text-muted: #adadbf` auf `--panel-bg` ≈ 4.3:1 – grenzwertig für kleinere Texte. Empfehlung: `#c4c3d4` oder heller für `font-size < 14px`.
-
-### P1 – Accessibility
-
-5. **`prefers-reduced-motion`** respektieren. Animationen in `globals.css` (`selectionMarqueeEnter`, Hover-Lift via `--card-hover-offset`, Rail Transform) sollten unter:
-   ```css
-   @media (prefers-reduced-motion: reduce) {
-     *,
-     *::before,
-     *::after {
-       animation-duration: 0.01ms !important;
-       transition-duration: 0.01ms !important;
-     }
-   }
-   ```
-   kontrolliert werden. Alternativ pro Komponente gezielt.
-6. **Keyboard-Workflow für Cards**. `LinkCard` nutzt `cursor: grab`, aber Tastatur-Interaktion zum Verschieben ist nicht sichtbar. Pfeil-Tasten + `aria-grabbed`/`aria-describedby`-Hinweis wären wertvoll (oder explizit dokumentieren, dass Drag maus-only ist).
-7. **`aria-live`-Region für Canvas-Operationen** (Paste, Undo, Snap blockiert). Aktuell keine sichtbare/hörbare Quittung für Screenreader.
-8. **Touch-Targets**: `width: 2rem; height: 2rem` (Workspace-Rail-Actions, Rail-Toggle `1.26rem` hoch!) sind unter dem WCAG-Minimum von 24 px (AA) bzw. 44 px (AAA für Touch). Rail-Toggle `2.1 × 1.26 rem` auf ≥ `2.4 × 2.4 rem` vergrößern, optisch weiter reduziert durch inneres Icon.
-
 ### P2 – Komponenten-Feinschliff
 
 9. **Taskbar-Dichte**.
@@ -100,18 +34,18 @@ Legende: **P1** = sollte vor dem nächsten Release, **P2** = mittelfristig, **P3
 
 ## 3. Konkreter Umsetzungsvorschlag (Reihenfolge)
 
-| # | Schritt | Effort | Impact |
-|---|---------|--------|--------|
-| 1 | Token-Erweiterung (Spacing, Motion, Z-Index, Elevation) | S | Hoch |
-| 2 | Focus-Visible-Utility + globale `prefers-reduced-motion` | S | Hoch |
-| 3 | Icon-Komponente + Migration aller Inline-SVGs | M | Mittel |
-| 4 | Text-Muted-Kontrast + Touch-Target-Fixes | S | Hoch (A11y) |
-| 5 | Light-Theme-Tokens vervollständigen oder `color-scheme` entfernen | S | Mittel |
-| 6 | Empty-Canvas-Guide CTA + Illustration | M | Hoch (Onboarding) |
-| 7 | LinkCard-Edit-Panel in Tabs/Sections gliedern | M | Mittel |
-| 8 | Edit-Mode-Overlay reduzieren | S | Mittel |
-| 9 | Mobile-Layout Rail-Toggle + Taskbar | M | Mittel |
-| 10 | Radius-Skala erweitern, Ad-hoc-`calc`s ersetzen | S | Niedrig |
+| #   | Schritt                                                           | Effort | Impact            |
+| --- | ----------------------------------------------------------------- | ------ | ----------------- |
+| 1   | Token-Erweiterung (Spacing, Motion, Z-Index, Elevation)           | S      | Hoch              |
+| 2   | Focus-Visible-Utility + globale `prefers-reduced-motion`          | S      | Hoch              |
+| 3   | Icon-Komponente + Migration aller Inline-SVGs                     | M      | Mittel            |
+| 4   | Text-Muted-Kontrast + Touch-Target-Fixes                          | S      | Hoch (A11y)       |
+| 5   | Light-Theme-Tokens vervollständigen oder `color-scheme` entfernen | S      | Mittel            |
+| 6   | Empty-Canvas-Guide CTA + Illustration                             | M      | Hoch (Onboarding) |
+| 7   | LinkCard-Edit-Panel in Tabs/Sections gliedern                     | M      | Mittel            |
+| 8   | Edit-Mode-Overlay reduzieren                                      | S      | Mittel            |
+| 9   | Mobile-Layout Rail-Toggle + Taskbar                               | M      | Mittel            |
+| 10  | Radius-Skala erweitern, Ad-hoc-`calc`s ersetzen                   | S      | Niedrig           |
 
 Aufwand: **S** ≤ 0.5 Tag, **M** 0.5–2 Tage.
 

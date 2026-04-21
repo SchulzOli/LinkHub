@@ -10,6 +10,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*
+ * Themes (light/dark + per-style tokens) are driven exclusively by the
+ * appearance store via `applyAppearanceStyle` in
+ * `src/features/appearance/stylePresets.ts`, which sets CSS variables on the
+ * document root for both modes. The `color-scheme` hints below only align
+ * native controls (scrollbars, form affordances) with the active token set.
+ */
 :root[data-theme-mode='dark'] {
   color-scheme: dark;
 }
@@ -160,10 +167,11 @@ input[type='range'] {
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+select:focus-visible,
+.focusRing:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 .workspaceShell {
@@ -396,5 +404,22 @@ select:focus-visible {
     width: auto;
     flex-direction: row;
     align-items: center;
+  }
+}
+
+/*
+ * Global reduced-motion safety net. Individual components can still opt into
+ * motion explicitly, but by default all animations, transitions, and smooth
+ * scrolling collapse when the OS requests reduced motion.
+ * Tokens (`--motion-*`) are additionally zeroed in tokens.css.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

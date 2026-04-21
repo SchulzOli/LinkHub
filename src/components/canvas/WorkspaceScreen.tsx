@@ -7,6 +7,7 @@ import { saveImageAsset } from '../../storage/imageRepository'
 import { EmptyCanvasGuide } from '../onboarding/EmptyCanvasGuide'
 import { BottomTaskbar } from '../taskbar/BottomTaskbar'
 import { WorkspaceHelpDock } from '../taskbar/WorkspaceHelpDock'
+import { AriaLiveRegion } from '../ui/AriaLiveRegion'
 import { PromptDialog } from '../ui/PromptDialog'
 import {
   CanvasActionsProvider,
@@ -455,6 +456,7 @@ export function WorkspaceScreen() {
 
   return (
     <div className="workspaceShell" data-mode={interactionMode}>
+      <AriaLiveRegion />
       <CanvasPasteLayer
         getFallbackText={getFallbackText}
         onText={handlePastedText}

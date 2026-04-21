@@ -17,6 +17,7 @@ import {
   serializeSelectionClipboard,
   type SelectionClipboardPayload,
 } from '../../../features/links/cardClipboard'
+import { announce } from '../../../state/useAnnouncerStore'
 import { useWorkspaceStore } from '../../../state/useWorkspaceStore'
 import type {
   CardBatchUpdate,
@@ -189,6 +190,7 @@ export function useCanvasClipboard({
       }
 
       if (!nextSelection) {
+        announce('Could not paste: no free space on the canvas.')
         return false
       }
 
@@ -198,6 +200,17 @@ export function useCanvasClipboard({
         selectedCardIds: nextSelection.cards.map((card) => card.id),
         selectedGroupIds: nextSelection.groups.map((group) => group.id),
       })
+      announce(
+        `Pasted ${nextSelection.cards.length} card${
+          nextSelection.cards.length === 1 ? '' : 's'
+        }${
+          nextSelection.groups.length > 0
+            ? ` and ${nextSelection.groups.length} group${
+                nextSelection.groups.length === 1 ? '' : 's'
+              }`
+            : ''
+        }.`,
+      )
       return true
     },
     [
@@ -343,6 +356,7 @@ export function useCanvasClipboard({
       ) {
         event.preventDefault()
         undoWorkspace()
+        announce('Undo applied.')
         return
       }
 
