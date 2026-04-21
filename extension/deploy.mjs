@@ -19,9 +19,16 @@
  */
 
 import { GoogleAuth } from 'google-auth-library'
+import JSZip from 'jszip'
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -383,22 +390,42 @@ if (!existsSync(resolve(distDir, 'manifest.json'))) {
 const extensionZip = resolve(root, 'dist-extension.zip')
 console.log('\nCreating extension ZIP…')
 try {
-  // Use PowerShell on Windows, zip on Unix
-  if (process.platform === 'win32') {
-    execSync(
-      `powershell -Command "Compress-Archive -Path '${distDir}\\*' -DestinationPath '${extensionZip}' -Force"`,
-      { cwd: root, stdio: 'inherit' },
-    )
-  } else {
-    execSync(`cd dist-extension && zip -r ../dist-extension.zip .`, {
-      cwd: root,
-      stdio: 'inherit',
-    })
-  }
+  await zipDirectory(distDir, extensionZip)
   console.log('✓ dist-extension.zip')
 } catch (err) {
   console.error('Failed to create extension ZIP:', err.message)
   process.exit(1)
+}
+
+/**
+ * Create a ZIP archive of `sourceDir` at `outputPath` using JSZip.
+ * Uses only sanitized path values (no shell invocation) to avoid
+ * command injection from paths that contain spaces or quotes.
+ */
+async function zipDirectory(sourceDir, outputPath) {
+  const zip = new JSZip()
+
+  function addEntries(currentDir) {
+    for (const entry of readdirSync(currentDir)) {
+      const absolutePath = resolve(currentDir, entry)
+      const relativePath = relative(sourceDir, absolutePath).replace(/\\/g, '/')
+      const stats = statSync(absolutePath)
+      if (stats.isDirectory()) {
+        addEntries(absolutePath)
+      } else if (stats.isFile()) {
+        zip.file(relativePath, readFileSync(absolutePath))
+      }
+    }
+  }
+
+  addEntries(sourceDir)
+
+  const buffer = await zip.generateAsync({
+    type: 'nodebuffer',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 9 },
+  })
+  writeFileSync(outputPath, buffer)
 }
 
 // ── 3. Generate .env files from environment variables (CI) ────────
