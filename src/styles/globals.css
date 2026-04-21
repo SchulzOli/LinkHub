@@ -90,6 +90,8 @@ input[type='number']::-webkit-inner-spin-button {
   min-height: calc(100% - 2px);
   border-left: 1px solid
     color-mix(in srgb, var(--input-border) 82%, var(--accent) 18%);
+  /* 1 px inset of --radius-md so the spinner's inner corner hugs the
+     parent's 1 px border without visual gaps. Accepted derivation. */
   border-radius: 0 calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0;
   background: linear-gradient(
     180deg,
@@ -291,7 +293,7 @@ select:focus-visible,
 .selectionMarquee {
   position: absolute;
   border: 1px solid color-mix(in srgb, var(--accent) 82%, white 18%);
-  border-radius: calc(var(--radius-sm) * 0.9);
+  border-radius: var(--radius-sm);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--accent) 18%, transparent),

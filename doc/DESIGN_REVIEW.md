@@ -10,8 +10,7 @@
 20. **Selection-Marquee**-Animation (120 ms, scale 0.985 → 1) ist angenehm dezent. Für schnelles Mehrfach-Drag reicht aktuell die Animation – ok.
 21. **`backdrop-filter: blur(18px)`** hat messbare Kosten, insbesondere bei vielen Cards + Rail gleichzeitig sichtbar. Messung per DevTools empfehlenswert; ggf. auf `blur(12px)` reduzieren.
 22. **Checkbox-Styling** ist aufwändig (Custom-Clip-Path-Haken) – schön, aber viel Spezial-CSS. Prüfen, ob zentraler `<Checkbox>`-Component dies kapselt.
-23. **Konsistenz der Radius-Skala**. `tokens.css` definiert `--radius-sm/md/lg`. In Modulen tauchen Ableitungen auf: `calc(var(--radius-lg) + 0.1rem)`, `calc(var(--radius-lg) + 0.7rem)`. Besser `--radius-xl`/`--radius-2xl` ergänzen statt Ad-hoc-Berechnungen.
-24. **Privacy-/Store-Assets** (`public/privacy/`, `extension/store-assets/`) sollten visuelle Sprache der App spiegeln – separat reviewen.
+23. **Privacy-/Store-Assets** (`public/privacy/`, `extension/store-assets/`) sollten visuelle Sprache der App spiegeln – separat reviewen.
 
 ---
 

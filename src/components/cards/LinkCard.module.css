@@ -120,14 +120,23 @@
 
 .cardEdit:hover .resizeHandle,
 .cardEdit:focus-within .resizeHandle {
-  opacity: 0.28;
+  opacity: 0.55;
   pointer-events: auto;
 }
 
 .resizeHandle:hover,
 .resizeHandle:focus-visible,
 .cardSelected .resizeHandle {
-  opacity: 0.42;
+  opacity: 0.85;
+}
+
+/* Subtle card-level outline during edit hover/focus so the resize affordance
+   is discoverable on dark cards even before users find an individual handle.
+   Intentionally lightweight; `.cardSelected` retains the stronger outline. */
+.cardEdit:hover,
+.cardEdit:focus-within {
+  outline: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
+  outline-offset: 2px;
 }
 
 .resizeHandleN,
@@ -731,6 +740,63 @@
   margin: 0;
   font-size: 0.78rem;
   color: color-mix(in srgb, #ff8d8d 78%, var(--text-primary));
+}
+
+/* Collapsible "More options" section: groups secondary style controls
+   (corner radius, transparency, shadow, visibility toggles) under a single
+   native <details>/<summary> to reduce visual noise in the default view. */
+.editMoreSection {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--panel-bg) 96%, transparent);
+}
+
+.editMoreSummary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+  padding-block: 0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.editMoreSummary::-webkit-details-marker {
+  display: none;
+}
+
+.editMoreSummary::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+
+.editMoreSection[open] > .editMoreSummary::before {
+  transform: rotate(45deg);
+}
+
+.editMoreSummary:hover,
+.editMoreSummary:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.editMoreBody {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.2rem;
 }
 
 @media (max-width: 768px) {

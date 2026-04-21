@@ -37,12 +37,20 @@
   --tab-active-border: #a8a5ff;
   --focus-ring: rgba(168, 165, 255, 0.24);
 
-  /* ---------- Radii ---------- */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.125rem;
-  --radius-2xl: 1.5rem;
+  /* ---------- Radii ----------
+   *
+   * Scale is used directly; do NOT synthesize intermediate values via
+   * `calc(var(--radius-lg) + 0.1rem)` etc. in module CSS. If a component
+   * needs a radius not represented here, extend the scale here first.
+   * The only accepted derivation is `calc(var(--radius-*) - 1px)` to
+   * inset a child inside a 1 px bordered parent (see number-spinner in
+   * globals.css).
+   */
+  --radius-sm: 0.5rem; /*  8px */
+  --radius-md: 0.625rem; /* 10px */
+  --radius-lg: 0.875rem; /* 14px */
+  --radius-xl: 1rem; /* 16px — seam between lg-radius panels and their outer frame */
+  --radius-2xl: 1.5rem; /* 24px — top-level shell / edit-mode frame */
 
   /* ---------- Spacing (4px base) ---------- */
   --space-1: 0.25rem; /*  4px */

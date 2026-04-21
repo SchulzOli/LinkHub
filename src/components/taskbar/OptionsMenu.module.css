@@ -34,7 +34,7 @@
   width: min(30rem, calc(100vw - 1rem));
   max-height: min(36rem, calc(100dvh - 1rem));
   border: 1px solid var(--menu-border);
-  border-radius: calc(var(--radius-lg) + 0.2rem);
+  border-radius: var(--radius-xl);
   background: var(--menu-bg);
   box-shadow: var(--menu-shadow);
   backdrop-filter: blur(18px);
@@ -190,7 +190,7 @@
   flex-wrap: nowrap;
   gap: 0.3rem;
   padding: 0.28rem;
-  border-radius: calc(var(--radius-lg) + 0.12rem);
+  border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--menu-border) 84%, transparent);
   background: linear-gradient(
     180deg,
@@ -207,7 +207,7 @@
   flex: 1 1 auto;
   min-width: 0;
   padding: 0.7rem 0.6rem;
-  border-radius: calc(var(--radius-md) + 0.08rem);
+  border-radius: var(--radius-md);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -683,7 +683,7 @@
   gap: 0.2rem;
   padding: 0.4rem 0.3rem;
   border: 1px solid var(--panel-border);
-  border-radius: calc(var(--radius-md) - 0.05rem);
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--input-bg) 78%, var(--panel-bg));
 }
 
@@ -775,7 +775,7 @@
   display: grid;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
-  border-radius: calc(var(--radius-lg) - 0.1rem);
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--input-bg) 70%, var(--panel-bg));
   overflow: hidden;
 }

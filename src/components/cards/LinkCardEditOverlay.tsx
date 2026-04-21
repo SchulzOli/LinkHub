@@ -229,75 +229,6 @@ export function LinkCardEditOverlay({
           />
         </label>
       </div>
-      <label className={styles.editField}>
-        <span className={styles.editLabel}>Corner radius</span>
-        <div className={styles.editSliderRow}>
-          <input
-            aria-label={`Edit corner radius for ${card.id}`}
-            className={styles.editSlider}
-            max={CARD_CORNER_RADIUS_LIMITS.max}
-            min={CARD_CORNER_RADIUS_LIMITS.min}
-            type="range"
-            value={cornerRadiusDraft}
-            onChange={(event) => {
-              onCornerRadiusChange(Number(event.currentTarget.value))
-            }}
-          />
-          <span className={styles.editSliderValue}>{cornerRadiusDraft}%</span>
-        </div>
-      </label>
-      <div className={styles.editToggleGrid}>
-        <label className={styles.editToggleField}>
-          <input
-            aria-label={`Show title on ${card.id}`}
-            checked={showTitleDraft}
-            type="checkbox"
-            onChange={(event) => {
-              onShowTitleChange(event.currentTarget.checked)
-            }}
-          />
-          <span>Show title</span>
-        </label>
-        <label className={styles.editToggleField}>
-          <input
-            aria-label={`Show image on ${card.id}`}
-            checked={showImageDraft}
-            type="checkbox"
-            onChange={(event) => {
-              onShowImageChange(event.currentTarget.checked)
-            }}
-          />
-          <span>Show image</span>
-        </label>
-      </div>
-      <div className={styles.editEffectGrid}>
-        <label className={styles.editField}>
-          <span className={styles.editLabel}>Transparency</span>
-          <div className={styles.editSliderRow}>
-            <input
-              aria-label={`Edit transparency for ${card.id}`}
-              className={styles.editSlider}
-              max={SURFACE_TRANSPARENCY_LIMITS.max}
-              min={SURFACE_TRANSPARENCY_LIMITS.min}
-              type="range"
-              value={surfaceTransparencyDraft}
-              onChange={(event) => {
-                onSurfaceTransparencyChange(
-                  Number(event.currentTarget.value) as SurfaceTransparency,
-                )
-              }}
-            />
-            <span className={styles.editSliderValue}>
-              {surfaceTransparencyDraft}%
-            </span>
-          </div>
-        </label>
-        <LinkCardShadowMenu
-          cardId={card.id}
-          shadowStyle={shadowStyleDraft}
-          onChange={onShadowStyleChange}
-        />
-      </div>
       <LinkCardColorEditor
         activeColorSettings={activeColorSettings}
         borderPresetIndexDraft={borderPresetIndexDraft}
@@ -313,6 +244,82 @@ export function LinkCardEditOverlay({
         onSelectBorderPreset={onSelectBorderPreset}
         onSelectFillPreset={onSelectFillPreset}
       />
+      <details className={styles.editMoreSection} open>
+        <summary className={styles.editMoreSummary}>More options</summary>
+        <div className={styles.editMoreBody}>
+          <label className={styles.editField}>
+            <span className={styles.editLabel}>Corner radius</span>
+            <div className={styles.editSliderRow}>
+              <input
+                aria-label={`Edit corner radius for ${card.id}`}
+                className={styles.editSlider}
+                max={CARD_CORNER_RADIUS_LIMITS.max}
+                min={CARD_CORNER_RADIUS_LIMITS.min}
+                type="range"
+                value={cornerRadiusDraft}
+                onChange={(event) => {
+                  onCornerRadiusChange(Number(event.currentTarget.value))
+                }}
+              />
+              <span className={styles.editSliderValue}>
+                {cornerRadiusDraft}%
+              </span>
+            </div>
+          </label>
+          <div className={styles.editToggleGrid}>
+            <label className={styles.editToggleField}>
+              <input
+                aria-label={`Show title on ${card.id}`}
+                checked={showTitleDraft}
+                type="checkbox"
+                onChange={(event) => {
+                  onShowTitleChange(event.currentTarget.checked)
+                }}
+              />
+              <span>Show title</span>
+            </label>
+            <label className={styles.editToggleField}>
+              <input
+                aria-label={`Show image on ${card.id}`}
+                checked={showImageDraft}
+                type="checkbox"
+                onChange={(event) => {
+                  onShowImageChange(event.currentTarget.checked)
+                }}
+              />
+              <span>Show image</span>
+            </label>
+          </div>
+          <div className={styles.editEffectGrid}>
+            <label className={styles.editField}>
+              <span className={styles.editLabel}>Transparency</span>
+              <div className={styles.editSliderRow}>
+                <input
+                  aria-label={`Edit transparency for ${card.id}`}
+                  className={styles.editSlider}
+                  max={SURFACE_TRANSPARENCY_LIMITS.max}
+                  min={SURFACE_TRANSPARENCY_LIMITS.min}
+                  type="range"
+                  value={surfaceTransparencyDraft}
+                  onChange={(event) => {
+                    onSurfaceTransparencyChange(
+                      Number(event.currentTarget.value) as SurfaceTransparency,
+                    )
+                  }}
+                />
+                <span className={styles.editSliderValue}>
+                  {surfaceTransparencyDraft}%
+                </span>
+              </div>
+            </label>
+            <LinkCardShadowMenu
+              cardId={card.id}
+              shadowStyle={shadowStyleDraft}
+              onChange={onShadowStyleChange}
+            />
+          </div>
+        </div>
+      </details>
       {!normalizedUpdateUrl ? (
         <p className={styles.editError}>Enter a valid http or https URL.</p>
       ) : null}

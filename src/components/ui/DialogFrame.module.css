@@ -14,7 +14,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   max-height: min(86vh, 52rem);
   border: 1px solid var(--menu-border);
-  border-radius: calc(var(--radius-lg) + 0.2rem);
+  border-radius: var(--radius-xl);
   background: var(--menu-bg);
   box-shadow: var(--menu-shadow);
   backdrop-filter: blur(18px);

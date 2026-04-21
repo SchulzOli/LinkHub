@@ -145,7 +145,7 @@
   place-items: center;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border-radius: calc(var(--radius-md) - 0.15rem);
+  border-radius: var(--radius-sm);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent),
     color-mix(in srgb, var(--input-bg) 78%, transparent);
