@@ -145,6 +145,7 @@ export type WorkspaceSelectionState = {
 }
 
 export type WorkspaceAppearanceState = {
+  viewport: Viewport
   setViewport: (viewport: Viewport) => void
   setThemeMode: (themeMode: ThemeMode) => void
   setDefaultCardSize: (defaultCardSize: CardSize) => void

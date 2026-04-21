@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import menuStyles from './OptionsMenu.module.css'
 import styles from './ThemeGallery.module.css'
@@ -168,10 +168,11 @@ export function ThemeGallery({
     setLoaded(true)
   }, [])
 
-  // Lazy-load user themes on first render
-  if (!loaded) {
+  // Lazy-load user themes on first mount
+  useEffect(() => {
+    if (loaded) return
     void refreshUserThemes()
-  }
+  }, [loaded, refreshUserThemes])
 
   const allThemes = [...BUILTIN_THEMES, ...userThemes]
 

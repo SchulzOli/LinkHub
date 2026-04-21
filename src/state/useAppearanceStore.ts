@@ -1,63 +1,28 @@
+import { useShallow } from 'zustand/react/shallow'
+
 import { useWorkspaceStore } from './useWorkspaceStore'
 
 export function useAppearanceStore() {
-  const appearance = useWorkspaceStore((state) => state.workspace.appearance)
-  const setThemeMode = useWorkspaceStore((state) => state.setThemeMode)
-  const setDefaultCardSize = useWorkspaceStore(
-    (state) => state.setDefaultCardSize,
+  return useWorkspaceStore(
+    useShallow((state) => ({
+      appearance: state.workspace.appearance,
+      setThemeMode: state.setThemeMode,
+      setDefaultCardSize: state.setDefaultCardSize,
+      setDefaultCardCornerRadius: state.setDefaultCardCornerRadius,
+      setDefaultCardShowTitle: state.setDefaultCardShowTitle,
+      setDefaultCardShowImage: state.setDefaultCardShowImage,
+      setDefaultCardOpenInNewTab: state.setDefaultCardOpenInNewTab,
+      setDefaultSurfaceTransparency: state.setDefaultSurfaceTransparency,
+      setDefaultSurfaceShadowStyle: state.setDefaultSurfaceShadowStyle,
+      setFillPresets: state.setFillPresets,
+      setBorderPresets: state.setBorderPresets,
+      setDefaultFillPresetIndex: state.setDefaultFillPresetIndex,
+      setDefaultBorderPresetIndex: state.setDefaultBorderPresetIndex,
+      resetAppearanceOptions: state.resetAppearanceOptions,
+      setStylePreset: state.setStylePreset,
+      applyTheme: state.applyTheme,
+      setStyleToken: state.setStyleToken,
+      resetStyleTokens: state.resetStyleTokens,
+    })),
   )
-  const setDefaultCardCornerRadius = useWorkspaceStore(
-    (state) => state.setDefaultCardCornerRadius,
-  )
-  const setDefaultCardShowTitle = useWorkspaceStore(
-    (state) => state.setDefaultCardShowTitle,
-  )
-  const setDefaultCardShowImage = useWorkspaceStore(
-    (state) => state.setDefaultCardShowImage,
-  )
-  const setDefaultCardOpenInNewTab = useWorkspaceStore(
-    (state) => state.setDefaultCardOpenInNewTab,
-  )
-  const setDefaultSurfaceTransparency = useWorkspaceStore(
-    (state) => state.setDefaultSurfaceTransparency,
-  )
-  const setDefaultSurfaceShadowStyle = useWorkspaceStore(
-    (state) => state.setDefaultSurfaceShadowStyle,
-  )
-  const setFillPresets = useWorkspaceStore((state) => state.setFillPresets)
-  const setBorderPresets = useWorkspaceStore((state) => state.setBorderPresets)
-  const setDefaultFillPresetIndex = useWorkspaceStore(
-    (state) => state.setDefaultFillPresetIndex,
-  )
-  const setDefaultBorderPresetIndex = useWorkspaceStore(
-    (state) => state.setDefaultBorderPresetIndex,
-  )
-  const resetAppearanceOptions = useWorkspaceStore(
-    (state) => state.resetAppearanceOptions,
-  )
-  const setStylePreset = useWorkspaceStore((state) => state.setStylePreset)
-  const applyTheme = useWorkspaceStore((state) => state.applyTheme)
-  const setStyleToken = useWorkspaceStore((state) => state.setStyleToken)
-  const resetStyleTokens = useWorkspaceStore((state) => state.resetStyleTokens)
-
-  return {
-    appearance,
-    setBorderPresets,
-    setThemeMode,
-    setDefaultCardCornerRadius,
-    setDefaultCardSize,
-    setDefaultCardShowTitle,
-    setDefaultCardShowImage,
-    setDefaultCardOpenInNewTab,
-    setDefaultSurfaceTransparency,
-    setDefaultSurfaceShadowStyle,
-    setDefaultBorderPresetIndex,
-    setDefaultFillPresetIndex,
-    setFillPresets,
-    resetAppearanceOptions,
-    setStylePreset,
-    applyTheme,
-    setStyleToken,
-    resetStyleTokens,
-  }
 }

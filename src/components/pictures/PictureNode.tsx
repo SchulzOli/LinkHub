@@ -2,7 +2,6 @@ import { memo, type CSSProperties } from 'react'
 
 import styles from './PictureNode.module.css'
 
-import type { CardSize } from '../../contracts/linkCard'
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
 import {
@@ -11,31 +10,22 @@ import {
 } from '../../features/appearance/themeTokens'
 import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
+import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import {
   useResizePlacement,
   type ResizeDirection,
 } from '../../features/placement/useResizePlacement'
+import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
-  useWorkspaceStore,
-  type InteractionMode,
-} from '../../state/useWorkspaceStore'
-import { useCanvasActionsContext } from '../canvas/CanvasActionsContext'
+  useCanvasEditActions,
+  useCanvasPlacementActions,
+  useCanvasSelectionActions,
+} from '../canvas/CanvasActionsContext'
 import { EditIcon } from '../ui/EditIcon'
-
-type PlaceableCanvasItem = {
-  id: string
-  positionX: number
-  positionY: number
-  size: CardSize
-  collapsed?: boolean
-  kind?: 'card' | 'group'
-  parentGroupId?: string
-}
 
 type PictureNodeProps = {
   picture: import('../../contracts/pictureNode').PictureNode
-  items: PlaceableCanvasItem[]
   guide: PlacementGuide
   isSelected: boolean
   interactionMode: InteractionMode
@@ -44,21 +34,18 @@ type PictureNodeProps = {
 
 export const PictureNode = memo(function PictureNode({
   picture,
-  items,
   guide,
   isSelected,
   interactionMode,
   viewport,
 }: PictureNodeProps) {
-  const formatPainter = useWorkspaceStore((state) => state.formatPainter)
+  const { onSelectPicture: onSelect } = useCanvasSelectionActions()
   const {
-    onMovePicture: onMove,
-    onPreviewChange,
     onRemovePicture: onRemove,
     onRequestPictureImagePicker: onRequestImagePicker,
-    onSelectPicture: onSelect,
     onUpdatePicture: onUpdate,
-  } = useCanvasActionsContext()
+  } = useCanvasEditActions()
+  const { onMovePicture: onMove, onPreviewChange } = useCanvasPlacementActions()
   const isEditMode = interactionMode === 'edit'
   const imageUrl = useImageAssetUrl(picture.imageId)
   const size = getCardPixelDimensions(picture.size, guide.gridSize)
@@ -67,7 +54,7 @@ export const PictureNode = memo(function PictureNode({
     cardId: picture.id,
     cardSize: picture.size,
     position: { x: picture.positionX, y: picture.positionY },
-    cards: items,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
@@ -87,7 +74,7 @@ export const PictureNode = memo(function PictureNode({
       positionY: picture.positionY,
       size: picture.size,
     },
-    cards: items,
+    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode,
     guide,
     isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
@@ -140,18 +127,14 @@ export const PictureNode = memo(function PictureNode({
   return (
     <article
       className={`${styles.node} ${isEditMode ? styles.nodeEdit : ''} ${isSelected ? styles.nodeSelected : ''}`}
+      data-entity-id={picture.id}
+      data-entity-kind="picture"
       data-mode={interactionMode}
       data-selected={isSelected}
       data-testid={`picture-node-${picture.id}`}
       style={nodeStyle}
       onPointerDown={(event) => {
         if (event.button !== 0) {
-          return
-        }
-
-        if (formatPainter) {
-          event.preventDefault()
-          event.stopPropagation()
           return
         }
 

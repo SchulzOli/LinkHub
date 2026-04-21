@@ -29,16 +29,19 @@ export type WorkspaceSession = {
   workspaceSummaries: WorkspaceSummary[]
 }
 
+// Persistenz-Strategie: IDB ist Primärquelle beim Laden, aber
+// `saveWorkspace` läuft asynchron und ist beim `pagehide`/Reload
+// nicht garantiert flushbar. Deshalb schreibt `saveWorkspaceSnapshot`
+// immer synchron nach localStorage als last-known-good. Bei einem
+// IDB-Fehler springt der Fallback automatisch ein – ohne separates
+// Health-Flag, weil jeder Write-Pfad seinen eigenen try/catch hat.
+
 function getFallbackWorkspaceKey(workspaceId: string) {
   return `${FALLBACK_WORKSPACE_KEY_PREFIX}${workspaceId}`
 }
 
-function toSerializableWorkspace(workspace: Workspace) {
-  return JSON.parse(JSON.stringify(workspace))
-}
-
 function serializeWorkspaceSnapshot(workspace: Workspace) {
-  return JSON.stringify(toSerializableWorkspace(workspace))
+  return JSON.stringify(workspace)
 }
 
 function estimateLocalStorageStringBytes(value: string) {
@@ -56,10 +59,33 @@ function readJsonFromLocalStorage(key: string) {
 }
 
 function writeWorkspaceFallbackRecord(workspace: Workspace) {
-  window.localStorage.setItem(
-    getFallbackWorkspaceKey(workspace.id),
-    serializeWorkspaceSnapshot(workspace),
-  )
+  const serialized = serializeWorkspaceSnapshot(workspace)
+
+  // localStorage hat ein hartes Quota (~5 MB in den meisten Browsern).
+  // Bei Überschreitung würde `setItem` synchron einen Fehler werfen und
+  // im Hot-Path den Main-Thread stören. Wir brechen vorher ab und
+  // räumen einen eventuell veralteten Eintrag auf – IDB bleibt die
+  // Source-of-Truth.
+  if (
+    estimateLocalStorageStringBytes(serialized) >
+    LOCAL_STORAGE_PRACTICAL_LIMIT_BYTES
+  ) {
+    try {
+      window.localStorage.removeItem(getFallbackWorkspaceKey(workspace.id))
+    } catch {
+      // ignore – Fallback war bereits best-effort.
+    }
+    return
+  }
+
+  try {
+    window.localStorage.setItem(
+      getFallbackWorkspaceKey(workspace.id),
+      serialized,
+    )
+  } catch {
+    // Quota oder Private-Mode: IDB bleibt zuständig.
+  }
 }
 
 function readFallbackWorkspaceSnapshot() {
@@ -212,11 +238,33 @@ export async function loadWorkspaceSession(): Promise<WorkspaceSession> {
   }
 }
 
+function writeActiveWorkspaceFallback(workspace: Workspace) {
+  const serialized = serializeWorkspaceSnapshot(workspace)
+
+  if (
+    estimateLocalStorageStringBytes(serialized) >
+    LOCAL_STORAGE_PRACTICAL_LIMIT_BYTES
+  ) {
+    try {
+      window.localStorage.removeItem(FALLBACK_ACTIVE_WORKSPACE_KEY)
+    } catch {
+      // ignore – Fallback ist best-effort.
+    }
+    return
+  }
+
+  try {
+    window.localStorage.setItem(FALLBACK_ACTIVE_WORKSPACE_KEY, serialized)
+  } catch {
+    // Quota oder Private-Mode: IDB bleibt zuständig.
+  }
+}
+
 export function saveWorkspaceSnapshot(workspace: Workspace) {
-  window.localStorage.setItem(
-    FALLBACK_ACTIVE_WORKSPACE_KEY,
-    serializeWorkspaceSnapshot(workspace),
-  )
+  // Immer synchron nach localStorage schreiben. Das asynchrone
+  // `saveWorkspace` kann auf `pagehide`/Reload abbrechen; dieser
+  // Snapshot bleibt als last-known-good für den nächsten App-Start.
+  writeActiveWorkspaceFallback(workspace)
   writeWorkspaceFallbackRecord(workspace)
 }
 
@@ -225,20 +273,31 @@ export function getWorkspaceSnapshotByteSize(workspace: Workspace) {
 }
 
 export async function saveWorkspace(workspace: Workspace) {
-  const serializable = toSerializableWorkspace(workspace)
-
-  writeWorkspaceFallbackRecord(workspace)
-
   try {
     const db = await openLinkHubDb()
-    await db.put(STORAGE_STORES.workspace, serializable, workspace.id)
+    await db.put(STORAGE_STORES.workspace, workspace, workspace.id)
   } catch {
-    // localStorage fallback already written
+    // Last-known-good in localStorage sichern, damit der nächste
+    // App-Start auch ohne IDB einen Workspace wiederherstellen kann.
+    writeWorkspaceFallbackRecord(workspace)
+    writeActiveWorkspaceFallback(workspace)
   }
 }
 
 export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
-  window.localStorage.setItem(FALLBACK_DIRECTORY_KEY, JSON.stringify(directory))
+  // localStorage wird immer gespiegelt, damit ein sp\u00e4terer App-Start
+  // ohne IDB (oder bei IDB-Fehlern beim \u00d6ffnen) last-known-good
+  // Directory-State wiederherstellen kann. Directory-Writes sind
+  // selten (Workspace-Switch, Pin-Toggle, Interaction-Mode), daher
+  // ist der doppelte Write-Pfad unkritisch.
+  try {
+    window.localStorage.setItem(
+      FALLBACK_DIRECTORY_KEY,
+      JSON.stringify(directory),
+    )
+  } catch {
+    // Quota oder Private-Mode: IDB bleibt zust\u00e4ndig.
+  }
 
   try {
     const db = await openLinkHubDb()
@@ -248,21 +307,22 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
       WORKSPACE_DIRECTORY_KEY,
     )
   } catch {
-    // localStorage fallback already written
+    // IDB nicht verf\u00fcgbar \u2013 localStorage-Fallback wurde bereits geschrieben.
   }
 }
 
 export async function deleteWorkspaceRecord(workspaceId: string) {
-  window.localStorage.removeItem(getFallbackWorkspaceKey(workspaceId))
-
   try {
     const db = await openLinkHubDb()
     const transaction = db.transaction(STORAGE_STORES.workspace, 'readwrite')
 
     await transaction.objectStore(STORAGE_STORES.workspace).delete(workspaceId)
     await transaction.done
+    // Altbestand im localStorage-Fallback aufräumen, falls ein
+    // früherer Fehlerlauf dort noch einen Eintrag hinterlassen hat.
+    window.localStorage.removeItem(getFallbackWorkspaceKey(workspaceId))
   } catch {
-    // localStorage fallback already updated
+    window.localStorage.removeItem(getFallbackWorkspaceKey(workspaceId))
   }
 }
 

@@ -8,7 +8,7 @@ import {
 } from './storageBackend'
 
 const DB_NAME = 'linkhub'
-const DB_VERSION = 5
+const DB_VERSION = 6
 
 export async function openLinkHubDb() {
   return getLinkHubStorageBackend().openDatabase()
@@ -38,6 +38,14 @@ function createIndexedDbStorageBackend(): LinkHubStorageBackend {
 
           if (!database.objectStoreNames.contains(STORAGE_STORES.imageBlob)) {
             database.createObjectStore(STORAGE_STORES.imageBlob)
+          }
+
+          if (
+            !database.objectStoreNames.contains(
+              STORAGE_STORES.imageThumbnailBlob,
+            )
+          ) {
+            database.createObjectStore(STORAGE_STORES.imageThumbnailBlob)
           }
 
           if (!database.objectStoreNames.contains(STORAGE_STORES.template)) {

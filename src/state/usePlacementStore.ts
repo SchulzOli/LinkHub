@@ -1,19 +1,14 @@
+import { useShallow } from 'zustand/react/shallow'
+
 import { useWorkspaceStore } from './useWorkspaceStore'
 
 export function usePlacementStore() {
-  const placementGuide = useWorkspaceStore(
-    (state) => state.workspace.placementGuide,
+  return useWorkspaceStore(
+    useShallow((state) => ({
+      placementGuide: state.workspace.placementGuide,
+      viewport: state.viewport,
+      setPlacementGuide: state.setPlacementGuide,
+      setViewport: state.setViewport,
+    })),
   )
-  const viewport = useWorkspaceStore((state) => state.workspace.viewport)
-  const setPlacementGuide = useWorkspaceStore(
-    (state) => state.setPlacementGuide,
-  )
-  const setViewport = useWorkspaceStore((state) => state.setViewport)
-
-  return {
-    placementGuide,
-    viewport,
-    setPlacementGuide,
-    setViewport,
-  }
 }

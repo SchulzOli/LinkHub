@@ -1,10 +1,24 @@
-import { memo, useMemo, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 
-import { getGroupLayoutSize } from '../../contracts/cardGroup'
-import type { Workspace } from '../../contracts/workspace'
+import { getGroupLayoutSize, type CardGroup } from '../../contracts/cardGroup'
+import type { LinkCard as LinkCardContract } from '../../contracts/linkCard'
+import type { PictureNode as PictureNodeContract } from '../../contracts/pictureNode'
+import type { PlacementGuide } from '../../contracts/placementGuide'
+import type { Viewport } from '../../contracts/workspace'
+import {
+  getCardUpdatesFromFormatPainter,
+  getGroupUpdatesFromFormatPainter,
+  isFormatPainterSourceMatch,
+} from '../../features/appearance/formatPainter'
 import { getCardPixelDimensions } from '../../features/appearance/themeTokens'
 import {
-  getGroupPlacementFrames,
   getRootSelectedGroupIds,
   getSelectedGroupSubtree,
   getVisibleCards,
@@ -24,10 +38,13 @@ import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
-import { LinkCard } from '../cards/LinkCard'
-import { GroupFrame } from '../groups/GroupFrame'
+import { LinkCardContainer as LinkCard } from '../cards/LinkCardContainer'
+import { GroupFrameContainer as GroupFrame } from '../groups/GroupFrameContainer'
 import { PictureNode } from '../pictures/PictureNode'
-import type { CanvasDragPreview } from './CanvasActionsContext'
+import {
+  useCanvasEditActions,
+  type CanvasDragPreview,
+} from './CanvasActionsContext'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 2.5
@@ -50,7 +67,11 @@ type CanvasRect = {
 }
 
 type InfiniteCanvasProps = {
-  workspace: Workspace
+  cards: LinkCardContract[]
+  groups: CardGroup[]
+  pictures: PictureNodeContract[]
+  viewport: Viewport
+  placementGuide: PlacementGuide
   interactionMode: InteractionMode
   selectedCardIds: string[]
   selectedGroupIds: string[]
@@ -66,12 +87,16 @@ type InfiniteCanvasProps = {
     canvasPosition: { x: number; y: number },
   ) => void
   onInvalidImageDrop: () => void
-  onPanViewport: (nextViewport: Workspace['viewport']) => void
+  onPanViewport: (nextViewport: Viewport) => void
   dragPreview: CanvasDragPreview | null
 }
 
 export const InfiniteCanvas = memo(function InfiniteCanvas({
-  workspace,
+  cards,
+  groups,
+  pictures,
+  viewport,
+  placementGuide,
   interactionMode,
   selectedCardIds,
   selectedGroupIds,
@@ -88,6 +113,52 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
   const clearFormatPainter = useWorkspaceStore(
     (state) => state.clearFormatPainter,
   )
+  const { onUpdateCard, onUpdateGroup } = useCanvasEditActions()
+  const handleFormatPainterCapture = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (event.button !== 0 || !formatPainter) {
+        return
+      }
+
+      const target = event.target as HTMLElement | null
+      if (!target) {
+        return
+      }
+
+      if (target.closest('button, input, select, textarea, a, label')) {
+        return
+      }
+
+      const entityEl = target.closest<HTMLElement>('[data-entity-kind]')
+      if (!entityEl || !canvasRef.current?.contains(entityEl)) {
+        return
+      }
+
+      const kind = entityEl.dataset.entityKind
+      const id = entityEl.dataset.entityId
+      if (!id || (kind !== 'card' && kind !== 'group' && kind !== 'picture')) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (kind === 'picture') {
+        return
+      }
+
+      if (isFormatPainterSourceMatch(formatPainter, { id, kind })) {
+        return
+      }
+
+      if (kind === 'card') {
+        onUpdateCard(id, getCardUpdatesFromFormatPainter(formatPainter))
+      } else {
+        onUpdateGroup(id, getGroupUpdatesFromFormatPainter(formatPainter))
+      }
+    },
+    [formatPainter, onUpdateCard, onUpdateGroup],
+  )
   const fileDragDepthRef = useRef(0)
   const [canvasInteraction, setCanvasInteraction] =
     useState<CanvasInteractionState>('idle')
@@ -95,25 +166,11 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
   const [selectionMarquee, setSelectionMarquee] =
     useState<SelectionMarquee | null>(null)
   const visibleCards = useMemo(
-    () => getVisibleCards(workspace.cards, workspace.groups),
-    [workspace.cards, workspace.groups],
+    () => getVisibleCards(cards, groups),
+    [cards, groups],
   )
-  const visibleGroups = useMemo(
-    () => getVisibleGroups(workspace.groups),
-    [workspace.groups],
-  )
-  const groupPlacementFrames = useMemo(
-    () => getGroupPlacementFrames(workspace.groups),
-    [workspace.groups],
-  )
-  const visiblePictures = useMemo(
-    () => workspace.pictures,
-    [workspace.pictures],
-  )
-  const placeableItems = useMemo(
-    () => [...visibleCards, ...visiblePictures, ...groupPlacementFrames],
-    [groupPlacementFrames, visibleCards, visiblePictures],
-  )
+  const visibleGroups = useMemo(() => getVisibleGroups(groups), [groups])
+  const visiblePictures = pictures
   const selectedCardIdSet = useMemo(
     () => new Set(selectedCardIds),
     [selectedCardIds],
@@ -129,15 +186,11 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
 
   const viewportBounds = useMemo(
     () =>
-      getVisibleCanvasBounds(
-        workspace.viewport,
-        window.innerWidth,
-        window.innerHeight,
-      ),
-    [workspace.viewport],
+      getVisibleCanvasBounds(viewport, window.innerWidth, window.innerHeight),
+    [viewport],
   )
 
-  const gridSize = workspace.placementGuide.gridSize
+  const gridSize = placementGuide.gridSize
 
   const culledCards = useMemo(
     () =>
@@ -224,10 +277,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
   const getFullyEnclosedCardIds = (selectionRect: CanvasRect) =>
     visibleCards
       .filter((card) => {
-        const size = getCardPixelDimensions(
-          card.size,
-          workspace.placementGuide.gridSize,
-        )
+        const size = getCardPixelDimensions(card.size, placementGuide.gridSize)
         const right = card.positionX + size.width
         const bottom = card.positionY + size.height
 
@@ -245,7 +295,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       .filter((group) => {
         const size = getCardPixelDimensions(
           getGroupLayoutSize(group),
-          workspace.placementGuide.gridSize,
+          placementGuide.gridSize,
         )
         const right = group.positionX + size.width
         const bottom = group.positionY + size.height
@@ -260,12 +310,10 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       .map((group) => group.id)
 
   const gridStyle = useMemo(() => {
-    const { gridSize } = workspace.placementGuide
-    const scaledGridSize = gridSize * workspace.viewport.zoom
-    const backgroundPositionX =
-      (-workspace.viewport.x * workspace.viewport.zoom) % scaledGridSize
-    const backgroundPositionY =
-      (-workspace.viewport.y * workspace.viewport.zoom) % scaledGridSize
+    const { gridSize } = placementGuide
+    const scaledGridSize = gridSize * viewport.zoom
+    const backgroundPositionX = (-viewport.x * viewport.zoom) % scaledGridSize
+    const backgroundPositionY = (-viewport.y * viewport.zoom) % scaledGridSize
 
     return {
       backgroundImage:
@@ -273,12 +321,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       backgroundPosition: `${backgroundPositionX}px ${backgroundPositionY}px`,
       backgroundSize: `${scaledGridSize}px ${scaledGridSize}px`,
     }
-  }, [
-    workspace.placementGuide,
-    workspace.viewport.x,
-    workspace.viewport.y,
-    workspace.viewport.zoom,
-  ])
+  }, [placementGuide, viewport.x, viewport.y, viewport.zoom])
 
   return (
     <section
@@ -289,6 +332,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       data-format-painter={formatPainter ? 'active' : 'idle'}
       data-mode={interactionMode}
       data-testid="infinite-canvas"
+      onPointerDownCapture={handleFormatPainterCapture}
       onContextMenu={(event) => {
         if (
           interactionMode === 'edit' ||
@@ -304,34 +348,26 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
 
         if (event.altKey) {
           onPanViewport({
-            ...workspace.viewport,
+            ...viewport,
             x:
-              workspace.viewport.x +
-              screenDeltaToCanvas(
-                event.deltaY + event.deltaX,
-                workspace.viewport.zoom,
-              ),
+              viewport.x +
+              screenDeltaToCanvas(event.deltaY + event.deltaX, viewport.zoom),
           })
           return
         }
 
         if (!event.ctrlKey) {
-          const canvasPoint = screenPointToCanvas(
-            localPoint,
-            workspace.viewport,
-          )
+          const canvasPoint = screenPointToCanvas(localPoint, viewport)
           const direction = event.deltaY > 0 ? -1 : 1
           const nextZoom = Math.min(
             MAX_ZOOM,
             Math.max(
               MIN_ZOOM,
-              Number(
-                (workspace.viewport.zoom + direction * ZOOM_STEP).toFixed(2),
-              ),
+              Number((viewport.zoom + direction * ZOOM_STEP).toFixed(2)),
             ),
           )
 
-          if (nextZoom === workspace.viewport.zoom) {
+          if (nextZoom === viewport.zoom) {
             return
           }
 
@@ -344,13 +380,9 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         }
 
         onPanViewport({
-          ...workspace.viewport,
-          x:
-            workspace.viewport.x +
-            screenDeltaToCanvas(event.deltaX, workspace.viewport.zoom),
-          y:
-            workspace.viewport.y +
-            screenDeltaToCanvas(event.deltaY, workspace.viewport.zoom),
+          ...viewport,
+          x: viewport.x + screenDeltaToCanvas(event.deltaX, viewport.zoom),
+          y: viewport.y + screenDeltaToCanvas(event.deltaY, viewport.zoom),
         })
       }}
       onDragEnter={(event) => {
@@ -408,7 +440,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           files,
           screenPointToCanvas(
             getLocalPoint(event.clientX, event.clientY),
-            workspace.viewport,
+            viewport,
           ),
         )
       }}
@@ -418,7 +450,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           setCanvasInteraction('panning')
 
           const startPoint = { x: event.clientX, y: event.clientY }
-          const startViewport = workspace.viewport
+          const startViewport = viewport
           let panFrameId: number | null = null
           let pendingPanEvent: PointerEvent | null = null
 
@@ -498,10 +530,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         setCanvasInteraction('selecting')
 
         const startLocalPoint = getLocalPoint(event.clientX, event.clientY)
-        const startCanvasPoint = screenPointToCanvas(
-          startLocalPoint,
-          workspace.viewport,
-        )
+        const startCanvasPoint = screenPointToCanvas(startLocalPoint, viewport)
 
         setSelectionMarquee({
           left: startLocalPoint.x,
@@ -510,7 +539,19 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           height: 0,
         })
 
-        const handleMove = (moveEvent: PointerEvent) => {
+        let marqueeFrameId: number | null = null
+        let pendingMoveEvent: PointerEvent | null = null
+
+        const processMarquee = () => {
+          marqueeFrameId = null
+
+          if (!pendingMoveEvent) {
+            return
+          }
+
+          const moveEvent = pendingMoveEvent
+          pendingMoveEvent = null
+
           const currentLocalPoint = getLocalPoint(
             moveEvent.clientX,
             moveEvent.clientY,
@@ -521,10 +562,18 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
           )
         }
 
+        const handleMove = (moveEvent: PointerEvent) => {
+          pendingMoveEvent = moveEvent
+
+          if (marqueeFrameId === null) {
+            marqueeFrameId = requestAnimationFrame(processMarquee)
+          }
+        }
+
         const handlePointerUp = (upEvent: PointerEvent) => {
           const endCanvasPoint = screenPointToCanvas(
             getLocalPoint(upEvent.clientX, upEvent.clientY),
-            workspace.viewport,
+            viewport,
           )
           const selectionRect = createCanvasRect(
             startCanvasPoint,
@@ -552,6 +601,11 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         }
 
         const cleanup = () => {
+          if (marqueeFrameId !== null) {
+            cancelAnimationFrame(marqueeFrameId)
+            marqueeFrameId = null
+          }
+
           setCanvasInteraction('idle')
           setSelectionMarquee(null)
           window.removeEventListener('pointermove', handleMove)
@@ -561,40 +615,38 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         window.addEventListener('pointermove', handleMove)
         window.addEventListener('pointerup', handlePointerUp, { once: true })
       }}
-      style={workspace.placementGuide.gridVisible ? gridStyle : undefined}
+      style={placementGuide.gridVisible ? gridStyle : undefined}
     >
       {culledGroups.map((group) => (
         <GroupFrame
           key={group.id}
           group={group}
-          groups={workspace.groups}
-          pictures={workspace.pictures}
-          guide={workspace.placementGuide}
+          groups={groups}
+          pictures={pictures}
+          guide={placementGuide}
           isSelected={selectedGroupIdSet.has(group.id)}
           interactionMode={interactionMode}
-          viewport={workspace.viewport}
+          viewport={viewport}
         />
       ))}
       {culledCards.map((card) => (
         <LinkCard
           key={card.id}
           card={card}
-          cards={placeableItems}
-          guide={workspace.placementGuide}
+          guide={placementGuide}
           isSelected={selectedCardIdSet.has(card.id)}
           interactionMode={interactionMode}
-          viewport={workspace.viewport}
+          viewport={viewport}
         />
       ))}
       {culledPictures.map((picture) => (
         <PictureNode
           key={picture.id}
           picture={picture}
-          items={placeableItems}
-          guide={workspace.placementGuide}
+          guide={placementGuide}
           isSelected={selectedPictureIdSet.has(picture.id)}
           interactionMode={interactionMode}
-          viewport={workspace.viewport}
+          viewport={viewport}
         />
       ))}
       {isFileDropActive ? (
@@ -624,7 +676,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
         ? (() => {
             const size = getCardPixelDimensions(
               dragPreview.size,
-              workspace.placementGuide.gridSize,
+              placementGuide.gridSize,
             )
 
             return (
@@ -634,7 +686,7 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
                 style={{
                   width: size.width,
                   height: size.height,
-                  transform: `translate(${(dragPreview.position.x - workspace.viewport.x) * workspace.viewport.zoom}px, ${(dragPreview.position.y - workspace.viewport.y) * workspace.viewport.zoom}px) scale(${workspace.viewport.zoom})`,
+                  transform: `translate(${(dragPreview.position.x - viewport.x) * viewport.zoom}px, ${(dragPreview.position.y - viewport.y) * viewport.zoom}px) scale(${viewport.zoom})`,
                   transformOrigin: 'top left',
                 }}
               />

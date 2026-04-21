@@ -19,6 +19,12 @@ type SnapOptions = {
   cards?: PlaceableItem[]
   excludedCardId?: string
   isOccupiedItemBlocking?: PlacementBlockPredicate
+  /**
+   * Pre-built occupancy index. When provided, `cards` and `excludedCardId` are
+   * ignored and the spiral search queries the index directly. Enables batch
+   * pasting where multiple items reuse (and extend) the same index.
+   */
+  occupancyIndex?: OccupancyIndex
 }
 
 type GridRect = {
@@ -45,13 +51,98 @@ function toGridRect(
   }
 }
 
-function rectsOverlap(a: GridRect, b: GridRect) {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
+/**
+ * Uniform grid index mapping each occupied cell key `"x,y"` to the items that
+ * cover it. Built once per snap call so that the spiral search can look up
+ * overlap candidates in O(candidate-cells) instead of O(occupied-items).
+ */
+export type OccupancyIndex = {
+  cells: Map<string, PlaceableItem[]>
+  gridSize: number
+  itemCount: number
+}
+
+function cellKey(x: number, y: number) {
+  return `${x},${y}`
+}
+
+function addItemToIndex(index: OccupancyIndex, item: PlaceableItem) {
+  const rect = toGridRect(
+    { x: item.positionX, y: item.positionY },
+    item.size,
+    index.gridSize,
   )
+
+  for (let x = rect.x; x < rect.x + rect.width; x += 1) {
+    for (let y = rect.y; y < rect.y + rect.height; y += 1) {
+      const key = cellKey(x, y)
+      const bucket = index.cells.get(key)
+
+      if (bucket) {
+        bucket.push(item)
+      } else {
+        index.cells.set(key, [item])
+      }
+    }
+  }
+
+  index.itemCount += 1
+}
+
+export function createOccupancyIndex(
+  items: PlaceableItem[],
+  guide: PlacementGuide,
+): OccupancyIndex {
+  const index: OccupancyIndex = {
+    cells: new Map(),
+    gridSize: guide.gridSize,
+    itemCount: 0,
+  }
+
+  for (const item of items) {
+    addItemToIndex(index, item)
+  }
+
+  return index
+}
+
+/**
+ * Extends an existing occupancy index with a newly placed item. Use during
+ * multi-paste loops so subsequent snap calls see previously placed items
+ * without rebuilding the index from scratch.
+ */
+export function addItemToOccupancyIndex(
+  index: OccupancyIndex,
+  item: PlaceableItem,
+) {
+  addItemToIndex(index, item)
+}
+
+function getOverlappingItems(
+  candidate: GridRect,
+  index: OccupancyIndex,
+): PlaceableItem[] {
+  const seen = new Set<string>()
+  const items: PlaceableItem[] = []
+
+  for (let x = candidate.x; x < candidate.x + candidate.width; x += 1) {
+    for (let y = candidate.y; y < candidate.y + candidate.height; y += 1) {
+      const bucket = index.cells.get(cellKey(x, y))
+
+      if (!bucket) {
+        continue
+      }
+
+      for (const item of bucket) {
+        if (!seen.has(item.id)) {
+          seen.add(item.id)
+          items.push(item)
+        }
+      }
+    }
+  }
+
+  return items
 }
 
 function getOccupiedItems(
@@ -67,37 +158,35 @@ function getOccupiedItems(
 
 function isGridRectFree(
   candidate: GridRect,
-  occupiedItems: PlaceableItem[],
+  index: OccupancyIndex,
   guide: PlacementGuide,
   isOccupiedItemBlocking?: PlacementBlockPredicate,
 ) {
-  return occupiedItems.every((occupiedItem) => {
-    if (isOccupiedItemBlocking) {
-      return !isOccupiedItemBlocking(
-        {
-          position: {
-            x: candidate.x * guide.gridSize,
-            y: candidate.y * guide.gridSize,
-          },
-          size: {
-            columns: candidate.width,
-            rows: candidate.height,
-          },
-        },
-        occupiedItem,
-        guide,
-      )
-    }
+  const overlapping = getOverlappingItems(candidate, index)
 
-    return !rectsOverlap(
-      candidate,
-      toGridRect(
-        { x: occupiedItem.positionX, y: occupiedItem.positionY },
-        occupiedItem.size,
-        guide.gridSize,
-      ),
-    )
-  })
+  if (overlapping.length === 0) {
+    return true
+  }
+
+  if (!isOccupiedItemBlocking) {
+    return false
+  }
+
+  const candidateFrame = {
+    position: {
+      x: candidate.x * guide.gridSize,
+      y: candidate.y * guide.gridSize,
+    },
+    size: {
+      columns: candidate.width,
+      rows: candidate.height,
+    },
+  }
+
+  return overlapping.every(
+    (occupiedItem) =>
+      !isOccupiedItemBlocking(candidateFrame, occupiedItem, guide),
+  )
 }
 
 export function isPlacementAvailable(
@@ -106,17 +195,19 @@ export function isPlacementAvailable(
   guide: PlacementGuide,
   options?: Pick<
     SnapOptions,
-    'cards' | 'excludedCardId' | 'isOccupiedItemBlocking'
+    'cards' | 'excludedCardId' | 'isOccupiedItemBlocking' | 'occupancyIndex'
   >,
 ) {
-  const occupiedItems = getOccupiedItems(
-    options?.cards,
-    options?.excludedCardId,
-  )
+  const index =
+    options?.occupancyIndex ??
+    createOccupancyIndex(
+      getOccupiedItems(options?.cards, options?.excludedCardId),
+      guide,
+    )
 
   return isGridRectFree(
     toGridRect(position, size, guide.gridSize),
-    occupiedItems,
+    index,
     guide,
     options?.isOccupiedItemBlocking,
   )
@@ -132,7 +223,7 @@ function toCanvasPosition(cell: { x: number; y: number }, gridSize: number) {
 function findNearestFreeCell(
   targetCell: { x: number; y: number },
   size: CardSize,
-  occupiedItems: PlaceableItem[],
+  index: OccupancyIndex,
   guide: PlacementGuide,
   isOccupiedItemBlocking?: PlacementBlockPredicate,
 ) {
@@ -143,16 +234,11 @@ function findNearestFreeCell(
     height: size.rows,
   }
 
-  if (
-    isGridRectFree(targetRect, occupiedItems, guide, isOccupiedItemBlocking)
-  ) {
+  if (isGridRectFree(targetRect, index, guide, isOccupiedItemBlocking)) {
     return targetCell
   }
 
-  const maxRadius = Math.max(
-    12,
-    Math.ceil(Math.sqrt(occupiedItems.length + 1)) * 8,
-  )
+  const maxRadius = Math.max(12, Math.ceil(Math.sqrt(index.itemCount + 1)) * 8)
 
   for (let radius = 1; radius <= maxRadius; radius += 1) {
     const candidates: Array<{ x: number; y: number; dx: number; dy: number }> =
@@ -212,7 +298,7 @@ function findNearestFreeCell(
             width: size.columns,
             height: size.rows,
           },
-          occupiedItems,
+          index,
           guide,
           isOccupiedItemBlocking,
         )
@@ -243,14 +329,16 @@ export function getSnapTargetPosition(
     x: toGridCoordinate(position.x, guide.gridSize),
     y: toGridCoordinate(position.y, guide.gridSize),
   }
-  const occupiedItems = getOccupiedItems(
-    options?.cards,
-    options?.excludedCardId,
-  )
+  const index =
+    options?.occupancyIndex ??
+    createOccupancyIndex(
+      getOccupiedItems(options?.cards, options?.excludedCardId),
+      guide,
+    )
   const freeCell = findNearestFreeCell(
     targetCell,
     size,
-    occupiedItems,
+    index,
     guide,
     options?.isOccupiedItemBlocking,
   )

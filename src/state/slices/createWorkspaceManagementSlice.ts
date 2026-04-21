@@ -11,6 +11,7 @@ import {
   saveWorkspaceSnapshot,
 } from '../../storage/workspaceRepository'
 import { createId } from '../../utils/id'
+import { getPersistedWorkspace } from '../workspaceStoreHelpers'
 import type {
   WorkspaceManagementState,
   WorkspaceState,
@@ -59,6 +60,7 @@ function createWorkspaceSessionState(input: {
     status: 'ready' as const,
     undoStack: [],
     workspace: input.workspace,
+    viewport: input.workspace.viewport,
     workspaceRailOpen: input.workspaceRailPinned,
     workspaceRailPinned: input.workspaceRailPinned,
     workspaceSummaries: input.workspaceSummaries,
@@ -92,7 +94,7 @@ export const createWorkspaceManagementSlice: StateCreator<
       workspaces: nextWorkspaceSummaries,
     }
 
-    await saveWorkspace(state.workspace)
+    await saveWorkspace(getPersistedWorkspace(state))
     await Promise.all([
       saveWorkspace(nextWorkspace),
       saveWorkspaceDirectory(nextDirectory),
@@ -132,7 +134,7 @@ export const createWorkspaceManagementSlice: StateCreator<
       workspaces: nextWorkspaceSummaries,
     }
 
-    await saveWorkspace(state.workspace)
+    await saveWorkspace(getPersistedWorkspace(state))
     saveWorkspaceSnapshot(nextWorkspace)
 
     await Promise.all([
@@ -283,6 +285,7 @@ export const createWorkspaceManagementSlice: StateCreator<
     if (workspaceId === state.activeWorkspaceId) {
       const nextWorkspace = {
         ...state.workspace,
+        viewport: state.viewport,
         name: trimmedName,
       }
 
@@ -348,7 +351,7 @@ export const createWorkspaceManagementSlice: StateCreator<
       workspaces: nextWorkspaceSummaries,
     }
 
-    await saveWorkspace(state.workspace)
+    await saveWorkspace(getPersistedWorkspace(state))
     await saveWorkspaceDirectory(nextDirectory)
 
     set((currentState) =>

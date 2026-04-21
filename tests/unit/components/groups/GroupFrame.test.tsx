@@ -2,32 +2,38 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { CanvasActionsProvider } from '../../../../src/components/canvas/CanvasActionsContext'
-import { GroupFrame } from '../../../../src/components/groups/GroupFrame'
+import { GroupFrameContainer as GroupFrame } from '../../../../src/components/groups/GroupFrameContainer'
 import { defaultAppearanceProfile } from '../../../../src/contracts/appearanceProfile'
 import type { CardGroup } from '../../../../src/contracts/cardGroup'
 import type { PlacementGuide } from '../../../../src/contracts/placementGuide'
 import { createDefaultWorkspace } from '../../../../src/contracts/workspace'
 import { useWorkspaceStore } from '../../../../src/state/useWorkspaceStore'
 
-const canvasActions = {
+const selectionActions = {
   autoEditTarget: null,
   onClearAutoEditTarget: () => undefined,
-  onMoveCard: () => undefined,
-  onMoveGroup: () => undefined,
-  onMovePicture: () => undefined,
-  onPreviewChange: () => undefined,
+  onSelectCard: () => undefined,
+  onSelectGroup: () => undefined,
+  onSelectPicture: () => undefined,
+}
+
+const editActions = {
   onRecordLinkOpen: () => undefined,
   onRemoveCard: () => undefined,
   onRemoveGroup: () => undefined,
   onRemovePicture: () => undefined,
   onRequestCardImageOverridePicker: () => undefined,
   onRequestPictureImagePicker: () => undefined,
-  onSelectCard: () => undefined,
-  onSelectGroup: () => undefined,
-  onSelectPicture: () => undefined,
   onUpdateCard: () => undefined,
   onUpdateGroup: () => undefined,
   onUpdatePicture: () => undefined,
+}
+
+const placementActions = {
+  onMoveCard: () => undefined,
+  onMoveGroup: () => undefined,
+  onMovePicture: () => undefined,
+  onPreviewChange: () => undefined,
 }
 
 const guide: PlacementGuide = {
@@ -63,7 +69,11 @@ describe('GroupFrame', () => {
     })
 
     render(
-      <CanvasActionsProvider value={canvasActions}>
+      <CanvasActionsProvider
+        selection={selectionActions}
+        edit={editActions}
+        placement={placementActions}
+      >
         <GroupFrame
           group={createGroup()}
           groups={[createGroup()]}

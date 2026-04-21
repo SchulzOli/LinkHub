@@ -1,55 +1,51 @@
 import { useEffect, useState } from 'react'
 
-import { getImageBlob } from '../../storage/imageRepository'
+import {
+  acquireImageObjectUrl,
+  releaseImageObjectUrl,
+  type ImageObjectUrlVariant,
+} from './imageObjectUrlCache'
 
-export function useImageAssetUrl(imageId: string | undefined) {
+export function useImageAssetUrl(
+  imageId: string | undefined,
+  variant: ImageObjectUrlVariant = 'thumbnail',
+) {
   const [assetState, setAssetState] = useState<{
     imageId: string | null
     url: string | null
+    variant: ImageObjectUrlVariant | null
   }>({
     imageId: null,
     url: null,
+    variant: null,
   })
 
   useEffect(() => {
-    let active = true
-    let currentObjectUrl: string | null = null
-
-    if (
-      !imageId ||
-      typeof URL === 'undefined' ||
-      typeof URL.createObjectURL !== 'function'
-    ) {
+    if (!imageId) {
       return
     }
 
-    void getImageBlob(imageId)
-      .then((blob) => {
-        if (!active || !blob) {
-          if (active) {
-            setAssetState({ imageId, url: null })
-          }
+    let active = true
 
-          return
+    void acquireImageObjectUrl(imageId, variant)
+      .then((url) => {
+        if (active) {
+          setAssetState({ imageId, url, variant })
         }
-
-        currentObjectUrl = URL.createObjectURL(blob)
-        setAssetState({ imageId, url: currentObjectUrl })
       })
       .catch(() => {
         if (active) {
-          setAssetState({ imageId, url: null })
+          setAssetState({ imageId, url: null, variant })
         }
       })
 
     return () => {
       active = false
-
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl)
-      }
+      releaseImageObjectUrl(imageId, variant)
     }
-  }, [imageId])
+  }, [imageId, variant])
 
-  return assetState.imageId === imageId ? assetState.url : null
+  return assetState.imageId === imageId && assetState.variant === variant
+    ? assetState.url
+    : null
 }

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { CARD_SIZE_LIMITS, type CardSize } from '../../contracts/linkCard'
 import type { PlacementGuide } from '../../contracts/placementGuide'
@@ -20,7 +20,12 @@ type ResizeFrame = {
 
 type ResizeOptions = {
   card: PlaceableItem
-  cards: PlaceableItem[]
+  /**
+   * Called lazily at pointerdown time to produce the placement-neighborhood
+   * snapshot. Using a getter keeps sibling nodes from re-rendering on every
+   * workspace change — see `useDragPlacement`.
+   */
+  getCards: () => PlaceableItem[]
   enabled: boolean
   guide: PlacementGuide
   isOccupiedItemBlocking?: PlacementBlockPredicate
@@ -118,7 +123,7 @@ function isSameFrame(left: ResizeFrame, right: ResizeFrame) {
 
 export function useResizePlacement({
   card,
-  cards,
+  getCards,
   enabled,
   guide,
   isOccupiedItemBlocking,
@@ -127,6 +132,11 @@ export function useResizePlacement({
   onResize,
   onPreviewChange,
 }: ResizeOptions) {
+  const getCardsRef = useRef(getCards)
+  useEffect(() => {
+    getCardsRef.current = getCards
+  }, [getCards])
+
   return useCallback(
     (direction: ResizeDirection) =>
       (event: React.PointerEvent<HTMLElement>) => {
@@ -143,6 +153,7 @@ export function useResizePlacement({
           size: card.size,
         }
         let currentFrame = initialFrame
+        const cards = getCardsRef.current()
 
         onPreviewChange({
           cardId: card.id,
@@ -242,7 +253,6 @@ export function useResizePlacement({
       },
     [
       card,
-      cards,
       enabled,
       guide,
       isOccupiedItemBlocking,

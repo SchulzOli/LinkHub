@@ -21,6 +21,7 @@ export const createWorkspaceUISlice: StateCreator<
     set({
       undoStack: [],
       workspace,
+      viewport: workspace.viewport,
       status: 'ready',
       optionsMenuOpen: false,
       quickAddOpen: false,

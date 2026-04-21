@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+export const ImageAssetThumbnailMetadataSchema = z.object({
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  byteSize: z.number().int().nonnegative(),
+  mimeType: z.string().min(1),
+})
+
+export type ImageAssetThumbnailMetadata = z.infer<
+  typeof ImageAssetThumbnailMetadataSchema
+>
+
 export const ImageAssetSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1),
@@ -10,6 +21,7 @@ export const ImageAssetSchema = z.object({
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
   isAnimated: z.boolean(),
+  thumbnail: ImageAssetThumbnailMetadataSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

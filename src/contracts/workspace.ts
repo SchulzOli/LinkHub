@@ -21,6 +21,14 @@ import {
 
 export const DEFAULT_WORKSPACE_ID = 'default'
 
+/**
+ * Current Workspace-Record-Schema-Version. Wird bei jedem erfolgreichen
+ * Migrations-Durchlauf in den Record eingetragen, damit spätere Reads den
+ * Coercer überspringen können. Bei jedem Breaking-Change an Unter-Contracts
+ * (Cards, Groups, Pictures, Appearance, Analytics) um 1 erhöhen.
+ */
+export const LATEST_WORKSPACE_SCHEMA_VERSION = 1
+
 export const ViewportSchema = z.object({
   x: z.number(),
   y: z.number(),
@@ -30,6 +38,7 @@ export const ViewportSchema = z.object({
 export const WorkspaceSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
+  schemaVersion: z.number().int().nonnegative().optional(),
   appearance: AppearanceProfileSchema,
   analytics: WorkspaceAnalyticsSchema,
   placementGuide: PlacementGuideSchema,
@@ -52,6 +61,7 @@ export function createDefaultWorkspace(
   return {
     id: DEFAULT_WORKSPACE_ID,
     name: 'Home',
+    schemaVersion: LATEST_WORKSPACE_SCHEMA_VERSION,
     appearance: defaultAppearanceProfile,
     analytics: createDefaultWorkspaceAnalytics(),
     placementGuide: defaultPlacementGuide,
