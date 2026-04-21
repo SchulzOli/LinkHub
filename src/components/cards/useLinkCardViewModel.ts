@@ -358,6 +358,44 @@ export function useLinkCardViewModel({
     (card.positionY - viewport.y) * viewport.zoom,
   )
 
+  /**
+   * LinkCard CSS custom-property contract.
+   *
+   * The object returned here is applied as an inline `style={...}` on the
+   * card's root `<article>`. It is the ONLY supported way to pass
+   * per-card dynamic values (color, size, radius, transforms, title
+   * layout) into the CSS module. Everything in this object is part of
+   * the public interface consumed by `LinkCard.module.css` and any
+   * descendant selector.
+   *
+   * Interface tiers:
+   *
+   * 1. Positioning / size (standard CSS keys)
+   *      width, height, transform, transformOrigin
+   *      - transform composes per-card translate, the animated hover
+   *        offset (`--card-hover-offset`, declared via CSS-only
+   *        `@property` in LinkCard.module.css), and viewport zoom.
+   *
+   * 2. Surface tokens (overridden per card; each has a CSS fallback)
+   *      --card-radius, --card-surface, --card-surface-layer,
+   *      --card-surface-hover-layer, --card-outline, --card-shadow
+   *      - Consumed by `.card`, `.cardView:hover`, and descendant
+   *        shells (favicon, title panel). Changing any of these names
+   *        is a breaking change for LinkCard.module.css.
+   *
+   * 3. Content-layout tokens (title zone, image shell, action bar)
+   *      --card-content-padding, --card-title-*, --action-*,
+   *      --favicon-*, --card-image-*
+   *      - Computed once in `useLinkCardViewModel` based on card size,
+   *        title/image visibility, and appearance presets. Each
+   *        corresponding CSS rule has a fallback for pre-hydration
+   *        renders.
+   *
+   * Consumers outside `LinkCard.module.css` must NOT write to these
+   * custom properties directly; extend this view-model instead so the
+   * per-card invariant (fallbacks, memoization, theme reactivity)
+   * stays enforced in one place.
+   */
   const cardStyle: CSSProperties & Record<string, string | number> = useMemo(
     () => ({
       width: size.width,

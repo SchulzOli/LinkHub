@@ -38,6 +38,21 @@
   cursor: grabbing;
 }
 
+/*
+ * Register the hover-offset custom property as a typed <length> so the
+ * 160ms transition below actually interpolates instead of swapping
+ * discretely. Required browser support: @property is available in
+ * Chromium 85+, Safari 16.4+, Firefox 128+. Older engines skip this
+ * block and the hover lift degrades to an instant discrete change —
+ * visually correct, just not animated, which matches the unregistered
+ * pre-@property behavior everywhere. No JSX wrapper is needed.
+ */
+@property --card-hover-offset {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 .cardView {
   padding: 0;
   cursor: pointer;
@@ -46,6 +61,14 @@
     border-color 160ms ease,
     box-shadow 160ms ease,
     --card-hover-offset 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardView {
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
 }
 
 .cardView:hover,
@@ -64,6 +87,13 @@
     0 10px 26px color-mix(in srgb, var(--accent) 16%, transparent),
     0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
     var(--card-shadow, var(--panel-shadow));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardView:hover,
+  .cardView:focus-within {
+    --card-hover-offset: 0px;
+  }
 }
 
 .card[data-card-image-layout='edge-to-edge'],

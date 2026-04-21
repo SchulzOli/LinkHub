@@ -113,11 +113,27 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   )
   const articleRef = useRef<HTMLElement | null>(null)
   const editPanelRef = useRef<HTMLDivElement | null>(null)
+  /**
+   * Portal-positioning inline style for the edit panel.
+   *
+   * Contract: the only keys written here are CSS box-model properties
+   * required to pin the panel next to the card in viewport coordinates
+   * (typically `top`, `left`, `right`, `width`, `maxHeight`). All visual
+   * styling — border, background, radius, scroll behavior — lives in
+   * `.editPanel` inside `LinkCard.module.css`. Do NOT leak card-* custom
+   * properties into this style; the edit panel is theme-driven via the
+   * global tokens applied through its CSS module.
+   */
   const [editPanelStyle, setEditPanelStyle] = useState<CSSProperties | null>(
     null,
   )
   const tooltipTimeoutRef = useRef<number | null>(null)
   const [isUrlTooltipVisible, setIsUrlTooltipVisible] = useState(false)
+  /**
+   * Portal-positioning inline style for the URL tooltip. Same contract
+   * as `editPanelStyle`: positioning-only (top/left/right), no visual
+   * tokens. Visual styling lives in the `LinkCardUrlTooltip` module.
+   */
   const [urlTooltipStyle, setUrlTooltipStyle] = useState<CSSProperties | null>(
     null,
   )

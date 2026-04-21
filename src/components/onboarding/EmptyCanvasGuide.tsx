@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 import styles from './EmptyCanvasGuide.module.css'
 
 type EmptyCanvasGuideProps = {
@@ -18,6 +20,12 @@ type EmptyCanvasGuideProps = {
  * accent token.
  */
 function EmptyCanvasIllustration() {
+  // Per-instance id prevents collisions if the guide is ever rendered in
+  // multiple places (e.g. multi-canvas workspaces). `useId()` produces
+  // ":r1:"-style strings that are not valid SVG url() references, so we
+  // strip the colons.
+  const gridPatternId = `empty-canvas-grid-${useId().replace(/:/g, '')}`
+
   return (
     <svg
       aria-hidden="true"
@@ -29,7 +37,7 @@ function EmptyCanvasIllustration() {
       <defs>
         <pattern
           height="16"
-          id="empty-canvas-grid"
+          id={gridPatternId}
           patternUnits="userSpaceOnUse"
           width="16"
         >
@@ -43,7 +51,7 @@ function EmptyCanvasIllustration() {
         </pattern>
       </defs>
       <rect
-        fill="url(#empty-canvas-grid)"
+        fill={`url(#${gridPatternId})`}
         height="160"
         width="320"
         x="0"

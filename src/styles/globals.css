@@ -103,6 +103,16 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 input[type='checkbox'] {
+  /*
+   * Centralized checkbox primitive. All `<input type="checkbox">` across the
+   * app inherit this styling (custom clip-path check, theme-aware colors,
+   * focus ring from the shared button/input rule above). Do NOT duplicate
+   * or override these properties in module CSS — if a new variant is
+   * needed, extend this rule with a `[data-variant]` selector here so the
+   * contract stays in one place. A React `<Checkbox>` wrapper is
+   * intentionally omitted: native `<input>` already composes correctly
+   * with `<label>`, form semantics, and controlled-value patterns.
+   */
   appearance: none;
   -webkit-appearance: none;
   width: 1.05rem;

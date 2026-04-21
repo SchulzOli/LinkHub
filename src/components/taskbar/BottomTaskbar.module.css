@@ -188,8 +188,8 @@
   box-shadow: var(--panel-shadow);
 }
 
-.workspaceRailAction .modeSvg,
-.workspaceRailToggle .modeSvg {
+.workspaceRailAction .iconSvg,
+.workspaceRailToggle .iconSvg {
   width: 0.92rem;
   height: 0.92rem;
   transition:
@@ -197,22 +197,22 @@
     opacity 160ms ease;
 }
 
-.workspaceRailPinActive .modeSvg {
+.workspaceRailPinActive .iconSvg {
   opacity: 1;
   transform: none;
 }
 
-.workspaceRailPinInactive .modeSvg {
+.workspaceRailPinInactive .iconSvg {
   opacity: 0.76;
   transform: none;
 }
 
-.workspaceRailToggle .modeSvg {
+.workspaceRailToggle .iconSvg {
   transform: rotate(180deg);
   transition: transform 160ms ease;
 }
 
-.workspaceRailToggleOpen .modeSvg {
+.workspaceRailToggleOpen .iconSvg {
   transform: rotate(0deg);
 }
 
@@ -235,7 +235,18 @@
   display: none;
 }
 
-.modeButton {
+/*
+ * Icon-button primitive used by the bottom taskbar.
+ *
+ *   .iconButton     — the square button shell (touch-target-sized).
+ *   .iconGlyph      — inline-grid wrapper centering a single icon.
+ *   .iconSvg        — the SVG itself (default size).
+ *   .iconSvg[data-size='lg'] — slightly larger variant (same stroke).
+ *   .iconButton[data-variant='edit'|'view'] — state-dependent theming
+ *     for the view/edit-mode toggle. Use data-attributes rather than
+ *     modifier classes so a single className survives mode flips.
+ */
+.iconButton {
   display: inline-grid;
   place-items: center;
   width: 2.4rem;
@@ -243,28 +254,28 @@
   padding: 0;
 }
 
-.modeIcon {
+.iconGlyph {
   display: inline-grid;
   place-items: center;
 }
 
-.modeSvg {
+.iconSvg {
   width: 1.1rem;
   height: 1.1rem;
 }
 
-.modeSvgLarge {
+.iconSvg[data-size='lg'] {
   width: 1.3rem;
   height: 1.3rem;
 }
 
-.modeButtonEdit {
+.iconButton[data-variant='edit'] {
   border-color: color-mix(in srgb, var(--accent) 74%, var(--panel-border));
   background: color-mix(in srgb, var(--accent) 22%, var(--panel-bg));
   color: var(--text-primary);
 }
 
-.modeButtonView {
+.iconButton[data-variant='view'] {
   border-color: var(--panel-border);
   background: var(--input-bg);
   color: var(--text-muted);
@@ -312,8 +323,8 @@
     height: 1.18rem;
   }
 
-  .workspaceRailAction .modeSvg,
-  .workspaceRailToggle .modeSvg {
+  .workspaceRailAction .iconSvg,
+  .workspaceRailToggle .iconSvg {
     width: 0.84rem;
     height: 0.84rem;
   }
@@ -342,18 +353,18 @@
     gap: 0.28rem;
   }
 
-  .modeButton {
+  .iconButton {
     width: 2.18rem;
     height: 2.18rem;
     flex: 0 0 auto;
   }
 
-  .modeSvg {
+  .iconSvg {
     width: 1rem;
     height: 1rem;
   }
 
-  .modeSvgLarge {
+  .iconSvg[data-size='lg'] {
     width: 1.14rem;
     height: 1.14rem;
   }

@@ -146,11 +146,11 @@ export function BottomTaskbar({
           title="New workspace"
           type="button"
         >
-          <span aria-hidden="true" className={styles.modeIcon}>
+          <span aria-hidden="true" className={styles.iconGlyph}>
             <svg
               viewBox="0 0 24 24"
               focusable="false"
-              className={styles.modeSvg}
+              className={styles.iconSvg}
             >
               <path
                 d="M12 4.25a.75.75 0 0 1 .75.75v6.25H19a.75.75 0 0 1 0 1.5h-6.25V19a.75.75 0 0 1-1.5 0v-6.25H5a.75.75 0 0 1 0-1.5h6.25V5a.75.75 0 0 1 .75-.75Z"
@@ -202,11 +202,11 @@ export function BottomTaskbar({
           title={workspaceRailPinned ? 'Stays open' : 'Closes on outside click'}
           type="button"
         >
-          <span aria-hidden="true" className={styles.modeIcon}>
+          <span aria-hidden="true" className={styles.iconGlyph}>
             <svg
               viewBox="0 0 24 24"
               focusable="false"
-              className={styles.modeSvg}
+              className={styles.iconSvg}
             >
               <path
                 d="M9.15 5.25h5.7c.78 0 1.19.91.68 1.5l-1.67 1.94v2.1l1.9 1.1c.5.29.3 1.06-.28 1.06H8.52c-.58 0-.78-.77-.28-1.06l1.9-1.1v-2.1L8.47 6.75c-.51-.59-.1-1.5.68-1.5Z"
@@ -252,7 +252,7 @@ export function BottomTaskbar({
           ref={workspaceRailToggleRef}
           type="button"
         >
-          <svg viewBox="0 0 24 24" focusable="false" className={styles.modeSvg}>
+          <svg viewBox="0 0 24 24" focusable="false" className={styles.iconSvg}>
             <path
               d="M6.47 14.28a.75.75 0 0 1 1.06-.06L12 18.09l4.47-3.87a.75.75 0 0 1 .98 1.14l-4.96 4.29a.75.75 0 0 1-.98 0l-4.98-4.31a.75.75 0 0 1-.06-1.06Z"
               fill="currentColor"
@@ -286,16 +286,17 @@ export function BottomTaskbar({
             <>
               <button
                 aria-label="Add group"
-                className={styles.modeButton}
+                className={styles.iconButton}
                 onClick={onCreateGroup}
                 title="Add group"
                 type="button"
               >
-                <span aria-hidden="true" className={styles.modeIcon}>
+                <span aria-hidden="true" className={styles.iconGlyph}>
                   <svg
                     viewBox="0 0 24 24"
                     focusable="false"
-                    className={`${styles.modeSvg} ${styles.modeSvgLarge}`}
+                    className={styles.iconSvg}
+                    data-size="lg"
                   >
                     <path
                       d="M6.1 3.35a.85.85 0 0 1 .85.85V6.2h2a.85.85 0 1 1 0 1.7h-2v2a.85.85 0 1 1-1.7 0v-2h-2a.85.85 0 1 1 0-1.7h2V4.2a.85.85 0 0 1 .85-.85Z"
@@ -326,16 +327,17 @@ export function BottomTaskbar({
               </button>
               <button
                 aria-label="Upload image"
-                className={styles.modeButton}
+                className={styles.iconButton}
                 onClick={() => fileInputRef.current?.click()}
                 title="Upload image"
                 type="button"
               >
-                <span aria-hidden="true" className={styles.modeIcon}>
+                <span aria-hidden="true" className={styles.iconGlyph}>
                   <svg
                     viewBox="0 0 24 24"
                     focusable="false"
-                    className={`${styles.modeSvg} ${styles.modeSvgLarge}`}
+                    className={styles.iconSvg}
+                    data-size="lg"
                   >
                     <rect
                       x="6.9"
@@ -376,16 +378,16 @@ export function BottomTaskbar({
               </button>
               <button
                 aria-label="Open image gallery"
-                className={styles.modeButton}
+                className={styles.iconButton}
                 onClick={onOpenImageGallery}
                 title="Open image gallery"
                 type="button"
               >
-                <span aria-hidden="true" className={styles.modeIcon}>
+                <span aria-hidden="true" className={styles.iconGlyph}>
                   <svg
                     viewBox="0 0 24 24"
                     focusable="false"
-                    className={styles.modeSvg}
+                    className={styles.iconSvg}
                   >
                     <path
                       d="M4.75 5.5A1.75 1.75 0 0 1 6.5 3.75h11A1.75 1.75 0 0 1 19.25 5.5v13A1.75 1.75 0 0 1 17.5 20.25h-11A1.75 1.75 0 0 1 4.75 18.5v-13Zm1.5 0v13c0 .14.11.25.25.25h11a.25.25 0 0 0 .25-.25v-13a.25.25 0 0 0-.25-.25h-11a.25.25 0 0 0-.25.25Zm2 2a.75.75 0 0 1 .75-.75h6a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm0 3.5A.75.75 0 0 1 9 10.25h6a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm0 3.5A.75.75 0 0 1 9 13.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Z"
@@ -402,22 +404,19 @@ export function BottomTaskbar({
             aria-label="Toggle interaction mode"
             aria-pressed={interactionMode === 'edit'}
             title={interactionMode === 'edit' ? 'Bearbeiten' : 'Ansehen'}
-            className={
-              interactionMode === 'edit'
-                ? `${styles.modeButton} ${styles.modeButtonEdit}`
-                : `${styles.modeButton} ${styles.modeButtonView}`
-            }
+            className={styles.iconButton}
+            data-variant={interactionMode === 'edit' ? 'edit' : 'view'}
             onClick={onToggleInteractionMode}
             type="button"
           >
-            <span aria-hidden="true" className={styles.modeIcon}>
+            <span aria-hidden="true" className={styles.iconGlyph}>
               {interactionMode === 'edit' ? (
-                <EditIcon className={styles.modeSvg} />
+                <EditIcon className={styles.iconSvg} />
               ) : (
                 <svg
                   viewBox="0 0 24 24"
                   focusable="false"
-                  className={styles.modeSvg}
+                  className={styles.iconSvg}
                 >
                   <path
                     d="M12 5c-5.5 0-9.5 5.19-10.63 6.83a.8.8 0 0 0 0 .9C2.5 14.37 6.5 19.56 12 19.56s9.5-5.19 10.63-6.83a.8.8 0 0 0 0-.9C21.5 10.19 17.5 5 12 5Zm0 12.56c-4.27 0-7.58-3.88-8.97-5.28C4.42 10.88 7.73 7 12 7s7.58 3.88 8.97 5.28C19.58 13.68 16.27 17.56 12 17.56Zm0-8.81A3.53 3.53 0 1 0 15.53 12 3.54 3.54 0 0 0 12 8.75Zm0 5.06A1.53 1.53 0 1 1 13.53 12 1.53 1.53 0 0 1 12 13.81Z"

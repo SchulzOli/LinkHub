@@ -1,17 +1,43 @@
 /*
- * LinkHub design tokens.
+ * LinkHub design tokens — two tiers with different ownership.
  *
- * Theme-aware tokens (colors, radii, shadows) below are *defaults* for the
- * dark theme. The appearance store
- * (`src/features/appearance/stylePresets.ts`) overrides them at runtime via
- * `root.style.setProperty(...)` for both `data-theme-mode="dark"` and
- * `data-theme-mode="light"` — that is the single source of truth for
- * per-theme token values. Structural tokens (spacing, typography, motion,
- * z-index, elevation) are theme-independent and live only in CSS.
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │ Tier 1 — THEME-EDITABLE (runtime, per-user)                         │
+ * ├─────────────────────────────────────────────────────────────────────┤
+ * │ The appearance store overwrites these on `:root` via                │
+ * │ `applyAppearanceStyle` (see                                         │
+ * │ `src/features/appearance/stylePresets.ts`). The values below are    │
+ * │ only the dark-theme defaults used before the store mounts and as a  │
+ * │ fallback when no preset is loaded. The single source of truth for   │
+ * │ each user-visible theme is                                          │
+ * │ `CSS_VARIABLE_BY_TOKEN_KEY` in `stylePresets.ts`.                   │
+ * │                                                                     │
+ * │ Keys overwritten at runtime:                                        │
+ * │   --ui-font, --bg-canvas, --bg-shell,                               │
+ * │   --panel-bg, --panel-border, --panel-shadow,                       │
+ * │   --card-bg, --card-border,                                         │
+ * │   --input-bg, --input-border, --grid-color,                         │
+ * │   --text-primary, --text-muted,                                     │
+ * │   --accent, --accent-strong,                                        │
+ * │   --button-hover-bg, --button-active-bg,                            │
+ * │   --menu-bg, --menu-border, --menu-shadow, --menu-item-hover-bg,    │
+ * │   --tab-bg, --tab-active-bg, --tab-active-border, --focus-ring,     │
+ * │   --radius-sm, --radius-md, --radius-lg                             │
+ * │                                                                     │
+ * │ => If you add a key that must be themeable, add it BOTH here and    │
+ * │    in `CSS_VARIABLE_BY_TOKEN_KEY` + `AppearanceStyleTokens`.        │
+ * ├─────────────────────────────────────────────────────────────────────┤
+ * │ Tier 2 — STRUCTURAL (theme-independent, CSS-only)                   │
+ * ├─────────────────────────────────────────────────────────────────────┤
+ * │ Spacing, typography (except --ui-font), motion, z-index, the base   │
+ * │ elevation scale (--shadow-1/2/3), and the extended radii            │
+ * │ --radius-xl / --radius-2xl. These never change per theme; they      │
+ * │ establish the app's rhythm, hierarchy, and timing. Edit them here.  │
+ * └─────────────────────────────────────────────────────────────────────┘
  */
 
 :root {
-  /* ---------- Theme-aware defaults (dark) ---------- */
+  /* ---------- Tier 1: theme-editable defaults (dark) ---------- */
   --ui-font: Assistant, 'Segoe UI', system-ui, sans-serif;
   --bg-canvas: #121212;
   --bg-shell: #1c1c22;
@@ -37,7 +63,7 @@
   --tab-active-border: #a8a5ff;
   --focus-ring: rgba(168, 165, 255, 0.24);
 
-  /* ---------- Radii ----------
+  /* ---------- Tier 1: theme-editable radii (sm/md/lg) ----------
    *
    * Scale is used directly; do NOT synthesize intermediate values via
    * `calc(var(--radius-lg) + 0.1rem)` etc. in module CSS. If a component
@@ -45,14 +71,19 @@
    * The only accepted derivation is `calc(var(--radius-*) - 1px)` to
    * inset a child inside a 1 px bordered parent (see number-spinner in
    * globals.css).
+   *
+   * Only --radius-sm/md/lg are theme-editable via the appearance store;
+   * --radius-xl / --radius-2xl are structural and unaffected by themes.
    */
   --radius-sm: 0.5rem; /*  8px */
   --radius-md: 0.625rem; /* 10px */
   --radius-lg: 0.875rem; /* 14px */
+
+  /* ---------- Tier 2: structural radii ---------- */
   --radius-xl: 1rem; /* 16px — seam between lg-radius panels and their outer frame */
   --radius-2xl: 1.5rem; /* 24px — top-level shell / edit-mode frame */
 
-  /* ---------- Spacing (4px base) ---------- */
+  /* ---------- Tier 2: spacing (4px base) ---------- */
   --space-1: 0.25rem; /*  4px */
   --space-2: 0.5rem; /*  8px */
   --space-3: 0.75rem; /* 12px */
@@ -62,7 +93,7 @@
   --space-7: 2.5rem; /* 40px */
   --space-8: 3rem; /* 48px */
 
-  /* ---------- Typography ---------- */
+  /* ---------- Tier 2: typography (--ui-font is theme-editable, above) ---------- */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
@@ -74,13 +105,13 @@
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
 
-  /* ---------- Motion ---------- */
+  /* ---------- Tier 2: motion ---------- */
   --motion-fast: 120ms;
   --motion-base: 160ms;
   --motion-slow: 240ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
-  /* ---------- Z-Index ---------- */
+  /* ---------- Tier 2: z-index ---------- */
   --z-canvas: 1;
   --z-card-hover: 10;
   --z-edit-mode: 11;
@@ -92,12 +123,16 @@
   --z-dialog: 40;
   --z-tooltip: 50;
 
-  /* ---------- Elevation ---------- */
+  /* ---------- Tier 2: elevation base scale ----------
+   * --shadow-1/2/3 are structural and constant across themes. Per-theme
+   * elevation presets (--panel-shadow, --menu-shadow, below) map into
+   * this scale and are overridden per theme via the appearance store.
+   */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.18);
   --shadow-2: 0 6px 14px rgba(0, 0, 0, 0.32);
   --shadow-3: 0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2);
 
-  /* Back-compat aliases (overridden at runtime by the appearance store). */
+  /* Tier 1 theme-aware shadow presets (dark defaults). */
   --panel-shadow: var(--shadow-3);
   --menu-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.24);
 }
