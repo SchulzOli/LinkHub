@@ -10,7 +10,10 @@ import {
   isGroupPlacementBlockedByVisibleGroup,
   isPlacementBlockedByOccupiedItem,
 } from '../../../features/groups/groupLayout'
-import { isPlacementAvailable } from '../../../features/placement/snapEngine'
+import {
+  createOccupancyIndex,
+  isPlacementAvailable,
+} from '../../../features/placement/snapEngine'
 
 export type CardFrame = {
   cardId: string
@@ -62,32 +65,36 @@ export function usePlacementFrames({
       const stationaryCards = nodePlacementFrames.filter(
         (item) => !movingIds.has(item.id),
       )
+      const frameItems = frames.map((candidate) => ({
+        id: candidate.cardId,
+        positionX: candidate.position.x,
+        positionY: candidate.position.y,
+        size: candidate.size,
+      }))
+      // Occupancy-Index einmal pro Aufruf bauen statt pro Frame in
+      // `isPlacementAvailable`. Das Self-Overlap des jeweiligen
+      // Frames wird ueber `isOccupiedItemBlocking` ausgefiltert.
+      const occupancyIndex = createOccupancyIndex(
+        [...stationaryCards, ...frameItems],
+        placementGuide,
+      )
 
-      return frames.every((frame, _, allFrames) => {
-        const siblingFrames = allFrames
-          .filter((candidate) => candidate.cardId !== frame.cardId)
-          .map((candidate) => ({
-            id: candidate.cardId,
-            positionX: candidate.position.x,
-            positionY: candidate.position.y,
-            size: candidate.size,
-          }))
+      return frames.every((frame) =>
+        isPlacementAvailable(frame.position, frame.size, placementGuide, {
+          occupancyIndex,
+          isOccupiedItemBlocking: (candidate, occupiedItem, guide) => {
+            if (occupiedItem.id === frame.cardId) {
+              return false
+            }
 
-        return isPlacementAvailable(
-          frame.position,
-          frame.size,
-          placementGuide,
-          {
-            cards: [...stationaryCards, ...siblingFrames],
-            isOccupiedItemBlocking: (candidate, occupiedItem, guide) =>
-              isPlacementBlockedByOccupiedItem({
-                candidate,
-                gridSize: guide.gridSize,
-                occupiedItem,
-              }),
+            return isPlacementBlockedByOccupiedItem({
+              candidate,
+              gridSize: guide.gridSize,
+              occupiedItem,
+            })
           },
-        )
-      })
+        }),
+      )
     },
     [nodePlacementFrames, placementGuide],
   )
@@ -101,35 +108,36 @@ export function usePlacementFrames({
       const stationaryGroups = groupPlacementFrames.filter(
         (group) => !movingIds.has(group.id),
       )
+      const frameItems = rootFrames.map((candidate) => ({
+        collapsed: candidate.collapsed,
+        id: candidate.groupId,
+        kind: 'group' as const,
+        parentGroupId: candidate.parentGroupId,
+        positionX: candidate.position.x,
+        positionY: candidate.position.y,
+        size: candidate.size,
+      }))
+      const occupancyIndex = createOccupancyIndex(
+        [...stationaryGroups, ...frameItems],
+        placementGuide,
+      )
 
-      return rootFrames.every((frame, _, allFrames) => {
-        const siblingFrames = allFrames
-          .filter((candidate) => candidate.groupId !== frame.groupId)
-          .map((candidate) => ({
-            collapsed: candidate.collapsed,
-            id: candidate.groupId,
-            kind: 'group' as const,
-            parentGroupId: candidate.parentGroupId,
-            positionX: candidate.position.x,
-            positionY: candidate.position.y,
-            size: candidate.size,
-          }))
+      return rootFrames.every((frame) =>
+        isPlacementAvailable(frame.position, frame.size, placementGuide, {
+          occupancyIndex,
+          isOccupiedItemBlocking: (candidate, occupiedItem, guide) => {
+            if (occupiedItem.id === frame.groupId) {
+              return false
+            }
 
-        return isPlacementAvailable(
-          frame.position,
-          frame.size,
-          placementGuide,
-          {
-            cards: [...stationaryGroups, ...siblingFrames],
-            isOccupiedItemBlocking: (candidate, occupiedItem, guide) =>
-              isGroupPlacementBlockedByVisibleGroup({
-                candidate,
-                gridSize: guide.gridSize,
-                occupiedGroup: occupiedItem,
-              }),
+            return isGroupPlacementBlockedByVisibleGroup({
+              candidate,
+              gridSize: guide.gridSize,
+              occupiedGroup: occupiedItem,
+            })
           },
-        )
-      })
+        }),
+      )
     },
     [groupPlacementFrames, placementGuide],
   )
