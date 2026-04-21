@@ -285,6 +285,20 @@ export async function saveWorkspace(workspace: Workspace) {
 }
 
 export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
+  // localStorage wird immer gespiegelt, damit ein sp\u00e4terer App-Start
+  // ohne IDB (oder bei IDB-Fehlern beim \u00d6ffnen) last-known-good
+  // Directory-State wiederherstellen kann. Directory-Writes sind
+  // selten (Workspace-Switch, Pin-Toggle, Interaction-Mode), daher
+  // ist der doppelte Write-Pfad unkritisch.
+  try {
+    window.localStorage.setItem(
+      FALLBACK_DIRECTORY_KEY,
+      JSON.stringify(directory),
+    )
+  } catch {
+    // Quota oder Private-Mode: IDB bleibt zust\u00e4ndig.
+  }
+
   try {
     const db = await openLinkHubDb()
     await db.put(
@@ -293,10 +307,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
       WORKSPACE_DIRECTORY_KEY,
     )
   } catch {
-    window.localStorage.setItem(
-      FALLBACK_DIRECTORY_KEY,
-      JSON.stringify(directory),
-    )
+    // IDB nicht verf\u00fcgbar \u2013 localStorage-Fallback wurde bereits geschrieben.
   }
 }
 
