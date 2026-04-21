@@ -36,10 +36,6 @@ export type WorkspaceSession = {
 // bleibt als last-known-good erhalten.
 let indexedDbHealthy: boolean | null = null
 
-function isIndexedDbKnownHealthy() {
-  return indexedDbHealthy === true
-}
-
 function markIndexedDbHealthy() {
   indexedDbHealthy = true
 }
@@ -288,12 +284,11 @@ function writeActiveWorkspaceFallback(workspace: Workspace) {
 }
 
 export function saveWorkspaceSnapshot(workspace: Workspace) {
-  // IDB ist Primärpfad. Sobald IDB gesund ist, entfällt der
-  // synchrone localStorage-Write im Hot-Path vollständig.
-  if (isIndexedDbKnownHealthy()) {
-    return
-  }
-
+  // IDB ist Primärpfad, aber `saveWorkspace` läuft asynchron und ist
+  // auf `pagehide`/Reload nicht mehr garantiert flushbar. Deshalb
+  // schreibt der Snapshot immer synchron nach localStorage als
+  // last-known-good, damit ein Reload jede Mutation wieder sieht,
+  // selbst wenn die IDB-Transaktion beim Unload abbricht.
   writeActiveWorkspaceFallback(workspace)
   writeWorkspaceFallbackRecord(workspace)
 }

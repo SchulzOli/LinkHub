@@ -1,0 +1,258 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90mC:/Users/Oliver.Schulz/Desktop/root/oli-tech/LinkHub[39m
+
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mshares a single object URL across multiple acquirers[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mfalls back to the full blob when no thumbnail is available[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mloads the full variant directly when requested[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mreturns null when neither blob exists[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mrevokes the URL only when the last reference is released[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22mis safe to release an entry that was never acquired[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageObjectUrlCache.test.ts[2m > [22mimageObjectUrlCache[2m > [22minvalidates both thumbnail and full variants in one call[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/canvas/hooks/useImageGalleryManager.test.ts[2m > [22museImageGalleryManager[2m > [22mcloses the gallery after creating a picture node from browse mode[32m 40[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22mcreates a theme document from an appearance profile[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22momits the description when only whitespace is provided[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22mapplies a theme content back onto an appearance profile[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22mduplicates a theme with a new id and copy suffix[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22mparses valid theme payloads[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/themes/themeLibrary.test.ts[2m > [22mthemeLibrary[2m > [22mreturns null for invalid theme payloads[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/templateRepository.memoryBackend.test.ts[2m > [22mtemplateRepository (in-memory backend)[2m > [22mpersists a template with its image blobs and returns records on read[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/templateRepository.memoryBackend.test.ts[2m > [22mtemplateRepository (in-memory backend)[2m > [22mlists templates sorted by updatedAt descending[32m 24[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/templateRepository.memoryBackend.test.ts[2m > [22mtemplateRepository (in-memory backend)[2m > [22mreturns null / empty for missing templates[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/templateRepository.memoryBackend.test.ts[2m > [22mtemplateRepository (in-memory backend)[2m > [22mprunes image assets/blobs on overwrite and deletes them on delete[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mclampCardCornerRadius[2m > [22mclamps values above the maximum[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mclampCardCornerRadius[2m > [22mclamps values below the minimum[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mclampCardCornerRadius[2m > [22mrounds non-integer values[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardCornerRadius[2m > [22mreturns the fallback when the value is not numeric[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardCornerRadius[2m > [22mreturns the fallback for NaN[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardCornerRadius[2m > [22mclamps numeric values into range[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mgetLegacyCardSize[2m > [22mmaps legacy sizes to the documented grid sizes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardSize[2m > [22mconverts legacy string sizes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardSize[2m > [22mreads columns/rows from an object shape[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardSize[2m > [22maccepts legacy width/height aliases[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardSize[2m > [22mclamps into the allowed size range[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardSize[2m > [22mreturns the fallback when the value cannot be interpreted[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardVisibility[2m > [22mpasses through booleans[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardVisibility[2m > [22mreturns undefined for non-booleans[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardVisibilityDefault[2m > [22mreturns the fallback when the value is not boolean[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceCardVisibilityDefault[2m > [22mreturns the provided boolean otherwise[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceLinkCardColors[2m > [22mreturns empty slots for non-object input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceLinkCardColors[2m > [22mpasses through valid color and preset fields and strips unknowns[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mcoerceLinkCardColors[2m > [22mdrops empty string identifiers[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mparseCardSizeDraft[2m > [22mparses integer strings into a card size[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mparseCardSizeDraft[2m > [22mreturns null for non-integer input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/linkCard.test.ts[2m > [22mparseCardSizeDraft[2m > [22mreturns null for values outside the allowed range[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mserializes and parses copied cards[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects non-LinkHub clipboard text[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mserializes and parses copied selections with groups[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mparses legacy card clipboard text as a selection payload[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects card clipboard with invalid JSON after prefix[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects card clipboard with wrong version number[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects card clipboard with empty cards array[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects card clipboard with missing required card fields[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects selection clipboard with invalid JSON after prefix[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mrejects selection clipboard with empty cards and empty groups[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22maccepts selection clipboard with only groups and no cards[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mreturns null for plain text that is not a linkhub format[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mroundtrips multiple cards through card clipboard[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/cardClipboard.test.ts[2m > [22mcard clipboard[2m > [22mroundtrips nested groups with parentGroupId through selection clipboard[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/themeRepository.test.ts[2m > [22mthemeRepository[2m > [22mpersists, retrieves, lists, and deletes themes via the storage backend[32m 31[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/themeRepository.test.ts[2m > [22mthemeRepository[2m > [22mreturns null for missing themes and ignores invalid payloads[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/workspaceAnalytics.test.ts[2m > [22mworkspaceAnalytics[2m > [22mrecords link opens in totals and daily buckets[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/workspaceAnalytics.test.ts[2m > [22mworkspaceAnalytics[2m > [22maggregates calendar periods, timelines and per-card values[32m 43[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/workspaceAnalytics.test.ts[2m > [22mworkspaceAnalytics[2m > [22mkeeps the top 20 card rows synced with current titles and urls[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mcreateEmptyCanvasEntityBundle[2m > [22mreturns a bundle with empty arrays[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22misCanvasEntityBundleEmpty[2m > [22mreturns true for an empty bundle[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22misCanvasEntityBundleEmpty[2m > [22mreturns false when cards are present[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22misCanvasEntityBundleEmpty[2m > [22mreturns false when only groups are present[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22misCanvasEntityBundleEmpty[2m > [22mreturns false when only pictures are present[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetCanvasEntityBundleBounds[2m > [22mreturns null for an empty bundle[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetCanvasEntityBundleBounds[2m > [22mreturns top-left corner of a single card[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetCanvasEntityBundleBounds[2m > [22mreturns the minimum position across cards, groups, and pictures[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetCanvasEntityBundlePixelBounds[2m > [22mreturns null for an empty bundle[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetCanvasEntityBundlePixelBounds[2m > [22mcomputes correct pixel bounds for a single card[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mnormalizeCanvasEntityBundle[2m > [22mreturns the bundle unchanged when empty[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mnormalizeCanvasEntityBundle[2m > [22mshifts all positions so the top-left is at the origin[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22moffsetCanvasEntityBundle[2m > [22madds the offset to all entity positions[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22moffsetCanvasEntityBundle[2m > [22mhandles negative offsets[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetSelectedCanvasEntityBundle[2m > [22mreturns empty bundle when nothing is selected[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetSelectedCanvasEntityBundle[2m > [22mincludes cards belonging to a selected group tree[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetSelectedCanvasEntityBundle[2m > [22mexpands nested child groups when a parent group is selected[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetSelectedCanvasEntityBundle[2m > [22mdoes not count a child group as a root when both parent and child are selected[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mgetSelectedCanvasEntityBundle[2m > [22mincludes selected pictures[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mduplicateCanvasEntityBundle[2m > [22massigns new ids to all entities[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mduplicateCanvasEntityBundle[2m > [22mapplies offset to duplicated entity positions[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mduplicateCanvasEntityBundle[2m > [22mremaps group references for cards and nested groups[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mduplicateCanvasEntityBundle[2m > [22mremaps image ids when imageIdMap is provided[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundle.test.ts[2m > [22mduplicateCanvasEntityBundle[2m > [22msets createdAt and updatedAt to the provided timestamp[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/storageMigrations.test.ts[2m > [22mstorage migrations[2m > [22mdefaults analytics for legacy workspaces[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/storageMigrations.test.ts[2m > [22mstorage migrations[2m > [22mcoerces legacy picture nodes onto the workspace shape[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mcreateNextWorkspaceName[2m > [22mstarts numbering after the existing summaries[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mcreateNextWorkspaceName[2m > [22mskips numbers already used (case-insensitive)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mcreateNextWorkspaceName[2m > [22mreturns Board 1 when there are no summaries[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mcreateWorkspaceRecord[2m > [22mcreates a workspace with a unique id and generated name[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mgetWorkspaceSnapshotByteSize[2m > [22mreturns a positive byte size for a default workspace[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (in-memory backend)[2m > [22msaves and reloads a workspace through IDB[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (in-memory backend)[2m > [22mcreates, lists, and persists the directory via loadWorkspaceSession[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (in-memory backend)[2m > [22mstores and retrieves a custom directory state[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (in-memory backend)[2m > [22mremoves a workspace via deleteWorkspaceRecord[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (unavailable IDB)[2m > [22mfalls back to localStorage when IDB is unavailable[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/storage/workspaceRepository.memoryBackend.test.ts[2m > [22mworkspace persistence (unavailable IDB)[2m > [22mreturns a normalized directory from the localStorage fallback[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mfinds a free spot when the target area is occupied[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mreturns null for an empty bundle[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mplaces a bundle directly at the target point on an empty workspace[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mplaces a multi-card bundle and keeps all cards non-overlapping with existing cards[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mplaces a bundle containing a group with cards[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/canvas/entityBundlePlacement.test.ts[2m > [22mentity bundle placement[2m > [22mplaces a picture bundle on an empty workspace[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/importExport/canvasBundle.test.ts[2m > [22mcanvas bundle[2m > [22mcollects referenced image ids from pictures and card overrides without duplicates[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/importExport/canvasBundle.test.ts[2m > [22mcanvas bundle[2m > [22mexports and parses a canvas bundle while resetting analytics[32m 204[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/importExport/canvasBundle.test.ts[2m > [22mcanvas bundle[2m > [22mremaps conflicting imported image ids and rewrites workspace references[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates theme mode[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates the default card size[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates and resets non-color appearance options[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates default card visibility options[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates default surface effects[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates color presets and default preset selections[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates style preset[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mundoes the previous workspace change[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mtoggles the interaction mode[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mupdates and removes cards[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/appearanceStore.test.ts[2m > [22mappearance store[2m > [22mtracks selection and batch operations[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mcollapses a group, clears hidden card selection, and reflows lower cards and pictures[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mdoes not move downstream groups that extend beyond the source group width[32m 22[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mmoves affected groups together with their child cards and pictures during collapse reflow[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mdoes not move nested groups from a different parent subtree during collapse reflow[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mmoves nested groups, cards, and pictures together when the parent group moves[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mdoes not reassign cards between nested sibling groups when one sibling moves over the other[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mallows node placement inside a group body[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mblocks node placement on a group header[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupCollapse.test.ts[2m > [22mgroup collapse[2m > [22mcollapsing a parent group clears nested group selection and keeps descendants attached[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mhydrates a workspace and resets transient UI state[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mkeeps quick add and options menu mutually exclusive[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22madds an entity bundle and applies the provided selection[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mremoves group subtrees and pictures from the selection while clearing auto edit targets[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mundoes workspace changes and clears transient selection state[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mclears format painter when interaction mode changes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/useWorkspaceStore.test.ts[2m > [22museWorkspaceStore[2m > [22mdoes not collect outside pictures while a group is dragged across them[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/WorkspaceHelpDock.test.tsx[2m > [22mWorkspaceHelpDock[2m > [22mopens the centered help dialog with shortcut tables and links[33m 585[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/WorkspaceHelpDock.test.tsx[2m > [22mWorkspaceHelpDock[2m > [22mopens the centered privacy dialog from the help dialog[32m 254[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/groups/GroupFrame.test.tsx[2m > [22mGroupFrame[2m > [22mshows the actual group name in the header even when show title is disabled[32m 111[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/BottomTaskbar.test.tsx[2m > [22mBottomTaskbar[2m > [22mrenders quick add, mode toggle, and the options menu[33m 693[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/BottomTaskbar.test.tsx[2m > [22mBottomTaskbar[2m > [22mauto-hides the workspace rail on outside pointer down when unpinned[32m 21[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/BottomTaskbar.test.tsx[2m > [22mBottomTaskbar[2m > [22mkeeps the workspace rail open on outside pointer down when pinned[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/components/taskbar/BottomTaskbar.test.tsx[2m > [22mBottomTaskbar[2m > [22mhides secondary create actions while quick add is open[32m 67[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mhydrateWorkspace replaces the workspace and clears transient UI state[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mundoWorkspace is a no-op when the undo stack is empty[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mtoggleQuickAdd flips or sets the value and closes options menu[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mtoggleOptionsMenu flips or sets the value and closes quick add[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22msetAutoEditTarget/clearAutoEditTarget manage the edit hint target[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mstartFormatPainter/clearFormatPainter toggle the active painter[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22msetStatus updates the status field[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mtoggleInteractionMode flips edit<->view and persists when summaries exist[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceUISlice.test.ts[2m > [22mcreateWorkspaceUISlice[2m > [22mtoggleInteractionMode does not persist when there are no summaries[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mstarts with empty selections[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22msetSelectedCardIds clears other selections[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22msetSelectedGroupIds clears cards and pictures[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22msetSelectedPictureIds clears cards and groups[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22msetSelection replaces every selection bucket[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mselectCardExclusive/selectGroupExclusive/selectPictureExclusive select only one item[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mtoggleCardSelection adds and removes an id[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mtoggleGroupSelection / togglePictureSelection mirror card toggle behaviour[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mtoggling an entity clears the other buckets[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mclear helpers only clear the targeted bucket[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/state/slices/createWorkspaceSelectionSlice.test.ts[2m > [22mcreateWorkspaceSelectionSlice[2m > [22mclearSelection empties all buckets[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mhexToRgb[2m > [22mparses six-digit hex values[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mhexToRgb[2m > [22mexpands three-digit shorthand[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mhexToRgb[2m > [22maccepts values without a leading hash[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mhexToRgb[2m > [22mreturns null for unsupported lengths[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mhexToRgb[2m > [22mreturns null for non-hex characters[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mwithAlpha[2m > [22mreturns an rgba string for a valid color[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mwithAlpha[2m > [22mclamps alpha into the [0, 1] range[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mwithAlpha[2m > [22mreturns the original value when the color cannot be parsed[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mmixHexColors[2m > [22mreturns the left color when ratio is 0[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mmixHexColors[2m > [22mreturns the right color when ratio is 1[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mmixHexColors[2m > [22mmixes evenly at 0.5[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mmixHexColors[2m > [22mclamps the ratio to [0, 1][32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/colorMath.test.ts[2m > [22mmixHexColors[2m > [22mreturns the left color when either input is invalid[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22massigns a card to the smallest fully containing group[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22massigns a group to the smallest fully containing parent group[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mkeeps an existing parent group when a sibling also fully contains the child[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mremoves group membership when a card leaves every group[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mremoves parent group membership when a group leaves every group[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22monly reparents the moved root group when parent syncing is scoped[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mdoes not assign a card that sits only in the group header zone[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mdoes not assign a card that crosses the dashed body boundary[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupMembership.test.ts[2m > [22mgroupMembership[2m > [22mdoes not assign cards into a collapsed group[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22mdetects dark hex surfaces[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22mdetects dark rgb surfaces[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22mpicks the lighter title color on dark surfaces[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22mpicks the darker title color on light surfaces[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22maccounts for the canvas backdrop when surfaces are translucent[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceContrast.test.ts[2m > [22msurfaceContrast[2m > [22mkeeps edge-to-edge image title scrims on the lighter title color[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupSize.test.ts[2m > [22mparseGroupSizeDraft[2m > [22mallows groups larger than the card max size[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupSize.test.ts[2m > [22mparseGroupSizeDraft[2m > [22mrejects groups smaller than 2x2[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupSize.test.ts[2m > [22mparseGroupSizeDraft[2m > [22mcreates a default group size with usable snapped body slots for a default card[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/groups/groupSize.test.ts[2m > [22mparseGroupSizeDraft[2m > [22mcaps the shell top radius once the header radius is saturated[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/snapPlacement.test.ts[2m > [22msnap placement[2m > [22msnaps close positions to single grid cells when enabled[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/snapPlacement.test.ts[2m > [22msnap placement[2m > [22mpreserves self-chosen positions when snap is disabled[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/snapPlacement.test.ts[2m > [22msnap placement[2m > [22mforces positions onto single grid cells when requested[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/snapPlacement.test.ts[2m > [22msnap placement[2m > [22mskips occupied cells and resolves to the nearest free placement[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/workspaceAnalytics.test.ts[2m > [22mcreateDefaultWorkspaceAnalytics[2m > [22mreturns empty buckets and zeroed totals[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/workspaceAnalytics.test.ts[2m > [22mcoerceWorkspaceAnalytics[2m > [22mreturns a valid payload unchanged[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/workspaceAnalytics.test.ts[2m > [22mcoerceWorkspaceAnalytics[2m > [22mreturns defaults for non-object input[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/workspaceAnalytics.test.ts[2m > [22mcoerceWorkspaceAnalytics[2m > [22msanitises negative and non-finite counters[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/workspaceAnalytics.test.ts[2m > [22mcoerceWorkspaceAnalytics[2m > [22mfills in missing bucket fields[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/pictureCreation.test.ts[2m > [22mpicture creation[2m > [22mderives a landscape-oriented default size from image dimensions[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/pictureCreation.test.ts[2m > [22mpicture creation[2m > [22mcreates a picture node with a stable picture discriminator[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/templates/templateLibrary.test.ts[2m > [22mtemplate library[2m > [22mcollects unique image ids from cards and pictures[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/templates/templateLibrary.test.ts[2m > [22mtemplate library[2m > [22mcreates a normalized template document[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/templates/templateLibrary.test.ts[2m > [22mtemplate library[2m > [22mmaterializes a template and remaps conflicting images[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/templates/templateLibrary.test.ts[2m > [22mtemplate library[2m > [22mduplicates template metadata with a new id[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/linkCreation.test.ts[2m > [22mlink creation[2m > [22mnormalizes bare domains to https[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/linkCreation.test.ts[2m > [22mlink creation[2m > [22mrejects non-http protocols[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/linkCreation.test.ts[2m > [22mlink creation[2m > [22mcreates a square card with an empty title when no title is provided[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/links/linkCreation.test.ts[2m > [22mlink creation[2m > [22mkeeps explicit transparency and shadow settings when provided[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/workspaceStorage.test.ts[2m > [22mworkspaceStorage[2m > [22mreturns zero-sized logical buckets for empty board content[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/workspaceStorage.test.ts[2m > [22mworkspaceStorage[2m > [22mbuilds logical byte totals for board content, images, and templates[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/analyticsStore.test.ts[2m > [22manalytics store[2m > [22mrecords link opens without polluting undo history[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/analytics/analyticsStore.test.ts[2m > [22manalytics store[2m > [22mrecords canvas opens without polluting undo history[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/formatPainter.test.ts[2m > [22mformatPainter[2m > [22mkeeps card-only fields when copying card format to another card[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/formatPainter.test.ts[2m > [22mformatPainter[2m > [22mdrops card-only showImage when applying card format to a group[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/formatPainter.test.ts[2m > [22mformatPainter[2m > [22mpreserves preset-based colors while clearing custom colors and clamps only card size updates[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/formatPainter.test.ts[2m > [22mformatPainter[2m > [22mmatches only the original source node[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/useSurfaceStyles.test.ts[2m > [22museSurfaceStyles[2m > [22mresolves theme-aware colors and draft selections through one shared path[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/useSurfaceStyles.test.ts[2m > [22museSurfaceStyles[2m > [22mfalls back to appearance defaults when the entity has no explicit surface values[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageDrop.test.ts[2m > [22mimage drop[2m > [22mdetects file-based drag payloads[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageDrop.test.ts[2m > [22mimage drop[2m > [22mkeeps only supported image files from a drop payload[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageUsage.test.ts[2m > [22mimage usage[2m > [22mcounts picture nodes and card overrides independently[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageUsage.test.ts[2m > [22mimage usage[2m > [22mbuilds usage summaries for all requested image ids in one pass[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/images/imageUsage.test.ts[2m > [22mimage usage[2m > [22mformats a destructive confirmation message for in-use images[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceEffects.test.ts[2m > [22msurfaceEffects[2m > [22muses updated user-facing labels for the node shadow presets[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceEffects.test.ts[2m > [22msurfaceEffects[2m > [22mreturns no box shadow for the off preset[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceEffects.test.ts[2m > [22msurfaceEffects[2m > [22mkeeps the balanced shadow compact and readable in both theme modes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/surfaceEffects.test.ts[2m > [22msurfaceEffects[2m > [22mscales long shadows inversely to the canvas zoom[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22mscreenDeltaToCanvas[2m > [22mdivides the delta by zoom[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22mscreenPointToCanvas[2m > [22mtranslates a screen point into canvas coordinates[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22mgetVisibleCanvasBounds[2m > [22mexpands the viewport by the default margin[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22mgetVisibleCanvasBounds[2m > [22mscales the margin by the zoom factor[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22misRectInBounds[2m > [22mreturns true for rectangles that overlap the bounds[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/canvasMath.test.ts[2m > [22misRectInBounds[2m > [22mreturns false for rectangles outside the bounds[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/utils/id.test.ts[2m > [22mcreateId[2m > [22muses crypto.randomUUID when available[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/utils/id.test.ts[2m > [22mcreateId[2m > [22mfalls back to a time-based id when randomUUID is unavailable[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/utils/id.test.ts[2m > [22mcreateId[2m > [22mreturns a unique id across successive fallback calls[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/overlayPlacement.test.ts[2m > [22moverlayPlacement[2m > [22mcenters overlays below the anchor when there is enough room[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/overlayPlacement.test.ts[2m > [22moverlayPlacement[2m > [22mmoves the overlay above the anchor when below space is insufficient[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/placement/overlayPlacement.test.ts[2m > [22moverlayPlacement[2m > [22mshrinks the overlay into the larger free side instead of overlapping the anchor[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/features/appearance/cardColorPalette.test.ts[2m > [22mcardColorPalette[2m > [22mresolves preset-based card colors against the active theme row[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/imageAsset.test.ts[2m > [22mimage asset mime type resolution[2m > [22mkeeps supported browser-provided image mime types[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/imageAsset.test.ts[2m > [22mimage asset mime type resolution[2m > [22mfalls back to the file extension when the mime type is missing[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m tests/unit/contracts/imageAsset.test.ts[2m > [22mimage asset mime type resolution[2m > [22mnormalizes image/jpg to image/jpeg[32m 0[2mms[22m[39m
+ [2m[90mÔåô[39m[22m tests/unit/storage/workspaceRepository.test.ts[2m > [22mworkspace repository[2m > [22mcreates a workspace directory from the legacy default workspace
+ [2m[90mÔåô[39m[22m tests/unit/storage/workspaceRepository.test.ts[2m > [22mworkspace repository[2m > [22mloads the selected active workspace from a saved directory
+ [2m[90mÔåô[39m[22m tests/unit/storage/workspaceRepository.test.ts[2m > [22mworkspace repository[2m > [22mdefaults interaction mode to edit for legacy workspace directories
+ [2m[90mÔåô[39m[22m tests/unit/storage/templateRepository.test.ts[2m > [22mtemplate repository[2m > [22mstores templates and their copied image records
+
+[2m Test Files [22m [1m[32m42 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (44)[39m
+[2m      Tests [22m [1m[32m245 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (249)[39m
+[2m   Start at [22m 15:24:09
+[2m   Duration [22m 12.89s[2m (transform 9.03s, setup 13.78s, import 18.72s, tests 2.69s, environment 149.84s)[22m
+

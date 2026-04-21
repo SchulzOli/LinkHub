@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createDefaultWorkspace } from '../../../src/contracts/workspace'
 import { createWorkspaceSummary } from '../../../src/contracts/workspaceDirectory'
+import { openLinkHubDb, STORAGE_STORES } from '../../../src/storage/db'
 import {
   createWorkspaceRecord,
   loadWorkspace,
@@ -12,20 +13,27 @@ import {
 
 const itWithIndexedDb = typeof indexedDB === 'undefined' ? it.skip : it
 
-async function deleteDatabase(name: string) {
-  await new Promise<void>((resolve, reject) => {
-    const request = indexedDB.deleteDatabase(name)
+async function clearAllStores() {
+  const db = await openLinkHubDb()
+  const names = Object.values(STORAGE_STORES)
+  const transaction = db.transaction(names, 'readwrite')
 
-    request.onerror = () => reject(request.error)
-    request.onblocked = () => resolve()
-    request.onsuccess = () => resolve()
-  })
+  await Promise.all(
+    names.map(async (name) => {
+      const store = transaction.objectStore(name)
+      const keys = (await store.getAllKeys()) as string[]
+
+      await Promise.all(keys.map((key) => store.delete(key)))
+    }),
+  )
+
+  await transaction.done
 }
 
 describe('workspace repository', () => {
   beforeEach(async () => {
     window.localStorage.clear()
-    await deleteDatabase('linkhub')
+    await clearAllStores()
   })
 
   itWithIndexedDb(
@@ -89,13 +97,18 @@ describe('workspace repository', () => {
       const homeWorkspace = createDefaultWorkspace({ name: 'Home' })
 
       await saveWorkspace(homeWorkspace)
-      window.localStorage.setItem(
-        'linkhub.workspace-directory',
-        JSON.stringify({
+
+      // Seed a legacy directory (missing `interactionMode`) directly into IDB,
+      // simulating a pre-2026 persisted directory.
+      const db = await openLinkHubDb()
+      await db.put(
+        STORAGE_STORES.workspaceMetadata,
+        {
           activeWorkspaceId: homeWorkspace.id,
           workspaceRailPinned: true,
           workspaces: [createWorkspaceSummary(homeWorkspace)],
-        }),
+        },
+        'app',
       )
 
       const session = await loadWorkspaceSession()

@@ -1,0 +1,186 @@
+# LinkHub – Design & Frontend Review
+
+Stand: April 2026
+Scope: `src/styles/`, `src/components/` (Taskbar, Canvas, Cards, Groups, UI, Onboarding)
+Ziel: Visuelle Konsistenz, UX-Feinschliff, Accessibility und Wartbarkeit des React-Frontends.
+
+---
+
+## 1. Gesamteindruck
+
+LinkHub hat eine klare, dunkle „Canvas-App"-Ästhetik mit einem Akzent-Violett (`--accent: #a8a5ff`), Glas-Panels (`backdrop-filter: blur`) und konsistenten Radii. Die Struktur ist sauber in CSS-Module aufgeteilt, Tokens sind zentral in `tokens.css`. Das Fundament ist solide – die folgenden Verbesserungen fokussieren Konsistenz, Hierarchie, Accessibility und Skalierbarkeit des Design-Systems.
+
+**Stärken**
+- Zentrale Design-Tokens, `color-mix()` für abgeleitete Farben.
+- Saubere Trennung von Logik und Styles (CSS-Module pro Komponente).
+- Durchdachte Edit-/View-Modi inkl. visueller Kennzeichnung (`[data-mode='edit']`).
+- Respektvolle Micro-Interactions (Hover-Lift, Marquee-Animation, Snap-Preview).
+
+**Hauptschwächen**
+- Token-Set ist zu schmal: keine Spacing-, Typografie-, Z-Index-, Motion-Token.
+- Light-Mode ist deklariert (`color-scheme`), aber Tokens decken nur Dark ab.
+- Accessibility-Lücken (Kontrast `--text-muted`, `prefers-reduced-motion`, Focus-Styles inkonsistent).
+- Harte Werte (`clamp`, `rem`, `px`, `%`) gemischt ohne Spacing-Skala.
+- Keine sichtbare Empty-/Loading-/Error-State-Strategie über `EmptyCanvasGuide` hinaus.
+
+---
+
+## 2. Priorisierte Verbesserungen
+
+Legende: **P1** = sollte vor dem nächsten Release, **P2** = mittelfristig, **P3** = Nice-to-have.
+
+### P1 – Design-System härten
+
+1. **Token-Skala erweitern** in `src/styles/tokens.css`:
+   - Spacing: `--space-1` … `--space-8` (4px-Basis).
+   - Typografie: `--font-size-xs/sm/md/lg/xl`, `--font-weight-regular/medium/semibold`, `--line-height-tight/normal`.
+   - Motion: `--motion-fast: 120ms`, `--motion-base: 160ms`, `--motion-slow: 240ms`, `--ease-standard: cubic-bezier(.2,.0,.0,1)`.
+   - Z-Index: `--z-canvas`, `--z-card-selected`, `--z-overlay`, `--z-taskbar`, `--z-dialog`, `--z-tooltip` (aktuell magic numbers 1/10/11/12/13/20/24).
+   - Elevation: `--shadow-1/2/3` statt mehrfach duplizierter `0 20px 44px …`.
+2. **Light-Theme vervollständigen**. `color-scheme: light` ist gesetzt, aber Tokens werden nicht überschrieben. Entweder:
+   - `:root[data-theme-mode='light'] { … }` mit vollständigem Token-Overlay, **oder**
+   - Dokumentieren, dass Themes ausschließlich über den Theme-Store gesteuert werden und `color-scheme: light` entfernen, um Inkonsistenzen (System-Scrollbars, native Controls) zu vermeiden.
+3. **Focus-States vereinheitlichen**. Aktuell:
+   - Buttons/Inputs bekommen `box-shadow: 0 0 0 3px var(--focus-ring)` in `globals.css`.
+   - Viele Komponenten (Workspace-Tabs, Resize-Handles, Rail-Toggle) überschreiben das implizit.
+   - Einheitlicher Mixin/Klasse `:focus-visible` mit 2px Outline + `outline-offset` statt Border-Color-Shift (Border-Shift verschiebt Layout-Anmut nicht, aber verdeckt Selected-State bei Cards).
+4. **Kontrast prüfen**. `--text-muted: #adadbf` auf `--panel-bg` ≈ 4.3:1 – grenzwertig für kleinere Texte. Empfehlung: `#c4c3d4` oder heller für `font-size < 14px`.
+
+### P1 – Accessibility
+
+5. **`prefers-reduced-motion`** respektieren. Animationen in `globals.css` (`selectionMarqueeEnter`, Hover-Lift via `--card-hover-offset`, Rail Transform) sollten unter:
+   ```css
+   @media (prefers-reduced-motion: reduce) {
+     *,
+     *::before,
+     *::after {
+       animation-duration: 0.01ms !important;
+       transition-duration: 0.01ms !important;
+     }
+   }
+   ```
+   kontrolliert werden. Alternativ pro Komponente gezielt.
+6. **Keyboard-Workflow für Cards**. `LinkCard` nutzt `cursor: grab`, aber Tastatur-Interaktion zum Verschieben ist nicht sichtbar. Pfeil-Tasten + `aria-grabbed`/`aria-describedby`-Hinweis wären wertvoll (oder explizit dokumentieren, dass Drag maus-only ist).
+7. **`aria-live`-Region für Canvas-Operationen** (Paste, Undo, Snap blockiert). Aktuell keine sichtbare/hörbare Quittung für Screenreader.
+8. **Touch-Targets**: `width: 2rem; height: 2rem` (Workspace-Rail-Actions, Rail-Toggle `1.26rem` hoch!) sind unter dem WCAG-Minimum von 24 px (AA) bzw. 44 px (AAA für Touch). Rail-Toggle `2.1 × 1.26 rem` auf ≥ `2.4 × 2.4 rem` vergrößern, optisch weiter reduziert durch inneres Icon.
+
+### P2 – Komponenten-Feinschliff
+
+9. **Taskbar-Dichte**.
+   - Rail und Taskbar überlappen bewusst (`margin-bottom: -0.78rem`). Das wirkt gut, aber der Rail-Toggle `top: -0.66rem` liegt halb außerhalb – auf kleinen Viewports (< 520 px) kollidiert das mit dem Viewport-Rand. Media-Query für Mobil: Rail-Toggle unter der Taskbar oder als Seiten-Drawer.
+   - Workspace-Tabs haben `max-width: 9.5rem`. Bei vielen Workspaces hilft ein Overflow-Indikator (Fade-Gradient links/rechts statt nur nativer Scrollbar).
+10. **LinkCard-Hierarchie**.
+    - Card-Edit-Modus zeigt viele Controls (`ColorPresetPicker`, `SelectMenu`, Größen-Inputs, Format-Painter). Gefahr: visuelles Rauschen. Empfehlung: Sekundär-Controls (Corner-Radius, Transparency) in einen ausklappbaren „Mehr"-Abschnitt verschieben oder Tabs (Inhalt / Style / Layout).
+    - Resize-Handles haben `opacity: 0.28` im Hover – schwer sichtbar auf dunklen Cards. Kontrast erhöhen (`0.55`) oder Rahmen-Outline auf der Card statt nur Handles.
+11. **Edit-Mode-Overlay** (`workspaceShell[data-mode='edit']::before/::after`) ist stark auffällig: 3 px gestrichelter Rand + gekreuzter Pattern-Overlay. Das kann mit Inhalten visuell konkurrieren. Vorschlag: Nur einen dezenten Rand + kleine „Edit-Mode"-Badge oben, Pattern entfernen oder nur in einem Hover-Affordance einblenden.
+12. **Empty State** (`EmptyCanvasGuide`): Nur Titel + Body. Verpasst Chance, neue Nutzer:innen zu aktivieren.
+    - CTA-Button („Ersten Link hinzufügen") primary-styled.
+    - Sekundär: „Template laden".
+    - Ein illustrativer, subtiler Hintergrund-SVG (Grid + Platzhalter-Cards) statt nur Text.
+13. **Scrollbar-Styling** für `workspaceTabs` ist vorhanden, fehlt aber in anderen scrollbaren Bereichen (Options-Menu, Theme-Gallery). Als globale Utility `.scrollArea` in `globals.css` verankern.
+
+### P2 – Architektur & Wartbarkeit
+
+14. **Inline-SVG-Icons** sind überall dupliziert (Taskbar, Rail-Pin, Chevron). Extrahieren nach `src/components/ui/icons/` mit einheitlicher API (`<Icon name="chevron-down" size={16} />`). Reduziert LOC und sichert konsistente `stroke-width`/`viewBox`.
+15. **CSS-Module-Konventionen**. Beobachtet: `modeButton`, `modeSvg`, `modeSvgLarge`, `modeIcon` – zu viele Varianten ohne klare Semantik. Vorschlag: BEM-ähnliche Benennung (`iconButton`, `iconButton--lg`, `iconButton--primary`) oder `data-size="sm|md|lg"` Attribute.
+16. **Inline-Styles via `style`-Prop in `LinkCard`**. `editPanelStyle`, `urlTooltipStyle`, `--card-translate-x` etc. sind technisch nötig (Portal-Positionierung), aber mind. dokumentieren, welche Custom-Properties offizielles Interface sind. `CardStyleContract.md` oder JSDoc an `LinkCard`.
+17. **ID-Kollisionen vermeiden**: `useId()` wird in `BottomTaskbar` genutzt – gut. In anderen Dialog-Komponenten prüfen, ob statische IDs verwendet werden (häufige Bug-Quelle bei mehrfacher Mount-Instanz).
+18. **Theming-Layer vs. CSS-Variablen**. Der Store (`useAppearanceStore`) schreibt vermutlich Variablen ins `:root`. Aktuelle Tokens in `tokens.css` sind aber hartcodiert. Klärung: Welche Tokens sind user-editierbar, welche sind System? In `tokens.css` mit Kommentar-Blöcken trennen.
+
+### P3 – Details & Politur
+
+19. **Card-Hover** nutzt `--card-hover-offset: -2px` via CSS-Transition auf Custom-Property. Safari < 16.4 unterstützt `@property` für animierbare CPs nicht immer zuverlässig. Fallback: `transform: translateY(-2px)` auf innerem Element.
+20. **Selection-Marquee**-Animation (120 ms, scale 0.985 → 1) ist angenehm dezent. Für schnelles Mehrfach-Drag reicht aktuell die Animation – ok.
+21. **`backdrop-filter: blur(18px)`** hat messbare Kosten, insbesondere bei vielen Cards + Rail gleichzeitig sichtbar. Messung per DevTools empfehlenswert; ggf. auf `blur(12px)` reduzieren.
+22. **Checkbox-Styling** ist aufwändig (Custom-Clip-Path-Haken) – schön, aber viel Spezial-CSS. Prüfen, ob zentraler `<Checkbox>`-Component dies kapselt.
+23. **Konsistenz der Radius-Skala**. `tokens.css` definiert `--radius-sm/md/lg`. In Modulen tauchen Ableitungen auf: `calc(var(--radius-lg) + 0.1rem)`, `calc(var(--radius-lg) + 0.7rem)`. Besser `--radius-xl`/`--radius-2xl` ergänzen statt Ad-hoc-Berechnungen.
+24. **Privacy-/Store-Assets** (`public/privacy/`, `extension/store-assets/`) sollten visuelle Sprache der App spiegeln – separat reviewen.
+
+---
+
+## 3. Konkreter Umsetzungsvorschlag (Reihenfolge)
+
+| # | Schritt | Effort | Impact |
+|---|---------|--------|--------|
+| 1 | Token-Erweiterung (Spacing, Motion, Z-Index, Elevation) | S | Hoch |
+| 2 | Focus-Visible-Utility + globale `prefers-reduced-motion` | S | Hoch |
+| 3 | Icon-Komponente + Migration aller Inline-SVGs | M | Mittel |
+| 4 | Text-Muted-Kontrast + Touch-Target-Fixes | S | Hoch (A11y) |
+| 5 | Light-Theme-Tokens vervollständigen oder `color-scheme` entfernen | S | Mittel |
+| 6 | Empty-Canvas-Guide CTA + Illustration | M | Hoch (Onboarding) |
+| 7 | LinkCard-Edit-Panel in Tabs/Sections gliedern | M | Mittel |
+| 8 | Edit-Mode-Overlay reduzieren | S | Mittel |
+| 9 | Mobile-Layout Rail-Toggle + Taskbar | M | Mittel |
+| 10 | Radius-Skala erweitern, Ad-hoc-`calc`s ersetzen | S | Niedrig |
+
+Aufwand: **S** ≤ 0.5 Tag, **M** 0.5–2 Tage.
+
+---
+
+## 4. Beispielhafte Token-Erweiterung (Snippet)
+
+```css
+:root {
+  /* Spacing (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* Typography */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 6px 14px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  /* Z-Index */
+  --z-canvas: 1;
+  --z-card-hover: 10;
+  --z-card-selected: 24;
+  --z-overlay: 20;
+  --z-taskbar: 30;
+  --z-dialog: 40;
+  --z-tooltip: 50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}
+```
+
+---
+
+## 5. Offene Fragen
+
+- Gibt es ein verbindliches Light-Theme oder ist Dark die offizielle Default-Optik (Light nur via User-Theme)?
+- Soll Mobile-Support (Touch-Canvas) offiziell supported werden? Falls ja, Gesten-Layer priorisieren.
+- Welche Telemetrie liegt zu Edit-vs-View-Ratio und Quick-Add-Nutzung vor? Beeinflusst Priorisierung der Empty-State- und Taskbar-Überarbeitung.
+
+---
+
+## 6. Nicht abgedeckt (bewusst)
+
+- Performance-Profiling (separate Session sinnvoll: Canvas-Zoom mit > 200 Cards, `backdrop-filter`-Kosten).
+- E2E-Test-Snapshots / visuelle Regressions-Absicherung (Playwright).
+- Store-/State-Architektur (`useWorkspaceStore`, `useAppearanceStore`).
+- Internationalisierung (aktuell englische UI-Strings hartkodiert).
