@@ -49,6 +49,7 @@
 }
 
 .workspaceTabs {
+  composes: scrollArea from global;
   display: flex;
   gap: 0.38rem;
   align-items: center;
@@ -58,29 +59,9 @@
   overflow-y: hidden;
   padding: 0.04rem 0.04rem 0.22rem;
   scrollbar-gutter: stable both-edges;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border))
-    transparent;
   scroll-behavior: smooth;
   overscroll-behavior-inline: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-.workspaceTabs::-webkit-scrollbar {
-  height: 0.34rem;
-}
-
-.workspaceTabs::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.workspaceTabs::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 16%, var(--panel-border));
-}
-
-.workspaceTabs::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--accent) 24%, var(--panel-border));
 }
 
 .workspaceTab,

@@ -393,6 +393,39 @@ select:focus-visible,
   border: 0;
 }
 
+/*
+ * Scrollbar utility: apply to any element that needs the app's themed
+ * scrollbar (Firefox `scrollbar-*` + WebKit pseudo-elements). Covers both
+ * horizontal and vertical scroll axes so one class fits all overflow contexts
+ * (options menu, theme gallery, dialogs, menus, edit panels, tabs). CSS
+ * modules consume this via `composes: scrollArea from global;` (scrollArea
+ * is loaded globally from this file); JSX may also
+ * apply the class directly.
+ */
+.scrollArea {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border))
+    transparent;
+}
+
+.scrollArea::-webkit-scrollbar {
+  width: 0.34rem;
+  height: 0.34rem;
+}
+
+.scrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollArea::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--panel-border));
+}
+
+.scrollArea::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 24%, var(--panel-border));
+}
+
 @media (max-width: 768px) {
   .quickAddForm {
     flex-direction: column;

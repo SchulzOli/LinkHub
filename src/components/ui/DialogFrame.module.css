@@ -124,6 +124,7 @@
 }
 
 .content {
+  composes: scrollArea from global;
   min-height: 0;
   overflow: auto;
   padding: 0.95rem;

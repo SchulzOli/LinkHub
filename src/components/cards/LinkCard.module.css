@@ -590,6 +590,7 @@
 }
 
 .editPanel {
+  composes: scrollArea from global;
   position: fixed;
   box-sizing: border-box;
   display: grid;

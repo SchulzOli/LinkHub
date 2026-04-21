@@ -1,8 +1,5 @@
 ### P2 – Komponenten-Feinschliff
 
-9. **Taskbar-Dichte**.
-   - Rail und Taskbar überlappen bewusst (`margin-bottom: -0.78rem`). Das wirkt gut, aber der Rail-Toggle `top: -0.66rem` liegt halb außerhalb – auf kleinen Viewports (< 520 px) kollidiert das mit dem Viewport-Rand. Media-Query für Mobil: Rail-Toggle unter der Taskbar oder als Seiten-Drawer.
-   - Workspace-Tabs haben `max-width: 9.5rem`. Bei vielen Workspaces hilft ein Overflow-Indikator (Fade-Gradient links/rechts statt nur nativer Scrollbar).
 10. **LinkCard-Hierarchie**.
     - Card-Edit-Modus zeigt viele Controls (`ColorPresetPicker`, `SelectMenu`, Größen-Inputs, Format-Painter). Gefahr: visuelles Rauschen. Empfehlung: Sekundär-Controls (Corner-Radius, Transparency) in einen ausklappbaren „Mehr"-Abschnitt verschieben oder Tabs (Inhalt / Style / Layout).
     - Resize-Handles haben `opacity: 0.28` im Hover – schwer sichtbar auf dunklen Cards. Kontrast erhöhen (`0.55`) oder Rahmen-Outline auf der Card statt nur Handles.

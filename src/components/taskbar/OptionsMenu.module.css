@@ -244,6 +244,7 @@
 }
 
 .panelBody {
+  composes: scrollArea from global;
   display: grid;
   gap: 0.9rem;
   min-height: 0;

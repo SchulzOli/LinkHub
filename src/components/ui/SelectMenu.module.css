@@ -66,6 +66,7 @@
 }
 
 .menu {
+  composes: scrollArea from global;
   display: grid;
   gap: 0.25rem;
   padding: 0.4rem;
