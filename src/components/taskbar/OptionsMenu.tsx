@@ -61,6 +61,12 @@ const TemplatesPanel = lazy(async () => {
 type OptionsMenuProps = {
   cardCount: number
   open: boolean
+  /**
+   * Tab to activate the next time `open` transitions from false to true.
+   * Used by the empty-canvas “Browse templates” CTA to deep-link into the
+   * Templates tab. When unset the menu keeps its last-selected tab.
+   */
+  initialTab?: MenuTab
   onToggle: () => void
   onRequestClose: () => void
 }
@@ -74,6 +80,7 @@ type PromptDialogState = PromptDialogConfig & {
 export function OptionsMenu({
   cardCount,
   open,
+  initialTab,
   onToggle,
   onRequestClose,
 }: OptionsMenuProps) {
@@ -238,6 +245,15 @@ export function OptionsMenu({
 
     onToggle()
   }, [onToggle, open, resetWorkspaceEditor])
+
+  // Apply a parent-requested initial tab each time the menu opens. Lets
+  // deep-links (e.g. the empty-canvas "Browse templates" CTA) land on the
+  // desired panel without leaking state across opens.
+  useEffect(() => {
+    if (open && initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [open, initialTab])
 
   useEffect(() => {
     if (!open) {

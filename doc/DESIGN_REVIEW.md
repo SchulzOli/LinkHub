@@ -6,12 +6,6 @@
 10. **LinkCard-Hierarchie**.
     - Card-Edit-Modus zeigt viele Controls (`ColorPresetPicker`, `SelectMenu`, Größen-Inputs, Format-Painter). Gefahr: visuelles Rauschen. Empfehlung: Sekundär-Controls (Corner-Radius, Transparency) in einen ausklappbaren „Mehr"-Abschnitt verschieben oder Tabs (Inhalt / Style / Layout).
     - Resize-Handles haben `opacity: 0.28` im Hover – schwer sichtbar auf dunklen Cards. Kontrast erhöhen (`0.55`) oder Rahmen-Outline auf der Card statt nur Handles.
-11. **Edit-Mode-Overlay** (`workspaceShell[data-mode='edit']::before/::after`) ist stark auffällig: 3 px gestrichelter Rand + gekreuzter Pattern-Overlay. Das kann mit Inhalten visuell konkurrieren. Vorschlag: Nur einen dezenten Rand + kleine „Edit-Mode"-Badge oben, Pattern entfernen oder nur in einem Hover-Affordance einblenden.
-12. **Empty State** (`EmptyCanvasGuide`): Nur Titel + Body. Verpasst Chance, neue Nutzer:innen zu aktivieren.
-    - CTA-Button („Ersten Link hinzufügen") primary-styled.
-    - Sekundär: „Template laden".
-    - Ein illustrativer, subtiler Hintergrund-SVG (Grid + Platzhalter-Cards) statt nur Text.
-13. **Scrollbar-Styling** für `workspaceTabs` ist vorhanden, fehlt aber in anderen scrollbaren Bereichen (Options-Menu, Theme-Gallery). Als globale Utility `.scrollArea` in `globals.css` verankern.
 
 ### P2 – Architektur & Wartbarkeit
 

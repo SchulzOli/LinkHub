@@ -607,7 +607,7 @@ test('prefers a newly copied link over stale in-memory card clipboard data', asy
     })
   })
 
-  await page.getByRole('button', { name: 'Open quick add' }).click()
+  await page.getByRole('button', { name: 'Add your first link' }).click()
   await page.getByLabel('Link URL').fill('one.example.com')
   await page.getByLabel('Link title').fill('One')
   await page.getByRole('button', { name: 'Create' }).click()

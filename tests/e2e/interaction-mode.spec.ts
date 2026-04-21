@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('switches between edit and view behavior', async ({ page, context }) => {
-  await page.getByRole('button', { name: 'Open quick add' }).click()
+  await page.getByRole('button', { name: 'Add your first link' }).click()
   await page.getByLabel('Link URL').fill('example.com')
   await page.getByLabel('Link title').fill('Example')
   await page.getByRole('button', { name: 'Create' }).click()
@@ -213,7 +213,7 @@ test('persists interaction mode across reloads', async ({ page }) => {
 test('scales the title down on very small cards instead of hiding it', async ({
   page,
 }) => {
-  await page.getByRole('button', { name: 'Open quick add' }).click()
+  await page.getByRole('button', { name: 'Add your first link' }).click()
   await page.getByLabel('Link URL').fill('example.com')
   await page.getByLabel('Link title').fill('Dashboard')
   await page.getByRole('button', { name: 'Create' }).click()
@@ -297,7 +297,7 @@ test('keeps the card edit panel fully inside the viewport on small screens', asy
   })
   await page.reload()
 
-  await page.getByRole('button', { name: 'Open quick add' }).click()
+  await page.getByRole('button', { name: 'Add your first link' }).click()
   await page.getByLabel('Link URL').fill('example.com')
   await page.getByLabel('Link title').fill('Example')
   await page.getByRole('button', { name: 'Create' }).click()

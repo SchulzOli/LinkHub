@@ -36,7 +36,7 @@ async function createCard(page: Page, url: string, title: string) {
   const nextCount = (await cards.count()) + 1
 
   await page
-    .getByRole('button', { name: /Add link|Open quick add/ })
+    .getByRole('button', { name: /Add link|Open quick add|Add your first link/ })
     .first()
     .click()
   await page.getByLabel('Link URL').fill(url)

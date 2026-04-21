@@ -5,6 +5,7 @@ import { useEffect, useId, useRef } from 'react'
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import { EditIcon } from '../ui/EditIcon'
+import type { MenuTab } from './options/optionsMenuTabs'
 import { OptionsMenu } from './OptionsMenu'
 import { QuickAddAction } from './QuickAddAction'
 
@@ -14,6 +15,7 @@ type BottomTaskbarProps = {
   interactionMode: InteractionMode
   quickAddOpen: boolean
   optionsMenuOpen: boolean
+  optionsMenuInitialTab?: MenuTab
   onCreateGroup: () => void
   onCreateWorkspace: () => void
   onSelectWorkspace: (workspaceId: string) => void
@@ -37,6 +39,7 @@ export function BottomTaskbar({
   interactionMode,
   quickAddOpen,
   optionsMenuOpen,
+  optionsMenuInitialTab,
   onCreateGroup,
   onCreateWorkspace,
   onToggleInteractionMode,
@@ -390,6 +393,7 @@ export function BottomTaskbar({
           <OptionsMenu
             cardCount={cardCount}
             open={optionsMenuOpen}
+            initialTab={optionsMenuInitialTab}
             onRequestClose={onCloseOptionsMenu}
             onToggle={onToggleOptionsMenu}
           />

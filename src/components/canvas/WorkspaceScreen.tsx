@@ -6,6 +6,7 @@ import { useWorkspaceStore } from '../../state/useWorkspaceStore'
 import { saveImageAsset } from '../../storage/imageRepository'
 import { EmptyCanvasGuide } from '../onboarding/EmptyCanvasGuide'
 import { BottomTaskbar } from '../taskbar/BottomTaskbar'
+import type { MenuTab } from '../taskbar/options/optionsMenuTabs'
 import { WorkspaceHelpDock } from '../taskbar/WorkspaceHelpDock'
 import { AriaLiveRegion } from '../ui/AriaLiveRegion'
 import { PromptDialog } from '../ui/PromptDialog'
@@ -34,6 +35,9 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function WorkspaceScreen() {
   const [dragPreview, setDragPreview] = useState<CanvasDragPreview | null>(null)
+  const [optionsMenuInitialTab, setOptionsMenuInitialTab] = useState<
+    MenuTab | undefined
+  >(undefined)
   const {
     dismissPromptDialog,
     openPromptDialog,
@@ -491,6 +495,10 @@ export function WorkspaceScreen() {
           workspace.pictures.length === 0
         }
         onToggleQuickAdd={() => toggleQuickAdd()}
+        onBrowseTemplates={() => {
+          setOptionsMenuInitialTab('templates')
+          toggleOptionsMenu(true)
+        }}
       />
       <BottomTaskbar
         activeWorkspaceId={activeWorkspaceId}
@@ -498,6 +506,7 @@ export function WorkspaceScreen() {
         interactionMode={interactionMode}
         quickAddOpen={quickAddOpen}
         optionsMenuOpen={optionsMenuOpen}
+        optionsMenuInitialTab={optionsMenuInitialTab}
         workspaceRailOpen={workspaceRailOpen}
         workspaceRailPinned={workspaceRailPinned}
         workspaceSummaries={workspaceSummaries}

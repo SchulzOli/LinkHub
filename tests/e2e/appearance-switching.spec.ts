@@ -114,7 +114,7 @@ test('persists selected theme, color mode and default card size settings', async
   await page.keyboard.press('Escape')
 
   await page
-    .getByRole('button', { name: /Add link|Open quick add/ })
+    .getByRole('button', { name: /Add link|Open quick add|Add your first link/ })
     .first()
     .click()
   await page.getByLabel('Link URL').fill('example.com')
@@ -244,7 +244,7 @@ test('resets non-color options without touching saved color presets', async ({
   await page.keyboard.press('Escape')
 
   await page
-    .getByRole('button', { name: /Add link|Open quick add/ })
+    .getByRole('button', { name: /Add link|Open quick add|Add your first link/ })
     .first()
     .click()
   await page.getByLabel('Link URL').fill('example.com')
@@ -286,7 +286,7 @@ test('keeps card surface effects independent from group overrides', async ({
   await page.keyboard.press('Escape')
 
   await page
-    .getByRole('button', { name: /Add link|Open quick add/ })
+    .getByRole('button', { name: /Add link|Open quick add|Add your first link/ })
     .first()
     .click()
   await page.getByLabel('Link URL').fill('example.com')
@@ -343,7 +343,7 @@ test('updates preset-based card colors and favicon treatment after a theme switc
   await page.goto('/')
 
   await page
-    .getByRole('button', { name: /Add link|Open quick add/ })
+    .getByRole('button', { name: /Add link|Open quick add|Add your first link/ })
     .first()
     .click()
   await page.getByLabel('Link URL').fill('example.com')
