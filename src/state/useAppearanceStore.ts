@@ -18,6 +18,7 @@ export function useAppearanceStore() {
       setBorderPresets: state.setBorderPresets,
       setDefaultFillPresetIndex: state.setDefaultFillPresetIndex,
       setDefaultBorderPresetIndex: state.setDefaultBorderPresetIndex,
+      setFaviconsOfflineOnly: state.setFaviconsOfflineOnly,
       resetAppearanceOptions: state.resetAppearanceOptions,
       setStylePreset: state.setStylePreset,
       applyTheme: state.applyTheme,

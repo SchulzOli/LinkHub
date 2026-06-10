@@ -35,6 +35,7 @@ type OptionsAppearanceSectionProps = {
   setDefaultCardOpenInNewTab: (value: boolean) => void
   setDefaultCardSize: (size: AppearanceProfile['defaultCardSize']) => void
   setDefaultFillPresetIndex: (index: number) => void
+  setFaviconsOfflineOnly: (value: boolean) => void
   setDefaultSurfaceShadowStyle: (value: SurfaceShadowStyle) => void
   setDefaultSurfaceTransparency: (value: number) => void
   setFillPresets: (colors: string[]) => void
@@ -54,6 +55,7 @@ export function OptionsAppearanceSection({
   setDefaultCardShowTitle,
   setDefaultCardOpenInNewTab,
   setDefaultCardSize,
+  setFaviconsOfflineOnly,
   setDefaultFillPresetIndex,
   setDefaultSurfaceShadowStyle,
   setDefaultSurfaceTransparency,
@@ -121,6 +123,27 @@ export function OptionsAppearanceSection({
                     }
                   />
                   <span>Open links in new tab</span>
+                </label>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>Favicons</span>
+              <span className={styles.fieldHint}>
+                Favicons are cached locally on link creation. Enable this to
+                skip the Google favicon service and rely only on the host's
+                favicon.ico.
+              </span>
+              <div className={styles.toggleGrid}>
+                <label className={styles.toggleField}>
+                  <input
+                    aria-label="Favicons offline-only"
+                    checked={appearance.faviconsOfflineOnly}
+                    type="checkbox"
+                    onChange={(event) =>
+                      setFaviconsOfflineOnly(event.currentTarget.checked)
+                    }
+                  />
+                  <span>Favicons offline-only</span>
                 </label>
               </div>
             </div>

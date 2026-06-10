@@ -163,6 +163,7 @@ export type WorkspaceAppearanceState = {
   setBorderPresets: (borderPresets: string[]) => void
   setDefaultFillPresetIndex: (defaultFillPresetIndex: number) => void
   setDefaultBorderPresetIndex: (defaultBorderPresetIndex: number) => void
+  setFaviconsOfflineOnly: (faviconsOfflineOnly: boolean) => void
   resetAppearanceOptions: () => void
   setStylePreset: (stylePreset: StylePreset) => void
   setPlacementGuide: (placementGuide: PlacementGuide) => void

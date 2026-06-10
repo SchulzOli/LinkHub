@@ -4,6 +4,10 @@ import type { LinkCard } from '../../../contracts/linkCard'
 import type { Viewport, Workspace } from '../../../contracts/workspace'
 import { getCardColorsFromAppearance } from '../../../features/appearance/cardColorPalette'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
+import {
+  fetchFaviconBlob,
+  storeFaviconAsImageAsset,
+} from '../../../features/favicon/faviconCache'
 import { isPlacementBlockedByOccupiedItem } from '../../../features/groups/groupLayout'
 import { createLinkCard } from '../../../features/links/linkCreation'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
@@ -121,6 +125,30 @@ export function useCardActions({
       }
 
       addCard(card)
+
+      // Background-fetch the favicon, store as image asset, and wire it up
+      void (async () => {
+        try {
+          const hostname = new URL(card.url).hostname
+          const blob = await fetchFaviconBlob(
+            hostname,
+            workspace.appearance.faviconsOfflineOnly,
+          )
+
+          if (!blob) {
+            return
+          }
+
+          const imageId = await storeFaviconAsImageAsset(hostname, blob)
+
+          if (imageId) {
+            updateCard(card.id, { faviconOverrideImageId: imageId })
+          }
+        } catch {
+          // Best-effort: if favicon caching fails, the card still shows
+          // the Google fallback via faviconUrl.
+        }
+      })()
       setAutoEditTarget({
         kind: 'card',
         id: card.id,

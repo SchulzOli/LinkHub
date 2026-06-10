@@ -29,11 +29,16 @@ import {
   createFaviconUrl,
   normalizeUrl,
 } from '../../features/links/urlValidation'
+import {
+  fetchFaviconBlob,
+  storeFaviconAsImageAsset,
+} from '../../features/favicon/faviconCache'
 import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
 import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import { useResizePlacement } from '../../features/placement/useResizePlacement'
 import { useAppearanceStore } from '../../state/useAppearanceStore'
+import { useLinkCheckStore } from '../../state/useLinkCheckStore'
 import {
   useWorkspaceStore,
   type InteractionMode,
@@ -79,6 +84,13 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
   const startFormatPainter = useWorkspaceStore(
     (state) => state.startFormatPainter,
+  )
+  const linkStatus: 'ok' | 'broken' | 'unknown' = useLinkCheckStore(
+    (state) => {
+      const s = state.statuses[card.id]
+
+      return s === 'checking' ? 'unknown' : (s ?? 'unknown')
+    },
   )
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(card.title)
@@ -191,7 +203,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     [heightDraft, widthDraft],
   )
   const resolvedCardImageUrl = card.faviconOverrideImageId
-    ? overrideImageUrl
+    ? (overrideImageUrl ?? card.faviconUrl)
     : card.faviconUrl
   const viewModel = useLinkCardViewModel({
     appearance,
@@ -242,9 +254,33 @@ export const LinkCardContainer = memo(function LinkCardContainer({
       onUpdate(card.id, {
         url: normalizedUrl,
         faviconUrl: createFaviconUrl(normalizedUrl),
+        faviconOverrideImageId: undefined,
       })
+
+      // Background-fetch the favicon for the new URL
+      void (async () => {
+        try {
+          const hostname = new URL(normalizedUrl).hostname
+          const blob = await fetchFaviconBlob(
+            hostname,
+            appearance.faviconsOfflineOnly,
+          )
+
+          if (!blob) {
+            return
+          }
+
+          const imageId = await storeFaviconAsImageAsset(hostname, blob)
+
+          if (imageId) {
+            onUpdate(card.id, { faviconOverrideImageId: imageId })
+          }
+        } catch {
+          // Best-effort: fallback URLs still work
+        }
+      })()
     },
-    [card.id, onUpdate],
+    [card.id, onUpdate, appearance.faviconsOfflineOnly],
   )
 
   const commitSizeDrafts = useCallback(
@@ -697,10 +733,12 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         articleRef={articleRef}
         card={card}
         createResizePointerDown={createResizePointerDown}
+        faviconsOfflineOnly={appearance.faviconsOfflineOnly}
         interactionMode={interactionMode}
         isEditMode={isEditMode}
         isSelected={isSelected}
         viewModel={viewModel}
+        linkStatus={linkStatus}
         onCardBlur={hideUrlTooltip}
         onCardFocus={scheduleUrlTooltip}
         onCardPointerDown={handleCardPointerDown}

@@ -1,6 +1,7 @@
-import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
-
 import type { RefObject } from 'react'
+
+import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
+import type { LinkCheckStatus } from './options/useLinkCheck'
 
 import styles from './OptionsMenu.module.css'
 
@@ -15,7 +16,9 @@ type OptionsDataSectionProps = {
   handleImportCanvasFile: (file: File) => Promise<void>
   importFileInputRef: RefObject<HTMLInputElement | null>
   interactionMode: 'edit' | 'view'
+  linkCheckStatus: LinkCheckStatus
   menuId: string
+  onCheckLinks: () => void
   onDeleteWorkspace: (workspace: WorkspaceSummary) => void
   onMoveWorkspace: (workspaceId: string, direction: -1 | 1) => void
   onRequestEditMode: () => void
@@ -48,8 +51,10 @@ export function OptionsDataSection({
   handleImportCanvasFile,
   importFileInputRef,
   interactionMode,
+  linkCheckStatus,
   menuId,
   onCancelWorkspaceEditor,
+  onCheckLinks,
   onDeleteWorkspace,
   onMoveWorkspace,
   onRequestEditMode,
@@ -127,6 +132,49 @@ export function OptionsDataSection({
               type="button"
             >
               Export canvas bundle
+            </button>
+          </div>
+        </section>
+
+        <section className={`${styles.dataCard} ${styles.dataTransportCard}`}>
+          <div
+            className={`${styles.sectionHeader} ${styles.dataTransportHeader}`}
+          >
+            <h4 className={styles.sectionTitle}>Check Links</h4>
+            <span className={styles.sectionMeta}>
+              {linkCheckStatus.kind === 'checking'
+                ? 'Checking…'
+                : linkCheckStatus.kind === 'done'
+                  ? `${linkCheckStatus.ok} ok, ${linkCheckStatus.broken} broken`
+                  : linkCheckStatus.kind === 'error'
+                    ? 'Error'
+                    : workspaceEntityCounts.cards === 0
+                      ? 'No cards'
+                      : `${workspaceEntityCounts.cards} card${workspaceEntityCounts.cards === 1 ? '' : 's'}`}
+            </span>
+          </div>
+          <p className={`${styles.fieldHint} ${styles.dataTransportHint}`}>
+            Checks every link card in the current workspace by sending a HEAD
+            request. Cards whose server does not respond within 5 seconds are
+            marked with a yellow warning badge. Results are transient and
+            cleared when the browser tab is closed.
+          </p>
+          <div
+            className={`${styles.dataActions} ${styles.dataTransportActions}`}
+          >
+            <button
+              className={`${styles.dataPrimaryButton} ${styles.dataTransportPrimaryButton}`}
+              data-testid="check-links"
+              disabled={
+                linkCheckStatus.kind === 'checking' ||
+                workspaceEntityCounts.cards === 0
+              }
+              onClick={onCheckLinks}
+              type="button"
+            >
+              {linkCheckStatus.kind === 'checking'
+                ? `Checking ${linkCheckStatus.current}/${linkCheckStatus.total}…`
+                : 'Check Links'}
             </button>
           </div>
         </section>

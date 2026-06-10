@@ -191,6 +191,7 @@ export function WorkspaceScreen() {
     moveGroup,
     movePicture,
     selectedCardIds,
+    selectedGroupIds,
     selectedPictureIds,
     setAutoEditTarget,
     toggleInteractionMode,
