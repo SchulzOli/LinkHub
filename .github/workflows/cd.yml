@@ -89,7 +89,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync release version to $RELEASE_VERSION"
-          git push
+          git push https://x-access-token:${{ secrets.RELEASE_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
 
   deploy-extension:
     needs: sync-version
