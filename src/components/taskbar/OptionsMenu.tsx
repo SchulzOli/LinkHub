@@ -31,6 +31,7 @@ import type {
 } from './options/optionsMenuShared'
 import type { MenuTab } from './options/optionsMenuTabs'
 import { useCanvasImportExport } from './options/useCanvasImportExport'
+import { useLinkCheck } from './options/useLinkCheck'
 import { useOptionsMenuData } from './options/useOptionsMenuData'
 import { useWorkspaceDirectoryEditor } from './options/useWorkspaceDirectoryEditor'
 
@@ -206,6 +207,8 @@ export function OptionsMenu({
       refreshThemeCount,
       workspace,
     })
+
+  const { status: linkCheckStatus, handleCheckLinks } = useLinkCheck()
 
   const {
     handleCancelWorkspaceEdit,
@@ -385,8 +388,10 @@ export function OptionsMenu({
                 handleImportCanvasFile={handleImportCanvasFile}
                 importFileInputRef={importFileInputRef}
                 interactionMode={interactionMode}
+                linkCheckStatus={linkCheckStatus}
                 menuId={menuId}
                 onCancelWorkspaceEditor={handleCancelWorkspaceEdit}
+                onCheckLinks={handleCheckLinks}
                 onDeleteWorkspace={handleDeleteWorkspace}
                 onMoveWorkspace={(workspaceId, direction) => {
                   const workspaceSummary = workspaceSummaries.find(

@@ -38,6 +38,32 @@
   cursor: grabbing;
 }
 
+/* Link-check warning badge */
+.brokenLinkBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 48;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0 0.5rem 0 0.35rem;
+  background: color-mix(in srgb, #e8a317 92%, black);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.brokenLinkBadge svg {
+  width: 0.72rem;
+  height: 0.72rem;
+  fill: currentColor;
+}
+
 .cardView {
   padding: 0;
   cursor: pointer;

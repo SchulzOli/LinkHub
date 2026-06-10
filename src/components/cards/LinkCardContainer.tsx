@@ -38,6 +38,7 @@ import { getPlaceableItemsSnapshot } from '../../features/placement/placeableIte
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import { useResizePlacement } from '../../features/placement/useResizePlacement'
 import { useAppearanceStore } from '../../state/useAppearanceStore'
+import { useLinkCheckStore } from '../../state/useLinkCheckStore'
 import {
   useWorkspaceStore,
   type InteractionMode,
@@ -83,6 +84,13 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const { appearance, setBorderPresets, setFillPresets } = useAppearanceStore()
   const startFormatPainter = useWorkspaceStore(
     (state) => state.startFormatPainter,
+  )
+  const linkStatus: 'ok' | 'broken' | 'unknown' = useLinkCheckStore(
+    (state) => {
+      const s = state.statuses[card.id]
+
+      return s === 'checking' ? 'unknown' : (s ?? 'unknown')
+    },
   )
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(card.title)
@@ -730,6 +738,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         isEditMode={isEditMode}
         isSelected={isSelected}
         viewModel={viewModel}
+        linkStatus={linkStatus}
         onCardBlur={hideUrlTooltip}
         onCardFocus={scheduleUrlTooltip}
         onCardPointerDown={handleCardPointerDown}
