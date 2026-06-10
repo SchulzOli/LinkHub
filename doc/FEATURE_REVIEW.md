@@ -1,4 +1,3 @@
-
 #### 1.2 Lokaler Favicon-Cache statt Live-Lookup
 
 - Favicon beim Anlegen einmal laden, als Blob in `image_assets` / `image_blobs` ablegen, `faviconOverrideImageId` analog zum Upload nutzen.
@@ -7,29 +6,11 @@
 
 **Warum P1**: entschärft die Datenschutz-Aussage im README, spart Netz-Traffic, verbessert Offline-Verhalten (Extension öffnet oft ohne Netz).
 
-
-#### 1.4 Broken-Link-Checker (manuell, per Batch)
-
-- In den Options-Data-Bereich ein Button „Links prüfen" legen.
-- `fetch(url, { method: 'HEAD', mode: 'no-cors' })` pro Host gedrosselt, Timeout 5 s, Ergebnis als transienter Karten-Status (z. B. gelbes Warnbadge).
-- Kein automatischer Hintergrund-Scan, nur auf Nutzer-Wunsch – bleibt local-first-konform.
-
-**Warum P1**: pflegeleichter Canvas, verhindert Karten-Leichen.
-
-#### 1.5 Mehrfach-Öffnen / „Alle öffnen in dieser Gruppe"
-
-- Gruppen-Kontextmenü-Eintrag „Alle Links öffnen" (in neuen Tabs, optional im Gruppen-Fenster der Extension).
-- Schwellwert-Dialog ab z. B. 8 Links, um Tab-Explosion zu verhindern.
----
-
-### P2 – Deutlicher Mehrwert, mittlerer Aufwand
-
 #### 2.2 Notizen-/Sticky-Node-Typ
 
 - Neuer Node-Typ `stickyNode` neben `linkCard` und `pictureNode`.
 - Markdown- oder Plaintext-Inhalt, eigene Größen- und Farb-Controls, gleiche Snap-/Select-/Copy-Mechanik.
 - Für Context auf dem Canvas (Projekt-Beschreibungen, Quelle eines Link-Clusters).
-
 
 #### 2.6 Auto-Backup ins lokale Dateisystem
 
