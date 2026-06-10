@@ -22,6 +22,7 @@ type UseCanvasActionsArgs = {
   ) => void
   movePicture: (pictureId: string, position: { x: number; y: number }) => void
   selectedCardIds: string[]
+  selectedGroupIds: string[]
   selectedPictureIds: string[]
   setAutoEditTarget: (target: AutoEditTarget) => void
   toggleInteractionMode: (value?: 'edit' | 'view') => void
@@ -48,6 +49,7 @@ export function useCanvasActions(args: UseCanvasActionsArgs) {
     moveGroup,
     movePicture,
     selectedCardIds,
+    selectedGroupIds,
     selectedPictureIds,
     setAutoEditTarget,
     toggleInteractionMode,
@@ -92,6 +94,7 @@ export function useCanvasActions(args: UseCanvasActionsArgs) {
     interactionMode,
     moveGroup,
     placementFrames,
+    selectedGroupIds,
     toggleInteractionMode,
     updateGroup,
     viewport,

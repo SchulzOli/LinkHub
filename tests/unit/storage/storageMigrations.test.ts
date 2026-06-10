@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { defaultAppearanceProfile } from '../../../src/contracts/appearanceProfile'
 import { createDefaultWorkspace } from '../../../src/contracts/workspace'
 import { ensureLatestWorkspace } from '../../../src/storage/storageMigrations'
 
@@ -48,5 +49,35 @@ describe('storage migrations', () => {
         size: { columns: 8, rows: 4 },
       }),
     ])
+  })
+
+  it('defaults faviconsOfflineOnly to false for legacy workspaces', () => {
+    const legacyWorkspace = createDefaultWorkspace()
+
+    // Remove faviconsOfflineOnly as if it was never persisted
+    const { faviconsOfflineOnly: _, ...legacyAppearance } =
+      legacyWorkspace.appearance
+    legacyWorkspace.appearance =
+      legacyAppearance as typeof legacyAppearance & {
+        faviconsOfflineOnly?: boolean
+      }
+
+    expect(
+      (legacyWorkspace.appearance as { faviconsOfflineOnly?: boolean })
+        .faviconsOfflineOnly,
+    ).toBeUndefined()
+
+    const migrated = ensureLatestWorkspace(legacyWorkspace)
+
+    expect(migrated.appearance.faviconsOfflineOnly).toBe(false)
+  })
+
+  it('preserves faviconsOfflineOnly=true when already persisted', () => {
+    const workspace = createDefaultWorkspace()
+    workspace.appearance.faviconsOfflineOnly = true
+
+    const migrated = ensureLatestWorkspace(workspace)
+
+    expect(migrated.appearance.faviconsOfflineOnly).toBe(true)
   })
 })
