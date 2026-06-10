@@ -50,6 +50,7 @@ export const AppearanceProfileSchema = z.object({
   defaultFillPresetIndexByTheme: ThemePresetIndexMapSchema,
   defaultBorderPresetIndexByTheme: ThemePresetIndexMapSchema,
   activeThemeId: z.string().nullable(),
+  faviconsOfflineOnly: z.boolean(),
   styleTokens: ThemeTokensByModeSchema,
 })
 
@@ -89,6 +90,7 @@ export const defaultAppearanceProfile: AppearanceProfile = {
     dark: getDefaultCardPresetIndex(),
   },
   activeThemeId: 'builtin:excalidraw',
+  faviconsOfflineOnly: false,
   styleTokens: {
     light: { ...defaultStyleTokens.light },
     dark: { ...defaultStyleTokens.dark },

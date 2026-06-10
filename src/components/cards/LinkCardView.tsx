@@ -1,5 +1,6 @@
 import {
   memo,
+  useMemo,
   type FocusEventHandler,
   type MouseEventHandler,
   type PointerEventHandler,
@@ -10,6 +11,10 @@ import styles from './LinkCard.module.css'
 
 import type { LinkCard as LinkCardModel } from '../../contracts/linkCard'
 import type { SurfaceShadowStyle } from '../../contracts/surfaceEffects'
+import {
+  createPlaceholderDataUrl,
+  getFaviconPlaceholderLetter,
+} from '../../features/favicon/faviconCache'
 import { type ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import type { LinkCardViewModel } from './useLinkCardViewModel'
@@ -39,6 +44,7 @@ const resizeHandleClassNameByDirection: Record<ResizeDirection, string> = {
 type LinkCardViewProps = {
   articleRef: RefObject<HTMLElement | null>
   card: LinkCardModel
+  faviconsOfflineOnly: boolean
   interactionMode: InteractionMode
   isEditMode: boolean
   isSelected: boolean
@@ -67,6 +73,7 @@ function toLinkClassName(className: string) {
 export const LinkCardView = memo(function LinkCardView({
   articleRef,
   card,
+  faviconsOfflineOnly,
   interactionMode,
   isEditMode,
   isSelected,
@@ -83,6 +90,16 @@ export const LinkCardView = memo(function LinkCardView({
   onViewClick,
 }: LinkCardViewProps) {
   const linkClassName = toLinkClassName(viewModel.linkClassName)
+
+  const placeholderLetter = useMemo(
+    () => getFaviconPlaceholderLetter(card.url),
+    [card.url],
+  )
+  const placeholderDataUrl = useMemo(
+    () => createPlaceholderDataUrl(placeholderLetter),
+    [placeholderLetter],
+  )
+
   const content = (
     <>
       {viewModel.showCardImage ? (
@@ -107,21 +124,52 @@ export const LinkCardView = memo(function LinkCardView({
                     return
                   }
 
-                  if (image.dataset.fallbackApplied === 'true') {
-                    image.style.visibility = 'hidden'
+                  const attempt = Number(image.dataset.fallbackAttempt ?? 0)
+
+                  if (attempt >= 2) {
+                    // All fallbacks exhausted – show placeholder initial chip
+                    if (placeholderDataUrl) {
+                      image.src = placeholderDataUrl
+                    } else {
+                      image.style.visibility = 'hidden'
+                    }
                     return
                   }
 
+                  image.dataset.fallbackAttempt = String(attempt + 1)
+
                   try {
-                    image.dataset.fallbackApplied = 'true'
-                    image.src = `${new URL(card.url).origin}/favicon.ico`
+                    const origin = new URL(card.url).origin
+
+                    if (attempt === 0) {
+                      // First fallback: host's own favicon.ico
+                      image.src = `${origin}/favicon.ico`
+                      return
+                    }
+
+                    if (attempt === 1 && !faviconsOfflineOnly) {
+                      // Second fallback: Google service
+                      const hostname = new URL(card.url).hostname
+                      image.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`
+                      return
+                    }
                   } catch {
-                    image.style.visibility = 'hidden'
+                    // URL parse error – show placeholder
+                    if (placeholderDataUrl) {
+                      image.src = placeholderDataUrl
+                    } else {
+                      image.style.visibility = 'hidden'
+                    }
                   }
                 }}
               />
             ) : (
-              <div className={styles.placeholder}>Image unavailable</div>
+              <div
+                className={styles.placeholder}
+                data-testid="card-image-placeholder"
+              >
+                {placeholderLetter}
+              </div>
             )}
             {viewModel.showCardTitle ? (
               <div className={styles.titleOverlay}>

@@ -29,6 +29,10 @@ import {
   createFaviconUrl,
   normalizeUrl,
 } from '../../features/links/urlValidation'
+import {
+  fetchFaviconBlob,
+  storeFaviconAsImageAsset,
+} from '../../features/favicon/faviconCache'
 import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
 import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
@@ -191,7 +195,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     [heightDraft, widthDraft],
   )
   const resolvedCardImageUrl = card.faviconOverrideImageId
-    ? overrideImageUrl
+    ? (overrideImageUrl ?? card.faviconUrl)
     : card.faviconUrl
   const viewModel = useLinkCardViewModel({
     appearance,
@@ -242,9 +246,33 @@ export const LinkCardContainer = memo(function LinkCardContainer({
       onUpdate(card.id, {
         url: normalizedUrl,
         faviconUrl: createFaviconUrl(normalizedUrl),
+        faviconOverrideImageId: undefined,
       })
+
+      // Background-fetch the favicon for the new URL
+      void (async () => {
+        try {
+          const hostname = new URL(normalizedUrl).hostname
+          const blob = await fetchFaviconBlob(
+            hostname,
+            appearance.faviconsOfflineOnly,
+          )
+
+          if (!blob) {
+            return
+          }
+
+          const imageId = await storeFaviconAsImageAsset(hostname, blob)
+
+          if (imageId) {
+            onUpdate(card.id, { faviconOverrideImageId: imageId })
+          }
+        } catch {
+          // Best-effort: fallback URLs still work
+        }
+      })()
     },
-    [card.id, onUpdate],
+    [card.id, onUpdate, appearance.faviconsOfflineOnly],
   )
 
   const commitSizeDrafts = useCallback(
@@ -697,6 +725,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         articleRef={articleRef}
         card={card}
         createResizePointerDown={createResizePointerDown}
+        faviconsOfflineOnly={appearance.faviconsOfflineOnly}
         interactionMode={interactionMode}
         isEditMode={isEditMode}
         isSelected={isSelected}

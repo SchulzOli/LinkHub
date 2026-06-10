@@ -159,6 +159,16 @@ export const createWorkspaceAppearanceSlice: StateCreator<
         }),
       ),
     })),
+  setFaviconsOfflineOnly: (faviconsOfflineOnly) =>
+    set((state) => ({
+      ...commitWorkspaceChange(
+        state,
+        replaceAppearance(state.workspace, {
+          ...state.workspace.appearance,
+          faviconsOfflineOnly,
+        }),
+      ),
+    })),
   resetAppearanceOptions: () =>
     set((state) => ({
       ...commitWorkspaceChange(

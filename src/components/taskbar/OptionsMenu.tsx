@@ -118,6 +118,7 @@ export function OptionsMenu({
     setDefaultSurfaceShadowStyle,
     setDefaultFillPresetIndex,
     setFillPresets,
+    setFaviconsOfflineOnly,
     resetAppearanceOptions,
     setThemeMode,
     applyTheme,
@@ -327,6 +328,7 @@ export function OptionsMenu({
                 setDefaultCardShowTitle={setDefaultCardShowTitle}
                 setDefaultCardSize={setDefaultCardSize}
                 setDefaultFillPresetIndex={setDefaultFillPresetIndex}
+                setFaviconsOfflineOnly={setFaviconsOfflineOnly}
                 setDefaultSurfaceShadowStyle={setDefaultSurfaceShadowStyle}
                 setDefaultSurfaceTransparency={setDefaultSurfaceTransparency}
                 setFillPresets={setFillPresets}

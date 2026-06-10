@@ -311,6 +311,15 @@
   );
 }
 
+.placeholder[data-testid='card-image-placeholder'] {
+  font-size: min(var(--favicon-size, clamp(2.75rem, 48%, 4rem)), 50%);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  user-select: none;
+}
+
 .title {
   margin: 0;
   max-width: 100%;
