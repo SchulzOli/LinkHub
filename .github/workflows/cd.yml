@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   sync-version:
@@ -50,20 +51,30 @@ jobs:
             exit 1
           fi
 
-      - name: Sync package versions
+      - name: Check if version is already in sync
+        id: check-version
         shell: bash
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           CURRENT_VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")
           if [ "$CURRENT_VERSION" = "$RELEASE_VERSION" ]; then
-            echo "package.json already uses version $RELEASE_VERSION; skipping npm version."
+            echo "package.json already uses version $RELEASE_VERSION; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Sync package versions
+        if: ${{ steps.check-version.outputs.changed == 'true' }}
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
           npm version "$RELEASE_VERSION" --no-git-tag-version
 
       - name: Sync extension manifest version
+        if: ${{ steps.check-version.outputs.changed == 'true' }}
         shell: bash
         env:
           RELEASE_VERSION: ${{ inputs.version }}
@@ -76,20 +87,56 @@ jobs:
           fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
           EOF
 
-      - name: Commit synced versions
+      - name: Commit and push release branch
+        if: ${{ steps.check-version.outputs.changed == 'true' }}
         shell: bash
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
+          BRANCH="release/$RELEASE_VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add package.json package-lock.json extension/manifest.json
           if git diff --cached --quiet; then
             echo "No version changes to commit."
             exit 0
           fi
           git commit -m "chore: sync release version to $RELEASE_VERSION"
-          git push https://x-access-token:${{ secrets.RELEASE_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
+          git push origin "$BRANCH"
+
+      - name: Create and merge pull request
+        if: ${{ steps.check-version.outputs.changed == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          BRANCH="release/$RELEASE_VERSION"
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: sync release version to $RELEASE_VERSION" \
+            --body "Automated version bump to $RELEASE_VERSION." \
+            --label release)
+          echo "Created PR: $PR_URL"
+
+          # Set auto-merge and wait for completion
+          gh pr merge --squash --auto --delete-branch "$BRANCH"
+          echo "Auto-merge set, waiting for merge to complete…"
+          TIMEOUT=120
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+            STATE=$(gh pr view "$BRANCH" --json state --jq .state 2>/dev/null || echo "MERGEABLE")
+            if [ "$STATE" = "MERGED" ]; then
+              echo "PR merged successfully."
+              exit 0
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED + 5))
+          done
+          echo "Timeout waiting for PR merge."
+          exit 1
 
   deploy-extension:
     needs: sync-version
@@ -102,9 +149,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-
-      - name: Pull latest (after version sync)
-        run: git pull
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
