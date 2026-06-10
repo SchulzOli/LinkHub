@@ -22,6 +22,7 @@ type UseGroupActionsArgs = {
     pictureIds?: string[],
   ) => void
   placementFrames: Pick<PlacementFrames, 'groupPlacementFrames'>
+  selectedGroupIds: string[]
   toggleInteractionMode: (value?: 'edit' | 'view') => void
   updateGroup: (
     groupId: string,
@@ -53,6 +54,7 @@ export function useGroupActions({
   interactionMode,
   moveGroup,
   placementFrames,
+  selectedGroupIds,
   toggleInteractionMode,
   updateGroup,
   viewport,
@@ -140,9 +142,48 @@ export function useGroupActions({
       position: { x: number; y: number },
       pictureIds?: string[],
     ) => {
-      moveGroup(groupId, position, pictureIds)
+      if (
+        !selectedGroupIds.includes(groupId) ||
+        selectedGroupIds.length <= 1
+      ) {
+        moveGroup(groupId, position, pictureIds)
+        return
+      }
+
+      const anchorGroup = workspaceGroups.find(
+        (group) => group.id === groupId,
+      )
+
+      if (!anchorGroup) {
+        return
+      }
+
+      const delta = {
+        x: position.x - anchorGroup.positionX,
+        y: position.y - anchorGroup.positionY,
+      }
+
+      for (const selectedGroupId of selectedGroupIds) {
+        if (selectedGroupId === groupId) {
+          moveGroup(groupId, position)
+          continue
+        }
+
+        const group = workspaceGroups.find(
+          (g) => g.id === selectedGroupId,
+        )
+
+        if (!group) {
+          continue
+        }
+
+        moveGroup(selectedGroupId, {
+          x: group.positionX + delta.x,
+          y: group.positionY + delta.y,
+        })
+      }
     },
-    [moveGroup],
+    [moveGroup, selectedGroupIds, workspaceGroups],
   )
 
   return {
