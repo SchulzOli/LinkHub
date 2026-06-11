@@ -1,0 +1,237 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to deploy (leave empty to use latest)'
+        required: false
+      deploy_firefox:
+        description: 'Deploy to Firefox Add-ons (AMO)'
+        type: boolean
+        default: false
+      deploy_chrome:
+        description: 'Deploy to Chrome Web Store'
+        type: boolean
+        default: false
+      deploy_edge:
+        description: 'Deploy to Edge Add-ons'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: publish-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  # ──────────────────────────────────────────────
+  #  Job 1: Detect release push & set metadata
+  # ──────────────────────────────────────────────
+  detect-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    outputs:
+      version: ${{ steps.detect.outputs.version }}
+      tag: ${{ steps.detect.outputs.tag }}
+      is_release: ${{ steps.detect.outputs.is_release }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+
+      - name: Detect if this push is a version-bump commit
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          COMMIT_MSG=$(git log -1 --format=%s)
+          echo "Commit message: $COMMIT_MSG"
+
+          VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")
+          TAG="v$VERSION"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger — skipping auto-detect"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check if this commit changed version files
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "Changed files: $CHANGED"
+
+          if echo "$CHANGED" | grep -qE '^(package\.json|package-lock\.json|extension/manifest\.json)$'; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+            echo "This is a release push — will create GitHub Release."
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+            echo "Not a release push — skipping."
+          fi
+
+  # ──────────────────────────────────────────────
+  #  Job 2: Create GitHub Release from CI artifacts
+  # ──────────────────────────────────────────────
+  create-release:
+    needs: detect-and-publish
+    if: needs.detect-and-publish.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Fail if tag or release already exists
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.detect-and-publish.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Git tag $TAG already exists — skipping"
+            exit 0
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists — skipping"
+            exit 0
+          fi
+
+      - name: Find CI run for this commit
+        id: ci-run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          RUN=$(gh run list --workflow ci.yml --branch main --event push --limit 20 \
+            --json databaseId,headSha,conclusion \
+            --jq "[.[] | select(.headSha == \"$SHA\" and .conclusion == \"success\")] | first | .databaseId // empty")
+          if [ -z "$RUN" ]; then
+            echo "No successful CI push run found for commit $SHA"
+            exit 1
+          fi
+          echo "run_id=$RUN" >> "$GITHUB_OUTPUT"
+
+      - name: Download CI artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.ci-run.outputs.run_id }}
+        run: |
+          mkdir -p artifacts/app artifacts/extension
+          gh run download "$RUN_ID" -n linkhub-app-dist -D artifacts/app
+          gh run download "$RUN_ID" -n linkhub-extension-dist -D artifacts/extension
+
+      - name: Package release ZIPs
+        shell: bash
+        run: |
+          TAG="${{ needs.detect-and-publish.outputs.tag }}"
+          mkdir -p release-assets
+          (cd artifacts/app && zip -r "../../release-assets/linkhub-app-$TAG.zip" .)
+          (cd artifacts/extension && zip -r "../../release-assets/linkhub-extension-$TAG.zip" .)
+
+      - name: Generate release notes
+        id: notes
+        shell: bash
+        env:
+          TAG: ${{ needs.detect-and-publish.outputs.tag }}
+          RUN_ID: ${{ steps.ci-run.outputs.run_id }}
+          SHA: ${{ github.sha }}
+        run: |
+          NOTES="$RUNNER_TEMP/release-notes.md"
+          SHORT_SHA="${SHA:0:7}"
+          {
+            echo "## Release source"
+            echo
+            echo "- CI run: https://github.com/${{ github.repository }}/actions/runs/$RUN_ID"
+            echo "- Commit: \`$SHORT_SHA\`"
+          } > "$NOTES"
+          echo "file=$NOTES" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.detect-and-publish.outputs.tag }}
+          SHA: ${{ github.sha }}
+          NOTES_FILE: ${{ steps.notes.outputs.file }}
+        run: |
+          ARGS=(
+            release create "$TAG"
+            "release-assets/linkhub-app-$TAG.zip"
+            "release-assets/linkhub-extension-$TAG.zip"
+            --target "$SHA"
+            --title "LinkHub $TAG"
+            --generate-notes
+            --notes-file "$NOTES_FILE"
+          )
+          gh "${ARGS[@]}"
+
+  # ──────────────────────────────────────────────
+  #  Job 3: Deploy extension to selected stores
+  # ──────────────────────────────────────────────
+  deploy-extension:
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.deploy_firefox || inputs.deploy_chrome || inputs.deploy_edge) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build:extension
+
+      - name: Determine target stores
+        id: stores
+        shell: bash
+        run: |
+          STORES=""
+          [ "${{ inputs.deploy_firefox }}" = "true" ] && STORES="firefox"
+          [ "${{ inputs.deploy_chrome }}" = "true" ] && STORES="$STORES chrome"
+          [ "${{ inputs.deploy_edge }}" = "true" ] && STORES="$STORES edge"
+          STORES=$(echo "$STORES" | xargs)
+          echo "list=$STORES" >> "$GITHUB_OUTPUT"
+          echo "Deploying to: $STORES"
+
+      - name: Deploy to stores
+        env:
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+          FIREFOX_EXT_ID: ${{ secrets.FIREFOX_EXT_ID }}
+          CHROME_EXT_ID: ${{ secrets.CHROME_EXT_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_JSON: ${{ secrets.CHROME_SERVICE_ACCOUNT_JSON }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+        run: node extension/deploy.mjs --publish-only ${{ steps.stores.outputs.list }}

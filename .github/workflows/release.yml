@@ -6,42 +6,19 @@ on:
       version:
         description: 'Release version (semver, e.g. 1.1.0)'
         required: true
-      prerelease:
-        description: 'Create as GitHub pre-release'
-        type: boolean
-        default: false
-      deploy_firefox:
-        description: 'Deploy to Firefox Add-ons (AMO)'
-        type: boolean
-        default: false
-      deploy_chrome:
-        description: 'Deploy to Chrome Web Store'
-        type: boolean
-        default: false
-      deploy_edge:
-        description: 'Deploy to Edge Add-ons'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
   pull-requests: write
-  actions: read
 
 concurrency:
   group: release-${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
-  # ──────────────────────────────────────────────
-  #  Job 1: Bump version → PR → auto-merge
-  # ──────────────────────────────────────────────
   bump-version:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
-      merged_sha: ${{ steps.resolve.outputs.merged_sha }}
 
     steps:
       - name: Check out repository
@@ -68,7 +45,7 @@ jobs:
         run: |
           CURRENT=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")
           if [ "$CURRENT" = "$VERSION" ]; then
-            echo "Already at version $VERSION — skipping bump"
+            echo "Already at version $VERSION — nothing to do"
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -93,9 +70,8 @@ jobs:
           fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n')
           EOF
 
-      - name: Create release PR and set auto-merge
+      - name: Create release PR with auto-merge
         if: steps.check.outputs.changed == 'true'
-        id: pr
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -124,210 +100,6 @@ jobs:
             --body "Automated version bump to $VERSION." \
             --label release)
           echo "Created PR: $PR_URL"
-          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
 
           gh pr merge --squash --auto --delete-branch "$BRANCH"
-          echo "Auto-merge enabled"
-
-      - name: Resolve merged SHA and version
-        id: resolve
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_URL: ${{ steps.pr.outputs.pr_url }}
-          CHANGED: ${{ steps.check.outputs.changed }}
-        run: |
-          if [ "$CHANGED" != "true" ]; then
-            SHA=$(git rev-parse HEAD)
-            VER=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")
-            echo "version=$VER" >> "$GITHUB_OUTPUT"
-            echo "merged_sha=$SHA" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          PR_NUMBER=$(echo "$PR_URL" | grep -oP '/pull/\K\d+')
-          TIMEOUT=180
-          ELAPSED=0
-          while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
-            STATE=$(gh pr view "$PR_NUMBER" --json state,mergeCommit --jq '{state, sha: .mergeCommit.oid}' 2>/dev/null)
-            STATE_VAL=$(echo "$STATE" | jq -r '.state')
-            if [ "$STATE_VAL" = "MERGED" ]; then
-              SHA=$(echo "$STATE" | jq -r '.sha')
-              echo "PR merged at $SHA"
-              echo "merged_sha=$SHA" >> "$GITHUB_OUTPUT"
-              echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            sleep 10
-            ELAPSED=$((ELAPSED + 10))
-          done
-          echo "Timeout waiting for PR merge"
-          exit 1
-
-  # ──────────────────────────────────────────────
-  #  Job 2: Create GitHub Release from CI artifacts
-  # ──────────────────────────────────────────────
-  create-release:
-    needs: bump-version
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Check out merged commit
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.bump-version.outputs.merged_sha }}
-          fetch-depth: 0
-
-      - name: Set release metadata
-        id: meta
-        shell: bash
-        run: |
-          VERSION=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")
-          TAG="v$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "title=LinkHub $TAG" >> "$GITHUB_OUTPUT"
-          echo "app_zip=linkhub-app-$TAG.zip" >> "$GITHUB_OUTPUT"
-          echo "ext_zip=linkhub-extension-$TAG.zip" >> "$GITHUB_OUTPUT"
-
-      - name: Fail if tag or release already exists
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.meta.outputs.tag }}
-        run: |
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "Git tag $TAG already exists"
-            exit 1
-          fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "GitHub Release $TAG already exists"
-            exit 1
-          fi
-
-      - name: Find CI run for merged commit
-        id: ci-run
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ needs.bump-version.outputs.merged_sha }}
-        run: |
-          RUN=$(gh run list --workflow ci.yml --branch main --event push --status success \
-            --json databaseId,headSha --jq "[.[] | select(.headSha == \"$SHA\")] | first | .databaseId // empty" 2>/dev/null || echo "")
-          if [ -z "$RUN" ]; then
-            echo "No successful CI push run found for commit $SHA"
-            exit 1
-          fi
-          echo "run_id=$RUN" >> "$GITHUB_OUTPUT"
-
-      - name: Download CI artifacts
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ steps.ci-run.outputs.run_id }}
-        run: |
-          mkdir -p artifacts/app artifacts/extension
-          gh run download "$RUN_ID" -n linkhub-app-dist -D artifacts/app
-          gh run download "$RUN_ID" -n linkhub-extension-dist -D artifacts/extension
-
-      - name: Package release ZIPs
-        shell: bash
-        run: |
-          mkdir -p release-assets
-          (cd artifacts/app && zip -r "../../release-assets/${{ steps.meta.outputs.app_zip }}" .)
-          (cd artifacts/extension && zip -r "../../release-assets/${{ steps.meta.outputs.ext_zip }}" .)
-
-      - name: Prepare release notes preamble
-        id: notes
-        shell: bash
-        env:
-          TAG: ${{ steps.meta.outputs.tag }}
-          RUN_ID: ${{ steps.ci-run.outputs.run_id }}
-          SHA: ${{ needs.bump-version.outputs.merged_sha }}
-        run: |
-          NOTES="$RUNNER_TEMP/release-notes.md"
-          SHORT_SHA="${SHA:0:7}"
-          {
-            echo "## Release source"
-            echo
-            echo "- CI run: https://github.com/${{ github.repository }}/actions/runs/$RUN_ID"
-            echo "- Commit: \`$SHORT_SHA\`"
-          } > "$NOTES"
-          echo "file=$NOTES" >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.meta.outputs.tag }}
-          TITLE: ${{ steps.meta.outputs.title }}
-          SHA: ${{ needs.bump-version.outputs.merged_sha }}
-          PRERELEASE: ${{ inputs.prerelease }}
-          NOTES_FILE: ${{ steps.notes.outputs.file }}
-          APP_ZIP: ${{ steps.meta.outputs.app_zip }}
-          EXT_ZIP: ${{ steps.meta.outputs.ext_zip }}
-        run: |
-          ARGS=(
-            release create "$TAG"
-            "release-assets/$APP_ZIP"
-            "release-assets/$EXT_ZIP"
-            --target "$SHA"
-            --title "$TITLE"
-            --generate-notes
-            --notes-file "$NOTES_FILE"
-          )
-          if [ "$PRERELEASE" = "true" ]; then
-            ARGS+=(--prerelease)
-          fi
-          gh "${ARGS[@]}"
-
-  # ──────────────────────────────────────────────
-  #  Job 3: Deploy extension to selected stores
-  # ──────────────────────────────────────────────
-  deploy-extension:
-    needs: create-release
-    if: ${{ inputs.deploy_firefox || inputs.deploy_chrome || inputs.deploy_edge }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build extension
-        run: npm run build:extension
-
-      - name: Determine target stores
-        id: stores
-        shell: bash
-        run: |
-          STORES=""
-          [ "${{ inputs.deploy_firefox }}" = "true" ] && STORES="firefox"
-          [ "${{ inputs.deploy_chrome }}" = "true" ] && STORES="$STORES chrome"
-          [ "${{ inputs.deploy_edge }}" = "true" ] && STORES="$STORES edge"
-          STORES=$(echo "$STORES" | xargs)
-          echo "list=$STORES" >> "$GITHUB_OUTPUT"
-          echo "Deploying to: $STORES"
-
-      - name: Deploy to stores
-        env:
-          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
-          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
-          FIREFOX_EXT_ID: ${{ secrets.FIREFOX_EXT_ID }}
-          CHROME_EXT_ID: ${{ secrets.CHROME_EXT_ID }}
-          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
-          CHROME_SERVICE_ACCOUNT_JSON: ${{ secrets.CHROME_SERVICE_ACCOUNT_JSON }}
-          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
-          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
-        run: node extension/deploy.mjs --publish-only ${{ steps.stores.outputs.list }}
+          echo "Auto-merge enabled — the publish workflow will take over once merged."
