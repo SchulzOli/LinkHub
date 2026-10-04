@@ -608,4 +608,49 @@ describe('group collapse', () => {
 
     expect(useWorkspaceStore.getState().selectedPictureIds).toEqual(['outside'])
   })
+
+  it('keeps a standalone node below a collapsed group visible and selected', () => {
+    // 8-row group; picture 2 cells below its bottom. Collapsing reflows the
+    // picture upward into the group's expanded body area.
+    const grid = createDefaultWorkspace().placementGuide.gridSize
+    const group = createGroup({ size: { columns: 10, rows: 8 } })
+    const inside = createPicture({
+      id: 'inside',
+      positionX: grid,
+      positionY: grid * 2,
+    })
+    const below = createPicture({
+      id: 'below',
+      positionX: grid,
+      positionY: grid * 10,
+      size: { columns: 2, rows: 2 },
+    })
+
+    useWorkspaceStore.getState().hydrateWorkspace({
+      ...createDefaultWorkspace(),
+      groups: [group],
+      pictures: [inside, below],
+    })
+    useWorkspaceStore.setState({ selectedPictureIds: ['below'] })
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    const collapsed = useWorkspaceStore.getState().workspace
+    expect(
+      getVisiblePictures(collapsed.pictures, collapsed.groups, grid).map(
+        (picture) => picture.id,
+      ),
+    ).toEqual(['below'])
+    expect(useWorkspaceStore.getState().selectedPictureIds).toEqual(['below'])
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    const expanded = useWorkspaceStore.getState().workspace
+    expect(
+      expanded.pictures.find((picture) => picture.id === 'below')?.positionY,
+    ).toBe(grid * 10)
+    expect(
+      expanded.pictures.find((picture) => picture.id === 'inside')?.positionY,
+    ).toBe(grid * 2)
+  })
 })

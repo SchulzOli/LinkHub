@@ -2,6 +2,7 @@ import type { Workspace } from '../../contracts/workspace'
 import {
   getGroupPlacementFrames,
   getVisibleCards,
+  getVisiblePictures,
   isGroupPlacementBlockedByVisibleGroup,
   isPlacementBlockedByOccupiedItem,
 } from '../groups/groupLayout'
@@ -27,7 +28,12 @@ function toGridCell(value: number, gridSize: number) {
 function getWorkspacePlaceableNodes(workspace: Workspace) {
   return [
     ...getVisibleCards(workspace.cards, workspace.groups),
-    ...workspace.pictures,
+    // Nodes hidden in collapsed groups don't occupy space.
+    ...getVisiblePictures(
+      workspace.pictures,
+      workspace.groups,
+      workspace.placementGuide.gridSize,
+    ),
   ]
 }
 
@@ -199,7 +205,11 @@ export function placeCanvasEntityBundleNearPoint(input: {
           position: { x: card.positionX, y: card.positionY },
           size: card.size,
         })),
-        ...candidateBundle.pictures.map((picture) => ({
+        ...getVisiblePictures(
+          candidateBundle.pictures,
+          candidateBundle.groups,
+          gridSize,
+        ).map((picture) => ({
           id: picture.id,
           position: { x: picture.positionX, y: picture.positionY },
           size: picture.size,

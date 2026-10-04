@@ -140,15 +140,19 @@ export function findPresetSlotForColor(
       ),
   )
 
-  for (const row of [stored.light, stored.dark, ...builtin]) {
-    const index = row.findIndex((entry) => entry.toLowerCase() === needle)
+  // Themes may reuse a hex in several slots. Only an unambiguous match is a
+  // preset; anything else stays a custom colour.
+  const slots = new Set<number>()
 
-    if (index >= 0) {
-      return index
-    }
+  for (const row of [stored.light, stored.dark, ...builtin]) {
+    row.forEach((entry, index) => {
+      if (entry.toLowerCase() === needle) {
+        slots.add(index)
+      }
+    })
   }
 
-  return undefined
+  return slots.size === 1 ? [...slots][0] : undefined
 }
 
 export function resolveCardColors(
