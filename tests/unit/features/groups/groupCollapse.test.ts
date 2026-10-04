@@ -590,4 +590,22 @@ describe('group collapse', () => {
     // Collapsed outer group: everything below it disappears, also nested.
     expect(ids([{ ...outer, collapsed: true }, inner])).toEqual(['outside'])
   })
+
+  it('drops hidden pictures, charts and feeds from the selection on collapse', () => {
+    const group = createGroup({ size: { columns: 10, rows: 10 } })
+    const inside = createPicture({ id: 'inside', positionX: 24, positionY: 48 })
+    const outside = createPicture({ id: 'outside', positionX: 600 })
+    const workspace = createDefaultWorkspace()
+
+    useWorkspaceStore.getState().hydrateWorkspace({
+      ...workspace,
+      groups: [group],
+      pictures: [inside, outside],
+    })
+    useWorkspaceStore.setState({ selectedPictureIds: ['inside', 'outside'] })
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    expect(useWorkspaceStore.getState().selectedPictureIds).toEqual(['outside'])
+  })
 })

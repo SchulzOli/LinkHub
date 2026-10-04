@@ -18,7 +18,10 @@ import {
   resolveGroupChartSettings,
   setChartOverride,
 } from '../../features/charts/chartInheritance'
-import { getPictureIdsWithinGroupBodies } from '../../features/groups/groupLayout'
+import {
+  getPictureIdsWithinGroupBodies,
+  getVisiblePictures,
+} from '../../features/groups/groupLayout'
 import {
   applyGroupCollapseState,
   getGroupSubtreeIds,
@@ -373,6 +376,15 @@ export const createWorkspaceDataSlice: StateCreator<
       })
       const clearedCardIdSet = new Set(clearedSelectedCardIds)
       const hiddenGroupIdSet = new Set(hiddenGroupIds)
+      // Pictures, charts and feeds hidden by the collapse must leave the
+      // selection too, or Delete/copy would act on nodes you can't see.
+      const visiblePictureIdSet = new Set(
+        getVisiblePictures(
+          pictures,
+          groups,
+          state.workspace.placementGuide.gridSize,
+        ).map((picture) => picture.id),
+      )
 
       return {
         ...commitWorkspaceChange(
@@ -400,6 +412,11 @@ export const createWorkspaceDataSlice: StateCreator<
                   (candidateGroupId) => !hiddenGroupIdSet.has(candidateGroupId),
                 )
               : state.selectedGroupIds,
+            selectedPictureIds: nextCollapsed
+              ? state.selectedPictureIds.filter((pictureId) =>
+                  visiblePictureIdSet.has(pictureId),
+                )
+              : state.selectedPictureIds,
           },
         ),
       }
