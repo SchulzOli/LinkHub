@@ -1,16 +1,20 @@
 name: Release
 
-# One manual flow: check CI, set the version, build, commit and tag on main,
-# create the GitHub Release, then publish to each selected store in parallel.
-# A failed store can be retried with "Re-run failed jobs" without touching the
-# others. If the run stops after the tag was pushed, start it again with the
-# same version: it resumes from the tag.
+# One manual flow: check CI, set the version, build, tag, create the GitHub
+# Release, then publish to each selected store in parallel. A failed store can
+# be retried with "Re-run failed jobs" without touching the others. If the run
+# stops after the tag was pushed, start it again with the same version: it
+# resumes from the tag.
+#
+# main only accepts changes through pull requests, so nothing is pushed to
+# main. The version commit exists only on the tag (its parent is the main
+# commit that was released); the tags are the record of released versions.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New version, X.Y.Z (must be higher than the current one)'
+        description: 'New version, X.Y.Z (higher than both the latest v* tag and package.json on main)'
         required: true
       chrome:
         description: 'Publish to Chrome Web Store'
@@ -93,12 +97,15 @@ jobs:
             exit 0
           fi
 
-          CURRENT=$(node -p "require('./package.json').version")
+          # Highest of the latest release tag and the version on main.
+          LATEST_TAG=$(git tag -l 'v[0-9]*' | sed 's/^v//' | sort -V | tail -1)
+          CURRENT=$(printf '%s\n%s\n' "$(node -p "require('./package.json').version")" "$LATEST_TAG" | sort -V | tail -1)
           HIGHEST=$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -1)
           if [ "$VERSION" = "$CURRENT" ] || [ "$HIGHEST" != "$VERSION" ]; then
             echo "::error::$VERSION must be higher than the current version $CURRENT"
             exit 1
           fi
+          echo "Releasing $VERSION (current: $CURRENT)"
           echo "resume=false" >> "$GITHUB_OUTPUT"
 
       # Release only what CI has tested: the main commit must have a green run.
@@ -161,8 +168,9 @@ jobs:
           overwrite: true
 
       # Only version files change, so the CI result of the parent commit
-      # still applies.
-      - name: Commit and tag on main
+      # still applies. Only the tag is pushed: main is protected and needs a
+      # pull request, and the release does not need the commit on main.
+      - name: Commit and tag
         if: steps.version.outputs.resume == 'false'
         env:
           TAG: ${{ steps.version.outputs.tag }}
@@ -172,7 +180,7 @@ jobs:
           git add package.json package-lock.json extension/manifest.json
           git commit -m "chore: release $TAG"
           git tag "$TAG"
-          git push --atomic origin HEAD:main "$TAG"
+          git push origin "refs/tags/$TAG"
 
       - name: Create GitHub Release
         env:
