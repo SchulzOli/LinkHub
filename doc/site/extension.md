@@ -33,11 +33,11 @@ The ZIP is built in-process; no shell, PowerShell or `zip` binary is needed.
 ## Store screenshots
 
 ```bash
-npx playwright test tests/e2e/screenshots.spec.ts --project=chromium
+STORE_SCREENSHOTS=1 npx playwright test tests/e2e/screenshots.spec.ts --project=chromium
 ```
 
 This regenerates the eight 1280×800 screenshots and the four promotional
-tiles from the current app, with fixed demo data for charts and feeds.
+tiles from the current app, with fixed demo data for charts and feeds (link cards load the real site favicons).
 
 ## Publish
 

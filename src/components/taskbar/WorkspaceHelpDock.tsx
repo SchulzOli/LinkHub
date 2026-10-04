@@ -115,7 +115,7 @@ const privacySections: readonly PrivacySection[] = [
   {
     paragraphs: [
       "When you create a link card, LinkHub loads the site's favicon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. Favicons offline-only turns the Google fallback off.",
-      'Chart and news feed nodes connect only to the feed server or feed proxy address set on the node; by default these are optional servers on your own computer. Check Links sends a HEAD request to each card URL when you start it.',
+      'Chart nodes connect only to the feed server set on the chart. News feed nodes load your feeds through the proxy set on the node, or directly when it is cleared; by default both are optional servers on your own computer. With Images on, article images load from the news sites. Check Links sends a HEAD request to each card URL when you start it.',
       'None of these requests upload your canvas content, templates, themes, imported bundles, gallery images, or usage statistics.',
     ],
     title: 'External requests',

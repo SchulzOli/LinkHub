@@ -32,6 +32,7 @@ import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
 import {
   createFaviconUrl,
   normalizeUrl,
+  resolveCardFaviconUrl,
 } from '../../features/links/urlValidation'
 import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
 import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
@@ -200,9 +201,10 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     () => parseCardSizeDraft(widthDraft, heightDraft),
     [heightDraft, widthDraft],
   )
+  const faviconUrl = resolveCardFaviconUrl(card, appearance.faviconsOfflineOnly)
   const resolvedCardImageUrl = card.faviconOverrideImageId
-    ? (overrideImageUrl ?? card.faviconUrl)
-    : card.faviconUrl
+    ? (overrideImageUrl ?? faviconUrl)
+    : faviconUrl
   const viewModel = useLinkCardViewModel({
     appearance,
     card,

@@ -26,6 +26,7 @@ import {
   normalizeCanvasEntityBundle,
   type CanvasEntityBundle,
 } from '../canvas/entityBundle'
+import { resolveCardFaviconUrl } from '../links/urlValidation'
 
 export const TEMPLATE_PREVIEW_WIDTH = 320
 export const TEMPLATE_PREVIEW_HEIGHT = 120
@@ -64,7 +65,7 @@ export type TemplatePreviewAppearance = Pick<
   | 'fillPresetsByTheme'
   | 'borderPresetsByTheme'
 > &
-  Partial<Pick<AppearanceProfile, 'styleTokens'>>
+  Partial<Pick<AppearanceProfile, 'styleTokens' | 'faviconsOfflineOnly'>>
 
 /** Prefer the active theme's tokens so previews match the real canvas. */
 function getPreviewTokens(appearance: TemplatePreviewAppearance) {
@@ -419,7 +420,8 @@ function PreviewCard(props: {
     (card.showTitle ?? appearance.defaultCardShowTitle) && titleText.length > 0
   const resolvedCardImageUrl = card.faviconOverrideImageId
     ? (imageUrlById.get(card.faviconOverrideImageId) ?? null)
-    : card.faviconUrl || null
+    : resolveCardFaviconUrl(card, appearance.faviconsOfflineOnly ?? false) ||
+      null
   const previewCardImageUrl = resolvePreviewImageUrl(resolvedCardImageUrl)
   const usesFullBleedCardImageSource =
     Boolean(card.faviconOverrideImageId) ||

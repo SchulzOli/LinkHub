@@ -176,7 +176,8 @@ LinkHub is local-first.
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
 - Creating a link card fetches the site's favicon once (from the site itself, then Google's public favicon service as a fallback) and caches it locally; **Favicons offline-only** skips the Google fallback
-- Chart and news feed nodes connect only to the feed server or feed proxy URL you configure on the node (by default the optional local servers on `127.0.0.1`)
+- Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
+- News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 

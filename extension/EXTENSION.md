@@ -51,13 +51,14 @@ npm run build:extension
 ### Store screenshots and promotional tiles
 
 ```bash
-npx playwright test tests/e2e/screenshots.spec.ts --project=chromium
+STORE_SCREENSHOTS=1 npx playwright test tests/e2e/screenshots.spec.ts --project=chromium
 ```
 
 This regenerates the eight 1280×800 screenshots in `extension/screenshots/`
 and the four promotional tiles in `extension/store-assets/` (rendered from
-`promo-tile.html`). Chart and feed data are fixed demo data, so the images do
-not depend on the network. Store copy and the screenshot captions live in
+`promo-tile.html`). Chart and feed data are fixed demo data; link cards load the
+real site favicons. The spec is opt-in, so the regular test run and CI do not
+rewrite the store assets. Store copy and the screenshot captions live in
 [STORE_LISTING.md](STORE_LISTING.md).
 
 ### Privacy policy URL

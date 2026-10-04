@@ -5,8 +5,11 @@
  *
  * Screenshots are saved to: extension/screenshots/
  *
- * Run:
- *   npx playwright test screenshots --project=chromium
+ * Run (opt-in, skipped in the regular suite and CI):
+ *   STORE_SCREENSHOTS=1 npx playwright test screenshots --project=chromium
+ *
+ * Chart and feed data are mocked. Link cards load the real site favicons on
+ * purpose, so the store images show the real product.
  *
  * Prerequisites:
  *   Dev server running on http://127.0.0.1:4173 (Playwright auto-starts it)
@@ -272,6 +275,12 @@ async function screenshot(page: Page, name: string) {
 // ── Test Suite ───────────────────────────────────────────────────
 
 test.describe('Store listing screenshots', () => {
+  // Opt-in: these tests rewrite committed store assets and load real site
+  // favicons, so the regular suite and CI skip them.
+  test.skip(
+    !process.env.STORE_SCREENSHOTS,
+    'set STORE_SCREENSHOTS=1 to regenerate the store assets',
+  )
   // Store assets are desktop images; the mobile project would overwrite them
   // with a scaled, mobile-emulated layout.
   test.skip(

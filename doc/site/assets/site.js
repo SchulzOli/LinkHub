@@ -12,23 +12,42 @@
   })
 
   // ── Mobile navigation ─────────────────────────────────────
+  // On narrow screens the closed sidebar is off-canvas; `inert` keeps its
+  // links out of the tab order until it is opened.
   const menuToggle = document.querySelector('.menu-toggle')
+  const sidebar = document.getElementById('sidebar')
+  const narrow = matchMedia('(max-width: 820px)')
 
-  const setNav = (open) => {
+  const setNav = (open, { restoreFocus = false } = {}) => {
     document.body.classList.toggle('nav-open', open)
+    sidebar.inert = narrow.matches && !open
     menuToggle?.setAttribute('aria-expanded', String(open))
     menuToggle?.setAttribute(
       'aria-label',
       open ? 'Close navigation' : 'Open navigation',
     )
+
+    if (open) {
+      ;(
+        sidebar.querySelector('[aria-current="page"]') ??
+        sidebar.querySelector('a')
+      )?.focus()
+    } else if (restoreFocus) {
+      menuToggle?.focus()
+    }
   }
 
+  setNav(false)
+  narrow.addEventListener('change', () => setNav(false))
   menuToggle?.addEventListener('click', () =>
     setNav(!document.body.classList.contains('nav-open')),
   )
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      setNav(false)
+    if (
+      event.key === 'Escape' &&
+      document.body.classList.contains('nav-open')
+    ) {
+      setNav(false, { restoreFocus: true })
     }
   })
 
@@ -77,9 +96,18 @@
     return results.sort((a, b) => b.score - a.score).slice(0, 8)
   }
 
+  const setExpanded = (expanded) => {
+    list.hidden = !expanded
+    input.setAttribute('aria-expanded', String(expanded))
+
+    if (!expanded) {
+      input.removeAttribute('aria-activedescendant')
+    }
+  }
+
   const render = (results) => {
     active = -1
-    list.hidden = results.length === 0
+    setExpanded(results.length > 0)
     list.innerHTML = results
       .map(
         (result, position) =>
@@ -105,7 +133,8 @@
       links.forEach((link, position) =>
         link.setAttribute('aria-selected', String(position === active)),
       )
-    } else if (event.key === 'Enter' && links.length > 0) {
+      input.setAttribute('aria-activedescendant', links[active].id)
+    } else if (event.key === 'Enter' && links.length > 0 && !list.hidden) {
       event.preventDefault()
       location.href = links[Math.max(active, 0)].href
     } else if (event.key === 'Escape') {
@@ -116,7 +145,7 @@
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.search')) {
-      list.hidden = true
+      setExpanded(false)
     }
   })
 

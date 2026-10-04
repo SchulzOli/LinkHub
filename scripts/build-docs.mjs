@@ -18,17 +18,42 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { Marked } from 'marked'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const outArgIndex = process.argv.indexOf('--out')
-const outDir = resolve(
-  root,
-  outArgIndex > -1 ? process.argv[outArgIndex + 1] : 'site',
-)
+const outArg = outArgIndex > -1 ? process.argv[outArgIndex + 1] : 'site'
+const outDir = resolve(root, outArg ?? '')
+
+// outDir is deleted before each build: only allow a folder inside the repo
+// that does not hold sources.
+if (
+  !outArg ||
+  outArg.startsWith('-') ||
+  !outDir.startsWith(root + sep) ||
+  [
+    'doc',
+    'src',
+    'public',
+    'extension',
+    'scripts',
+    'tests',
+    'node_modules',
+    '.git',
+  ].some(
+    (protectedDir) =>
+      outDir === resolve(root, protectedDir) ||
+      outDir.startsWith(resolve(root, protectedDir) + sep),
+  )
+) {
+  console.error(
+    `Refusing to build into "${outArg ?? ''}": use a new folder inside the repository, e.g. --out site`,
+  )
+  process.exit(1)
+}
 const repoUrl = 'https://github.com/SchulzOli/LinkHub'
 
 /** doc/*.md files published as reference pages. */
@@ -306,8 +331,8 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
   <label class="search">
     <span class="visually-hidden">Search the docs</span>
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2" /></svg>
-    <input id="search" type="search" placeholder="Search" autocomplete="off" />
-    <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+    <input id="search" type="search" placeholder="Search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false" />
+    <ul id="search-results" class="search-results" role="listbox" aria-label="Search results" hidden></ul>
   </label>
   <a class="topbar-link" href="${repoUrl}" rel="noopener">GitHub</a>
   <button class="theme-toggle" type="button" aria-label="Switch color theme">

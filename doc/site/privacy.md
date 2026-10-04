@@ -21,13 +21,13 @@ Details: [Storage](storage.html).
 
 ## Network requests
 
-| When                             | Request                                                                                        |
-| -------------------------------- | ---------------------------------------------------------------------------------------------- |
-| You create a link card           | The site's `/favicon.ico`, then Google's favicon service as a fallback (can be turned off)     |
-| A chart node is on the board     | The feed server set on the chart (default: your own computer, `127.0.0.1:8787`)                |
-| A news feed node is on the board | The feeds you added, through the proxy set on the node (default: `127.0.0.1:8788`) or directly |
-| You select **Check Links**       | One `HEAD` request per card URL                                                                |
-| You open a link                  | The page itself, in a new tab                                                                  |
+| When                             | Request                                                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| You create a link card           | The site's `/favicon.ico`, then Google's favicon service as a fallback (can be turned off)                                                             |
+| A chart node is on the board     | The feed server set on the chart (default: your own computer, `127.0.0.1:8787`)                                                                        |
+| A news feed node is on the board | The feeds you added, through the proxy set on the node (default: `127.0.0.1:8788`) or directly; with **Images** on, article images from the news sites |
+| You select **Check Links**       | One `HEAD` request per card URL                                                                                                                        |
+| You open a link                  | The page itself, in a new tab                                                                                                                          |
 
 None of these requests carry your board content, templates, themes, images or
 statistics.
