@@ -6,6 +6,8 @@ import {
   isPrivateAddress,
   parseTargetUrl,
 } from '../../../server/news-feed/fetchFeed.mjs'
+// @ts-expect-error -- plain ESM server module without type declarations
+import { isAllowedOrigin } from '../../../server/news-feed/origins.mjs'
 
 const publicLookup = async () => [{ address: '93.184.216.34' }]
 
@@ -33,6 +35,41 @@ describe('news feed proxy', () => {
 
     expect(isPrivateAddress('93.184.216.34')).toBe(false)
     expect(isPrivateAddress('2a00:1450::1')).toBe(false)
+  })
+
+  it('serves only LinkHub origins', () => {
+    for (const origin of [
+      'http://127.0.0.1:4173',
+      'http://localhost:5173',
+      'chrome-extension://abcdefghijklmnop',
+      'moz-extension://1234-abcd',
+    ]) {
+      expect(isAllowedOrigin(origin), origin).toBe(true)
+    }
+
+    for (const origin of [
+      'https://evil.example',
+      'http://localhost.evil.example',
+      'null',
+      undefined,
+    ]) {
+      expect(isAllowedOrigin(origin), String(origin)).toBe(false)
+    }
+
+    expect(isAllowedOrigin('https://my.host', ['https://my.host'])).toBe(true)
+    expect(isAllowedOrigin('http://localhost:1', ['https://my.host'])).toBe(
+      false,
+    )
+  })
+
+  it('refuses private addresses at connect time (DNS rebinding)', async () => {
+    // A public answer at check time does not help when the socket
+    // resolves the host to loopback.
+    await expect(
+      fetchFeed('http://localhost:9/rss', {
+        lookup: async () => [{ address: '93.184.216.34' }],
+      }),
+    ).rejects.toMatchObject({ status: 403 })
   })
 
   it('accepts only http(s) URLs', () => {

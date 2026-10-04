@@ -2,8 +2,15 @@
  * Fetches one feed for the news proxy with the limits a local proxy needs:
  * http(s) only, no private/loopback targets (also after redirects), a
  * timeout and a size cap.
+ *
+ * The address check runs inside the socket's DNS lookup, so the address
+ * that was checked is the address that is connected to (no DNS rebinding
+ * between check and request).
  */
+import { lookup as dnsLookup } from 'node:dns'
 import { lookup } from 'node:dns/promises'
+import { request as httpRequest } from 'node:http'
+import { request as httpsRequest } from 'node:https'
 import { isIP } from 'node:net'
 
 const USER_AGENT = 'Mozilla/5.0 (LinkHub news feed proxy)'
@@ -77,7 +84,7 @@ export function parseTargetUrl(value) {
 }
 
 async function assertPublicHost(url, resolve = lookup) {
-  if (process.env.FEED_ALLOW_PRIVATE === '1') {
+  if (allowPrivate()) {
     return
   }
 
@@ -89,38 +96,96 @@ async function assertPublicHost(url, resolve = lookup) {
       })
 
   if (addresses.some((entry) => isPrivateAddress(entry.address))) {
-    throw new FeedProxyError(
-      'Private and local addresses are blocked (set FEED_ALLOW_PRIVATE=1 to allow)',
-      403,
-    )
+    throw new FeedProxyError(PRIVATE_ADDRESS_MESSAGE, 403)
   }
 }
 
-async function readLimited(response) {
-  const reader = response.body?.getReader()
+function allowPrivate() {
+  return process.env.FEED_ALLOW_PRIVATE === '1'
+}
 
-  if (!reader) {
-    return ''
+const PRIVATE_ADDRESS_MESSAGE =
+  'Private and local addresses are blocked (set FEED_ALLOW_PRIVATE=1 to allow)'
+
+/** `net` lookup that refuses private addresses at connect time. */
+export function guardedLookup(hostname, options, callback) {
+  dnsLookup(hostname, { ...options, all: true }, (error, addresses) => {
+    if (error) {
+      callback(error)
+      return
+    }
+
+    if (
+      !allowPrivate() &&
+      addresses.some((entry) => isPrivateAddress(entry.address))
+    ) {
+      callback(new FeedProxyError(PRIVATE_ADDRESS_MESSAGE, 403))
+      return
+    }
+
+    if (options?.all) {
+      callback(null, addresses)
+      return
+    }
+
+    callback(null, addresses[0].address, addresses[0].family)
+  })
+}
+
+/** Minimal fetch-like request over node:http(s) using `guardedLookup`. */
+function guardedFetch(url, init) {
+  return new Promise((resolve, reject) => {
+    const request = (url.protocol === 'https:' ? httpsRequest : httpRequest)(
+      url,
+      {
+        method: 'GET',
+        headers: init.headers,
+        signal: init.signal,
+        lookup: guardedLookup,
+      },
+      (incoming) => {
+        resolve({
+          status: incoming.statusCode ?? 0,
+          ok:
+            (incoming.statusCode ?? 0) >= 200 &&
+            (incoming.statusCode ?? 0) < 300,
+          headers: {
+            get: (name) => {
+              const value = incoming.headers[name.toLowerCase()]
+
+              return Array.isArray(value) ? value.join(', ') : (value ?? null)
+            },
+          },
+          body: incoming,
+        })
+      },
+    )
+
+    request.on('error', reject)
+    request.end()
+  })
+}
+
+async function readLimited(response) {
+  const body = response.body
+
+  if (!body) {
+    return Buffer.alloc(0)
   }
 
   const chunks = []
   let total = 0
 
-  for (;;) {
-    const { done, value } = await reader.read()
-
-    if (done) {
-      break
-    }
-
-    total += value.byteLength
+  // node:http responses and web streams are both async iterable.
+  for await (const chunk of body) {
+    total += chunk.byteLength
 
     if (total > MAX_BYTES) {
-      await reader.cancel()
+      body.destroy?.()
       throw new FeedProxyError('Feed is larger than the size limit', 413)
     }
 
-    chunks.push(value)
+    chunks.push(Buffer.from(chunk))
   }
 
   return Buffer.concat(chunks)
@@ -130,7 +195,7 @@ const cache = new Map()
 
 /** Returns `{ body: Buffer, contentType, finalUrl }`. */
 export async function fetchFeed(value, options = {}) {
-  const fetchImpl = options.fetch ?? fetch
+  const fetchImpl = options.fetch ?? guardedFetch
   const resolve = options.lookup ?? lookup
   let url = parseTargetUrl(value)
   const cacheKey = url.href
@@ -160,6 +225,9 @@ export async function fetchFeed(value, options = {}) {
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('location')
 
+        // Free the socket; the redirect body is not needed.
+        response.body?.resume?.()
+
         if (!location || redirects >= MAX_REDIRECTS) {
           throw new FeedProxyError('Too many or invalid redirects')
         }
@@ -188,6 +256,10 @@ export async function fetchFeed(value, options = {}) {
       return value
     }
   } catch (error) {
+    if (error?.cause instanceof FeedProxyError) {
+      throw error.cause
+    }
+
     if (controller.signal.aborted) {
       throw new FeedProxyError('Feed server did not respond in time', 504)
     }

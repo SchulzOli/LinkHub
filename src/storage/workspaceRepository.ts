@@ -314,10 +314,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
   // selten (Workspace-Switch, Pin-Toggle, Interaction-Mode), daher
   // ist der doppelte Write-Pfad unkritisch.
   try {
-    window.localStorage.setItem(
-      FALLBACK_DIRECTORY_KEY,
-      JSON.stringify(stamped),
-    )
+    window.localStorage.setItem(FALLBACK_DIRECTORY_KEY, JSON.stringify(stamped))
   } catch {
     // Quota oder Private-Mode: IDB bleibt zust\u00e4ndig.
   }

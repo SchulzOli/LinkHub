@@ -91,6 +91,8 @@ function collapseWhitespace(value: string): string {
 }
 
 /** Text content of an HTML fragment plus its first image, if any. */
+// DOMParser documents are inert: scripts never run and nothing loads. Only
+// textContent and one image URL (filtered by toSafeHttpUrl) leave here.
 function readHtml(html: string): { text: string; imageUrl?: string } {
   if (!html) {
     return { text: '' }
@@ -112,21 +114,57 @@ function readHtml(html: string): { text: string; imageUrl?: string } {
   }
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: '\u00a0',
+  ndash: '\u2013',
+  mdash: '\u2014',
+  hellip: '\u2026',
+  lsquo: '\u2018',
+  rsquo: '\u2019',
+  sbquo: '\u201a',
+  ldquo: '\u201c',
+  rdquo: '\u201d',
+  bdquo: '\u201e',
+  laquo: '\u00ab',
+  raquo: '\u00bb',
+  euro: '\u20ac',
+  auml: '\u00e4',
+  ouml: '\u00f6',
+  uuml: '\u00fc',
+  Auml: '\u00c4',
+  Ouml: '\u00d6',
+  Uuml: '\u00dc',
+  szlig: '\u00df',
+}
+
 /**
  * Titles are plain text, but some feeds double-escape entities
- * ("&amp;amp;"). Decode leftover entities without interpreting tags.
+ * ("&amp;amp;"). Decodes leftover entities as text only; nothing is parsed
+ * as HTML.
  */
-function decodeTitle(value: string): string {
-  if (!/&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(value)) {
-    return collapseWhitespace(value)
-  }
+export function decodeTitle(value: string): string {
+  return collapseWhitespace(
+    value.replace(
+      /&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]{2,8});/gi,
+      (match, entity: string) => {
+        if (entity[0] !== '#') {
+          return NAMED_ENTITIES[entity] ?? match
+        }
 
-  const doc = new DOMParser().parseFromString(
-    `<textarea>${value.replace(/<\/textarea/gi, '')}</textarea>`,
-    'text/html',
+        const code =
+          entity[1] === 'x' || entity[1] === 'X'
+            ? parseInt(entity.slice(2), 16)
+            : parseInt(entity.slice(1), 10)
+
+        return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match
+      },
+    ),
   )
-
-  return collapseWhitespace(doc.querySelector('textarea')?.value ?? value)
 }
 
 function excerpt(value: string): string {

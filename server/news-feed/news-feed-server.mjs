@@ -14,6 +14,7 @@
 import { createServer } from 'node:http'
 
 import { FeedProxyError, fetchFeed } from './fetchFeed.mjs'
+import { isAllowedOrigin } from './origins.mjs'
 
 const PORT = Number(process.env.PORT ?? 8788)
 const HOST = process.env.HOST ?? '127.0.0.1'
@@ -26,8 +27,18 @@ function sendJson(response, status, body) {
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? '/', `http://${request.headers.host}`)
 
-  response.setHeader('access-control-allow-origin', '*')
-  response.setHeader('access-control-allow-headers', 'accept')
+  const origin = request.headers.origin
+
+  response.setHeader('vary', 'origin')
+
+  if (isAllowedOrigin(origin)) {
+    response.setHeader('access-control-allow-origin', origin)
+    response.setHeader('access-control-allow-headers', 'accept')
+  } else if (origin) {
+    // A browser page from another site: refuse instead of fetching for it.
+    sendJson(response, 403, { error: 'Origin not allowed' })
+    return
+  }
 
   if (request.method === 'OPTIONS') {
     response.writeHead(204)

@@ -9,6 +9,7 @@ import {
   sortFeedItems,
 } from '../../../../src/features/feeds/feedItems'
 import {
+  decodeTitle,
   FeedParseError,
   parseFeed,
   type FeedItem,
@@ -107,6 +108,12 @@ describe('feed parser', () => {
         'https://x.example/atom',
       ])
     }
+  })
+
+  it('decodes double-escaped entities in titles as text only', () => {
+    expect(
+      decodeTitle('Tom &amp; Jerry &#8211; &lt;b&gt; &bogus; M&uuml;nchen'),
+    ).toBe('Tom & Jerry \u2013 <b> &bogus; M\u00fcnchen')
   })
 
   it('rejects invalid XML', () => {
