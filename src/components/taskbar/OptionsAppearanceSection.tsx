@@ -1,3 +1,4 @@
+import panelStyles from '../ui/panel/Panel.module.css'
 import styles from './OptionsMenu.module.css'
 
 import type { AppearanceProfile } from '../../contracts/appearanceProfile'
@@ -25,6 +26,7 @@ import {
   SURFACE_SHADOW_STYLE_OPTIONS,
 } from '../../features/appearance/surfaceEffects'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
+import { PanelSection, SettingRow, Slider, Switch } from '../ui/panel/Panel'
 import { SelectMenu } from '../ui/SelectMenu'
 
 type OptionsAppearanceSectionProps = {
@@ -75,6 +77,16 @@ export function OptionsAppearanceSection({
     appearance.themeMode,
   )
 
+  const setSizePart = (part: 'columns' | 'rows', nextValue: number) => {
+    if (
+      Number.isInteger(nextValue) &&
+      nextValue >= CARD_SIZE_LIMITS.min &&
+      nextValue <= CARD_SIZE_LIMITS.max
+    ) {
+      setDefaultCardSize({ ...appearance.defaultCardSize, [part]: nextValue })
+    }
+  }
+
   return (
     <div
       aria-labelledby={`${tabListId}-options`}
@@ -82,322 +94,192 @@ export function OptionsAppearanceSection({
       id={`${menuId}-options`}
       role="tabpanel"
     >
-      <div className={styles.fieldGrid}>
-        <section className={styles.settingsSection}>
-          <div className={styles.settingsSectionHeader}>
-            <span className={styles.settingsSectionEyebrow}>System</span>
-            <div className={styles.settingsSectionCopy}>
-              <h3 className={styles.sectionTitle}>Workspace appearance</h3>
-              <span className={styles.sectionMeta}>
-                Affects the menu and overall theme mode for the current
-                workspace.
-              </span>
-            </div>
-          </div>
-          <div className={styles.sectionFields}>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Color mode</span>
-              <span className={styles.fieldHint}>
-                Switch between the light and dark variants of the active theme.
-              </span>
-              <SelectMenu
-                ariaLabel="Color mode"
-                className={styles.select}
-                options={[
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'light', label: 'Light' },
-                ]}
-                value={appearance.themeMode}
-                onChange={(nextValue) =>
-                  setThemeMode(nextValue as typeof appearance.themeMode)
-                }
-              />
-            </label>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>Link opening</span>
-              <span className={styles.fieldHint}>
-                Applies to every link card in this workspace and is not set per
-                node.
-              </span>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleField}>
-                  <input
-                    aria-label="Open links in new tab"
-                    checked={appearance.defaultCardOpenInNewTab}
-                    type="checkbox"
-                    onChange={(event) =>
-                      setDefaultCardOpenInNewTab(event.currentTarget.checked)
-                    }
-                  />
-                  <span>Open links in new tab</span>
-                </label>
-              </div>
-            </div>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>Favicons</span>
-              <span className={styles.fieldHint}>
-                Favicons are cached locally on link creation. Enable this to
-                skip the Google favicon service and rely only on the host's
-                favicon.ico.
-              </span>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleField}>
-                  <input
-                    aria-label="Favicons offline-only"
-                    checked={appearance.faviconsOfflineOnly}
-                    type="checkbox"
-                    onChange={(event) =>
-                      setFaviconsOfflineOnly(event.currentTarget.checked)
-                    }
-                  />
-                  <span>Favicons offline-only</span>
-                </label>
-              </div>
-            </div>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>Card effects</span>
-              <span className={styles.fieldHint}>
-                {canvasEffectsSupported
-                  ? 'Experimental light effects on cards (hover glint, ripple on new cards). Stored on this device only.'
-                  : 'Requires a Chromium browser with chrome://flags/#canvas-draw-element enabled.'}
-              </span>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleField}>
-                  <input
-                    aria-label="Card effects"
-                    checked={canvasEffectsEnabled && canvasEffectsSupported}
-                    disabled={!canvasEffectsSupported}
-                    type="checkbox"
-                    onChange={(event) =>
-                      setCanvasEffectsEnabled(event.currentTarget.checked)
-                    }
-                  />
-                  <span>Card effects (html-in-canvas)</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className={styles.settingsSection}>
-          <div className={styles.settingsSectionHeader}>
-            <span className={styles.settingsSectionEyebrow}>Nodes</span>
-            <div className={styles.settingsSectionCopy}>
-              <h3 className={styles.sectionTitle}>Defaults for new nodes</h3>
-              <span className={styles.sectionMeta}>
-                These values are used when you create new cards and groups, not
-                on existing nodes.
-              </span>
-            </div>
-          </div>
-          <div className={styles.sectionFields}>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Default size</span>
-              <span className={styles.fieldHint}>
-                New cards start with these grid dimensions. The default stays at
-                5x5.
-              </span>
-              <div className={styles.sizeInputs}>
-                <label className={styles.sizeField}>
-                  <span className={styles.sizeFieldLabel}>Width</span>
-                  <input
-                    aria-label="Default width"
-                    className={styles.sizeInput}
-                    max={CARD_SIZE_LIMITS.max}
-                    min={CARD_SIZE_LIMITS.min}
-                    type="number"
-                    value={appearance.defaultCardSize.columns}
-                    onChange={(event) => {
-                      const nextValue = event.currentTarget.valueAsNumber
+      <div className={panelStyles.stack}>
+        <PanelSection title="Appearance">
+          <SettingRow
+            hint="Light or dark variant of the active theme."
+            label="Color mode"
+          >
+            <SelectMenu
+              ariaLabel="Color mode"
+              className={styles.compactSelect}
+              options={[
+                { value: 'dark', label: 'Dark' },
+                { value: 'light', label: 'Light' },
+              ]}
+              value={appearance.themeMode}
+              onChange={(nextValue) =>
+                setThemeMode(nextValue as typeof appearance.themeMode)
+              }
+            />
+          </SettingRow>
+          <SettingRow
+            hint={
+              canvasEffectsSupported
+                ? 'Hover glint and ripple on new cards. This device only.'
+                : 'Needs Chromium with chrome://flags/#canvas-draw-element.'
+            }
+            label="Card effects"
+          >
+            <Switch
+              ariaLabel="Card effects"
+              checked={canvasEffectsEnabled && canvasEffectsSupported}
+              disabled={!canvasEffectsSupported}
+              onChange={setCanvasEffectsEnabled}
+            />
+          </SettingRow>
+        </PanelSection>
 
-                      if (
-                        Number.isInteger(nextValue) &&
-                        nextValue >= CARD_SIZE_LIMITS.min &&
-                        nextValue <= CARD_SIZE_LIMITS.max
-                      ) {
-                        setDefaultCardSize({
-                          ...appearance.defaultCardSize,
-                          columns: nextValue,
-                        })
-                      }
-                    }}
-                  />
-                </label>
-                <label className={styles.sizeField}>
-                  <span className={styles.sizeFieldLabel}>Height</span>
-                  <input
-                    aria-label="Default height"
-                    className={styles.sizeInput}
-                    max={CARD_SIZE_LIMITS.max}
-                    min={CARD_SIZE_LIMITS.min}
-                    type="number"
-                    value={appearance.defaultCardSize.rows}
-                    onChange={(event) => {
-                      const nextValue = event.currentTarget.valueAsNumber
+        <PanelSection title="Links">
+          <SettingRow
+            hint="Applies to every link card in this workspace."
+            label="Open links in new tab"
+          >
+            <Switch
+              ariaLabel="Open links in new tab"
+              checked={appearance.defaultCardOpenInNewTab}
+              onChange={setDefaultCardOpenInNewTab}
+            />
+          </SettingRow>
+          <SettingRow
+            hint="Skip the Google favicon service and use only the site's favicon.ico."
+            label="Favicons offline-only"
+          >
+            <Switch
+              ariaLabel="Favicons offline-only"
+              checked={appearance.faviconsOfflineOnly}
+              onChange={setFaviconsOfflineOnly}
+            />
+          </SettingRow>
+        </PanelSection>
 
-                      if (
-                        Number.isInteger(nextValue) &&
-                        nextValue >= CARD_SIZE_LIMITS.min &&
-                        nextValue <= CARD_SIZE_LIMITS.max
-                      ) {
-                        setDefaultCardSize({
-                          ...appearance.defaultCardSize,
-                          rows: nextValue,
-                        })
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Default corner radius</span>
-              <span className={styles.fieldHint}>
-                Set how rounded new cards start, from hard corners to a full 50%
-                pill shape.
-              </span>
-              <div className={styles.sliderRow}>
-                <input
-                  aria-label="Default corner radius"
-                  className={styles.slider}
-                  max={CARD_CORNER_RADIUS_LIMITS.max}
-                  min={CARD_CORNER_RADIUS_LIMITS.min}
-                  type="range"
-                  value={appearance.defaultCardCornerRadius}
-                  onChange={(event) =>
-                    setDefaultCardCornerRadius(
-                      clampCardCornerRadius(Number(event.currentTarget.value)),
-                    )
-                  }
-                />
-                <span className={styles.sliderValue}>
-                  {appearance.defaultCardCornerRadius}%
-                </span>
-              </div>
-            </label>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>Default card details</span>
-              <span className={styles.fieldHint}>
-                Choose whether new cards show their title and image in the card
-                view.
-              </span>
-              <div className={styles.toggleGrid}>
-                <label className={styles.toggleField}>
-                  <input
-                    aria-label="Default show title"
-                    checked={appearance.defaultCardShowTitle}
-                    type="checkbox"
-                    onChange={(event) =>
-                      setDefaultCardShowTitle(event.currentTarget.checked)
-                    }
-                  />
-                  <span>Show title</span>
-                </label>
-                <label className={styles.toggleField}>
-                  <input
-                    aria-label="Default show image"
-                    checked={appearance.defaultCardShowImage}
-                    type="checkbox"
-                    onChange={(event) =>
-                      setDefaultCardShowImage(event.currentTarget.checked)
-                    }
-                  />
-                  <span>Show image</span>
-                </label>
-              </div>
-            </div>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Default transparency</span>
-              <span className={styles.fieldHint}>
-                Adjust how transparent the whole card and group surface starts.
-                0% stays solid, 100% becomes invisible.
-              </span>
-              <div className={styles.sliderRow}>
-                <input
-                  aria-label="Default transparency"
-                  className={styles.slider}
-                  max={SURFACE_TRANSPARENCY_LIMITS.max}
-                  min={SURFACE_TRANSPARENCY_LIMITS.min}
-                  type="range"
-                  value={appearance.defaultSurfaceTransparency}
-                  onChange={(event) =>
-                    setDefaultSurfaceTransparency(
-                      clampSurfaceTransparency(
-                        Number(event.currentTarget.value),
-                      ),
-                    )
-                  }
-                />
-                <span className={styles.sliderValue}>
-                  {appearance.defaultSurfaceTransparency}%
-                </span>
-              </div>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Default shadow</span>
-              <span className={styles.fieldHint}>
-                Choose how strongly new cards and groups lift off the canvas,
-                from tight to lifted or completely flat.
-              </span>
-              <SelectMenu
-                ariaLabel="Default shadow"
-                className={styles.select}
-                options={SURFACE_SHADOW_STYLE_OPTIONS.map((value) => ({
-                  value,
-                  label: SURFACE_SHADOW_STYLE_LABELS[value],
-                }))}
-                value={appearance.defaultSurfaceShadowStyle}
-                onChange={(nextValue) =>
-                  setDefaultSurfaceShadowStyle(
-                    nextValue as typeof appearance.defaultSurfaceShadowStyle,
-                  )
-                }
-              />
-            </label>
-            <div className={styles.field}>
-              <ColorPresetPicker
-                colors={activeColorSettings.fillPresets}
-                hint="Choose the default fill color for new cards or edit the five saved fill presets."
-                kind="fill"
-                label="Default fill"
-                onResetPresets={() =>
-                  setFillPresets(defaultColorPresets.fillPresets)
-                }
-                onSavePresets={setFillPresets}
-                onSelectPreset={setDefaultFillPresetIndex}
-                selectedIndex={activeColorSettings.defaultFillPresetIndex}
-                showDefaultBadge
-              />
-            </div>
-            <div className={styles.field}>
-              <ColorPresetPicker
-                colors={activeColorSettings.borderPresets}
-                hint="Choose the default border color for new cards or edit the five saved border presets."
-                kind="border"
-                label="Default border"
-                onResetPresets={() =>
-                  setBorderPresets(defaultColorPresets.borderPresets)
-                }
-                onSavePresets={setBorderPresets}
-                onSelectPreset={setDefaultBorderPresetIndex}
-                selectedIndex={activeColorSettings.defaultBorderPresetIndex}
-                showDefaultBadge
-              />
-            </div>
+        <PanelSection
+          description="Used when you create cards and groups. Existing nodes keep their style."
+          title="New nodes"
+        >
+          <SettingRow hint="Grid cells, width × height." label="Size">
+            <input
+              aria-label="Default width"
+              className={panelStyles.numberInput}
+              max={CARD_SIZE_LIMITS.max}
+              min={CARD_SIZE_LIMITS.min}
+              type="number"
+              value={appearance.defaultCardSize.columns}
+              onChange={(event) =>
+                setSizePart('columns', event.currentTarget.valueAsNumber)
+              }
+            />
+            <span aria-hidden="true" className={styles.times}>
+              ×
+            </span>
+            <input
+              aria-label="Default height"
+              className={panelStyles.numberInput}
+              max={CARD_SIZE_LIMITS.max}
+              min={CARD_SIZE_LIMITS.min}
+              type="number"
+              value={appearance.defaultCardSize.rows}
+              onChange={(event) =>
+                setSizePart('rows', event.currentTarget.valueAsNumber)
+              }
+            />
+          </SettingRow>
+          <SettingRow label="Corner radius" stacked>
+            <Slider
+              ariaLabel="Default corner radius"
+              max={CARD_CORNER_RADIUS_LIMITS.max}
+              min={CARD_CORNER_RADIUS_LIMITS.min}
+              value={appearance.defaultCardCornerRadius}
+              onChange={(value) =>
+                setDefaultCardCornerRadius(clampCardCornerRadius(value))
+              }
+            />
+          </SettingRow>
+          <SettingRow label="Transparency" stacked>
+            <Slider
+              ariaLabel="Default transparency"
+              max={SURFACE_TRANSPARENCY_LIMITS.max}
+              min={SURFACE_TRANSPARENCY_LIMITS.min}
+              value={appearance.defaultSurfaceTransparency}
+              onChange={(value) =>
+                setDefaultSurfaceTransparency(clampSurfaceTransparency(value))
+              }
+            />
+          </SettingRow>
+          <SettingRow label="Shadow">
+            <SelectMenu
+              ariaLabel="Default shadow"
+              className={styles.compactSelect}
+              options={SURFACE_SHADOW_STYLE_OPTIONS.map((value) => ({
+                value,
+                label: SURFACE_SHADOW_STYLE_LABELS[value],
+              }))}
+              value={appearance.defaultSurfaceShadowStyle}
+              onChange={(nextValue) =>
+                setDefaultSurfaceShadowStyle(
+                  nextValue as typeof appearance.defaultSurfaceShadowStyle,
+                )
+              }
+            />
+          </SettingRow>
+          <SettingRow label="Show title">
+            <Switch
+              ariaLabel="Default show title"
+              checked={appearance.defaultCardShowTitle}
+              onChange={setDefaultCardShowTitle}
+            />
+          </SettingRow>
+          <SettingRow label="Show image">
+            <Switch
+              ariaLabel="Default show image"
+              checked={appearance.defaultCardShowImage}
+              onChange={setDefaultCardShowImage}
+            />
+          </SettingRow>
+          <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+            <ColorPresetPicker
+              colors={activeColorSettings.fillPresets}
+              hint="Default for new cards. Edit to change the five saved presets."
+              kind="fill"
+              label="Default fill"
+              onResetPresets={() =>
+                setFillPresets(defaultColorPresets.fillPresets)
+              }
+              onSavePresets={setFillPresets}
+              onSelectPreset={setDefaultFillPresetIndex}
+              selectedIndex={activeColorSettings.defaultFillPresetIndex}
+              showDefaultBadge
+            />
           </div>
-        </section>
-        <div className={styles.resetRow}>
+          <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+            <ColorPresetPicker
+              colors={activeColorSettings.borderPresets}
+              hint="Default for new cards. Edit to change the five saved presets."
+              kind="border"
+              label="Default border"
+              onResetPresets={() =>
+                setBorderPresets(defaultColorPresets.borderPresets)
+              }
+              onSavePresets={setBorderPresets}
+              onSelectPreset={setDefaultBorderPresetIndex}
+              selectedIndex={activeColorSettings.defaultBorderPresetIndex}
+              showDefaultBadge
+            />
+          </div>
+        </PanelSection>
+
+        <div className={styles.footerRow}>
+          <span className={panelStyles.rowHint}>
+            Restores all options above. Saved color presets are kept.
+          </span>
           <button
             aria-label="Reset options"
-            className={styles.resetButton}
+            className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
             onClick={resetAppearanceOptions}
             type="button"
           >
             Reset
           </button>
-          <span className={styles.resetHint}>
-            Resets both sections except saved color presets: system appearance
-            and defaults for future nodes.
-          </span>
         </div>
       </div>
     </div>

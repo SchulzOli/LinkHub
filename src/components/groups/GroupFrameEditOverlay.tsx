@@ -5,8 +5,8 @@ import {
   type WheelEventHandler,
 } from 'react'
 import { createPortal } from 'react-dom'
-
-import styles from './GroupFrame.module.css'
+import editPanelStyles from '../ui/panel/EditPanel.module.css'
+import panelStyles from '../ui/panel/Panel.module.css'
 
 import type { CardGroup, GroupSize } from '../../contracts/cardGroup'
 import { GROUP_SIZE_LIMITS } from '../../contracts/cardGroup'
@@ -24,6 +24,14 @@ import {
 import { CloseIcon } from '../taskbar/TaskbarIcons'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
 import { FormatPainterIcon } from '../ui/FormatPainterIcon'
+import { EditPanel } from '../ui/panel/EditPanel'
+import {
+  IconButton,
+  PanelSection,
+  SettingRow,
+  Slider,
+  Switch,
+} from '../ui/panel/Panel'
 import { SelectMenu } from '../ui/SelectMenu'
 
 type GroupFrameEditOverlayProps = {
@@ -106,55 +114,63 @@ export function GroupFrameEditOverlay({
   }
 
   return createPortal(
-    <div
-      className={styles.editPanel}
-      data-testid="group-edit-panel"
-      ref={editPanelRef}
+    <EditPanel
+      actions={
+        <>
+          <IconButton
+            label={`Copy format from group ${group.id}`}
+            title="Copy format to other cards or groups"
+            onClick={onCopyFormat}
+          >
+            <FormatPainterIcon className={panelStyles.icon} />
+          </IconButton>
+          <IconButton
+            label={`Exit editor for group ${group.id}`}
+            title="Close editor"
+            onClick={onClose}
+          >
+            <CloseIcon className={panelStyles.icon} />
+          </IconButton>
+        </>
+      }
+      panelRef={editPanelRef}
       style={editPanelStyle ?? undefined}
+      subtitle="Group"
+      testId="group-edit-panel"
+      title={group.name || 'Group'}
       onPointerDown={onPointerDown}
       onWheelCapture={onWheelCapture}
     >
-      <div className={styles.editPanelHeader}>
-        <div className={styles.editPanelHeaderActions}>
-          <button
-            aria-label={`Copy format from group ${group.id}`}
-            className={`${styles.secondaryActionButton} ${styles.iconHeaderButton}`}
-            title="Copy format"
-            type="button"
-            onClick={onCopyFormat}
-          >
-            <FormatPainterIcon className={styles.actionSvg} />
-          </button>
-          <button
-            aria-label={`Exit editor for group ${group.id}`}
-            className={`${styles.secondaryActionButton} ${styles.iconHeaderButton}`}
-            title="Close editor"
-            type="button"
-            onClick={onClose}
-          >
-            <CloseIcon className={styles.actionSvg} />
-          </button>
+      <PanelSection title="Group">
+        <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+          <label className={panelStyles.field}>
+            <span className={panelStyles.fieldLabel}>Group name</span>
+            <input
+              aria-label={`Edit group name for ${group.id}`}
+              value={nameDraft}
+              onChange={(event) => {
+                onNameChange(event.target.value)
+              }}
+            />
+          </label>
+          {!nameDraft.trim() ? (
+            <p className={editPanelStyles.error}>Enter a group name.</p>
+          ) : null}
         </div>
-      </div>
-      <p className={styles.editHint}>
-        Apply this styling, shape, and size to other cards or groups. Press
-        Escape or click empty canvas to stop.
-      </p>
-      <label className={styles.editField}>
-        <span className={styles.editLabel}>Group name</span>
-        <input
-          aria-label={`Edit group name for ${group.id}`}
-          value={nameDraft}
-          onChange={(event) => {
-            onNameChange(event.target.value)
-          }}
-        />
-      </label>
-      <div className={styles.editSizeGrid}>
-        <label className={styles.editField}>
-          <span className={styles.editLabel}>Width</span>
+        <SettingRow label="Show title">
+          <Switch
+            ariaLabel={`Show title on group ${group.id}`}
+            checked={showTitleDraft}
+            onChange={onShowTitleChange}
+          />
+        </SettingRow>
+      </PanelSection>
+
+      <PanelSection title="Shape">
+        <SettingRow hint="Grid cells" label="Size">
           <input
             aria-label={`Edit group width for ${group.id}`}
+            className={panelStyles.numberInput}
             inputMode="numeric"
             min={GROUP_SIZE_LIMITS.min}
             type="number"
@@ -163,11 +179,10 @@ export function GroupFrameEditOverlay({
               onWidthChange(event.target.value)
             }}
           />
-        </label>
-        <label className={styles.editField}>
-          <span className={styles.editLabel}>Height</span>
+          <span aria-hidden="true">×</span>
           <input
             aria-label={`Edit group height for ${group.id}`}
+            className={panelStyles.numberInput}
             inputMode="numeric"
             min={GROUP_SIZE_LIMITS.min}
             type="number"
@@ -176,62 +191,42 @@ export function GroupFrameEditOverlay({
               onHeightChange(event.target.value)
             }}
           />
-        </label>
-      </div>
-      <label className={styles.editField}>
-        <span className={styles.editLabel}>Corner radius</span>
-        <div className={styles.editSliderRow}>
-          <input
-            aria-label={`Edit group corner radius for ${group.id}`}
+        </SettingRow>
+        {!normalizedGroupSize ? (
+          <div className={panelStyles.row}>
+            <p className={editPanelStyles.error}>
+              Enter a width and height of at least {GROUP_SIZE_LIMITS.min}{' '}
+              cells.
+            </p>
+          </div>
+        ) : null}
+        <SettingRow label="Corner radius" stacked>
+          <Slider
+            ariaLabel={`Edit group corner radius for ${group.id}`}
             max={CARD_CORNER_RADIUS_LIMITS.max}
             min={CARD_CORNER_RADIUS_LIMITS.min}
-            type="range"
             value={cornerRadiusDraft}
-            onChange={(event) => {
-              onCornerRadiusChange(Number(event.currentTarget.value))
-            }}
+            onChange={onCornerRadiusChange}
           />
-          <span className={styles.editSliderValue}>{cornerRadiusDraft}%</span>
-        </div>
-      </label>
-      <label className={styles.editToggleField}>
-        <input
-          aria-label={`Show title on group ${group.id}`}
-          checked={showTitleDraft}
-          type="checkbox"
-          onChange={(event) => {
-            onShowTitleChange(event.currentTarget.checked)
-          }}
-        />
-        <span>Show title</span>
-      </label>
-      <div className={styles.editEffectGrid}>
-        <label className={styles.editField}>
-          <span className={styles.editLabel}>Transparency</span>
-          <div className={styles.editSliderRow}>
-            <input
-              aria-label={`Edit transparency for group ${group.id}`}
-              className={styles.editSlider}
-              max={SURFACE_TRANSPARENCY_LIMITS.max}
-              min={SURFACE_TRANSPARENCY_LIMITS.min}
-              type="range"
-              value={surfaceTransparencyDraft}
-              onChange={(event) => {
-                onSurfaceTransparencyChange(
-                  Number(event.currentTarget.value) as SurfaceTransparency,
-                )
-              }}
-            />
-            <span className={styles.editSliderValue}>
-              {surfaceTransparencyDraft}%
-            </span>
-          </div>
-        </label>
-        <label className={styles.editField}>
-          <span className={styles.editLabel}>Shadow</span>
+        </SettingRow>
+      </PanelSection>
+
+      <PanelSection title="Style">
+        <SettingRow label="Transparency" stacked>
+          <Slider
+            ariaLabel={`Edit transparency for group ${group.id}`}
+            max={SURFACE_TRANSPARENCY_LIMITS.max}
+            min={SURFACE_TRANSPARENCY_LIMITS.min}
+            value={surfaceTransparencyDraft}
+            onChange={(value) =>
+              onSurfaceTransparencyChange(value as SurfaceTransparency)
+            }
+          />
+        </SettingRow>
+        <SettingRow label="Shadow">
           <SelectMenu
             ariaLabel={`Edit shadow for group ${group.id}`}
-            className={styles.editSelect}
+            className={editPanelStyles.select}
             options={SURFACE_SHADOW_STYLE_OPTIONS.map((value) => ({
               value,
               label: SURFACE_SHADOW_STYLE_LABELS[value],
@@ -241,43 +236,39 @@ export function GroupFrameEditOverlay({
               onShadowStyleChange(nextValue as SurfaceShadowStyle)
             }}
           />
-        </label>
-      </div>
-      <ColorPresetPicker
-        allowCustomColor
-        colors={activeColorSettings.fillPresets}
-        hint="Use one of your five saved fill presets or pick a free color for this group."
-        kind="fill"
-        label="Fill color"
-        onCustomColorChange={onCustomFillColorChange}
-        onResetPresets={onResetFillPresets}
-        onSavePresets={onSaveFillPresets}
-        onSelectPreset={onSelectFillPreset}
-        selectedColor={selectedFillColor}
-        selectedIndex={fillPresetIndexDraft ?? undefined}
-      />
-      <ColorPresetPicker
-        allowCustomColor
-        colors={activeColorSettings.borderPresets}
-        hint="Use one of your five saved border presets or pick a free color for this group."
-        kind="border"
-        label="Border color"
-        onCustomColorChange={onCustomBorderColorChange}
-        onResetPresets={onResetBorderPresets}
-        onSavePresets={onSaveBorderPresets}
-        onSelectPreset={onSelectBorderPreset}
-        selectedColor={selectedBorderColor}
-        selectedIndex={borderPresetIndexDraft ?? undefined}
-      />
-      {!nameDraft.trim() ? (
-        <p className={styles.editError}>Enter a group name.</p>
-      ) : null}
-      {!normalizedGroupSize ? (
-        <p className={styles.editError}>
-          Enter a width and height of at least {GROUP_SIZE_LIMITS.min} cells.
-        </p>
-      ) : null}
-    </div>,
+        </SettingRow>
+        <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+          <ColorPresetPicker
+            allowCustomColor
+            colors={activeColorSettings.fillPresets}
+            hint="Pick a saved preset or a free color."
+            kind="fill"
+            label="Fill color"
+            onCustomColorChange={onCustomFillColorChange}
+            onResetPresets={onResetFillPresets}
+            onSavePresets={onSaveFillPresets}
+            onSelectPreset={onSelectFillPreset}
+            selectedColor={selectedFillColor}
+            selectedIndex={fillPresetIndexDraft ?? undefined}
+          />
+        </div>
+        <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+          <ColorPresetPicker
+            allowCustomColor
+            colors={activeColorSettings.borderPresets}
+            hint="Pick a saved preset or a free color."
+            kind="border"
+            label="Border color"
+            onCustomColorChange={onCustomBorderColorChange}
+            onResetPresets={onResetBorderPresets}
+            onSavePresets={onSaveBorderPresets}
+            onSelectPreset={onSelectBorderPreset}
+            selectedColor={selectedBorderColor}
+            selectedIndex={borderPresetIndexDraft ?? undefined}
+          />
+        </div>
+      </PanelSection>
+    </EditPanel>,
     document.body,
   )
 }
