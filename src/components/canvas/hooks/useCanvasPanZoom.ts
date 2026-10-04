@@ -2,14 +2,12 @@ import { useCallback } from 'react'
 
 import type { Viewport } from '../../../contracts/workspace'
 import {
-  screenDeltaToCanvas,
-  screenPointToCanvas,
-} from '../../../features/placement/canvasMath'
+  getWheelZoom,
+  panByScreenDelta,
+  zoomAtScreenPoint,
+} from '../../../engine/camera'
+import { isCanvasBackgroundTarget } from '../../../engine/react/canvasBackground'
 import type { InteractionMode } from '../../../state/workspaceStoreTypes'
-
-const MIN_ZOOM = 0.1
-const MAX_ZOOM = 2.5
-const ZOOM_STEP = 0.1
 
 type CanvasInteractionState = 'idle' | 'panning' | 'selecting'
 
@@ -42,7 +40,7 @@ export function useCanvasPanZoom({
 
   const handleContextMenu = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (interactionMode === 'edit' || event.target === event.currentTarget) {
+      if (interactionMode === 'edit' || isCanvasBackgroundTarget(event)) {
         event.preventDefault()
       }
     },
@@ -50,49 +48,32 @@ export function useCanvasPanZoom({
   )
 
   const handleWheel = useCallback(
-    (event: React.WheelEvent<HTMLElement>) => {
+    (event: WheelEvent | React.WheelEvent<HTMLElement>) => {
       event.preventDefault()
 
       const localPoint = getLocalPoint(event.clientX, event.clientY)
 
       if (event.altKey) {
-        onPanViewport({
-          ...viewport,
-          x:
-            viewport.x +
-            screenDeltaToCanvas(event.deltaY + event.deltaX, viewport.zoom),
-        })
+        onPanViewport(
+          panByScreenDelta(viewport, -(event.deltaY + event.deltaX), 0),
+        )
         return
       }
 
       if (!event.ctrlKey) {
-        const canvasPoint = screenPointToCanvas(localPoint, viewport)
-        const direction = event.deltaY > 0 ? -1 : 1
-        const nextZoom = Math.min(
-          MAX_ZOOM,
-          Math.max(
-            MIN_ZOOM,
-            Number((viewport.zoom + direction * ZOOM_STEP).toFixed(2)),
-          ),
+        const nextViewport = zoomAtScreenPoint(
+          viewport,
+          localPoint,
+          getWheelZoom(viewport.zoom, event.deltaY),
         )
 
-        if (nextZoom === viewport.zoom) {
-          return
+        if (nextViewport !== viewport) {
+          onPanViewport(nextViewport)
         }
-
-        onPanViewport({
-          x: canvasPoint.x - localPoint.x / nextZoom,
-          y: canvasPoint.y - localPoint.y / nextZoom,
-          zoom: nextZoom,
-        })
         return
       }
 
-      onPanViewport({
-        ...viewport,
-        x: viewport.x + screenDeltaToCanvas(event.deltaX, viewport.zoom),
-        y: viewport.y + screenDeltaToCanvas(event.deltaY, viewport.zoom),
-      })
+      onPanViewport(panByScreenDelta(viewport, -event.deltaX, -event.deltaY))
     },
     [getLocalPoint, onPanViewport, viewport],
   )
@@ -121,21 +102,13 @@ export function useCanvasPanZoom({
         const moveEvent = pendingPanEvent
         pendingPanEvent = null
 
-        onPanViewport({
-          ...startViewport,
-          x:
-            startViewport.x -
-            screenDeltaToCanvas(
-              moveEvent.clientX - startPoint.x,
-              startViewport.zoom,
-            ),
-          y:
-            startViewport.y -
-            screenDeltaToCanvas(
-              moveEvent.clientY - startPoint.y,
-              startViewport.zoom,
-            ),
-        })
+        onPanViewport(
+          panByScreenDelta(
+            startViewport,
+            moveEvent.clientX - startPoint.x,
+            moveEvent.clientY - startPoint.y,
+          ),
+        )
       }
 
       const handleMove = (moveEvent: PointerEvent) => {

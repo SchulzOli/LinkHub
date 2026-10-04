@@ -32,6 +32,12 @@ const vendorChunkGroups = [
     priority: 20,
   },
   {
+    // Only needed by the optional card effects (lazy-loaded).
+    name: 'three-vendor',
+    test: /node_modules[\\/]three(?:[\\/]|$)/,
+    priority: 25,
+  },
+  {
     name: 'vendor',
     test: /node_modules[\\/]/,
     priority: 10,

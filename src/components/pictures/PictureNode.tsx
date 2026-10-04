@@ -101,7 +101,7 @@ export const PictureNode = memo(function PictureNode({
     ['--action-icon-size' as const]: `${actionMetrics.iconSize}px`,
     ['--action-bar-gap' as const]: `${actionMetrics.gap}px`,
     ['--action-bar-offset' as const]: `${actionMetrics.offset}px`,
-    transform: `translate(${(picture.positionX - viewport.x) * viewport.zoom}px, ${(picture.positionY - viewport.y) * viewport.zoom}px) scale(${viewport.zoom})`,
+    transform: `translate(${picture.positionX}px, ${picture.positionY}px)`,
   }
   const resizeHandles: ResizeDirection[] = [
     'n',

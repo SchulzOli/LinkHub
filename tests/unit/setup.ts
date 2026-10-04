@@ -24,7 +24,7 @@ function createMemoryStorage(): Storage {
 }
 
 for (const name of ['localStorage', 'sessionStorage'] as const) {
-  let usable = false
+  let usable: boolean
   try {
     usable = typeof window[name]?.clear === 'function'
   } catch {

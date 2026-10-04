@@ -6,6 +6,7 @@ import {
 } from '../../../contracts/cardGroup'
 import type { LinkCard } from '../../../contracts/linkCard'
 import type { Viewport } from '../../../contracts/workspace'
+import { isCanvasBackgroundTarget } from '../../../engine/react/canvasBackground'
 import type { FormatPainterPayload } from '../../../features/appearance/formatPainter'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
 import {
@@ -149,7 +150,7 @@ export function useMarqueeSelection({
       if (
         formatPainter &&
         event.button === 0 &&
-        event.target === event.currentTarget
+        isCanvasBackgroundTarget(event)
       ) {
         event.preventDefault()
         onClearSelection()
@@ -162,7 +163,7 @@ export function useMarqueeSelection({
       if (
         event.button !== 0 ||
         interactionMode !== 'edit' ||
-        event.target !== event.currentTarget
+        !isCanvasBackgroundTarget(event)
       ) {
         return
       }

@@ -23,16 +23,6 @@ import {
   getOverlayActionMetrics,
 } from '../../features/appearance/themeTokens'
 
-function roundToDevicePixel(value: number) {
-  if (typeof window === 'undefined') {
-    return value
-  }
-
-  const pixelRatio = window.devicePixelRatio || 1
-
-  return Math.round(value * pixelRatio) / pixelRatio
-}
-
 type UseLinkCardViewModelArgs = {
   appearance: AppearanceProfile
   card: LinkCardModel
@@ -351,12 +341,9 @@ export function useLinkCardViewModel({
         resolvedSurfaceTransparency,
       )
     : 'transparent'
-  const translatedX = roundToDevicePixel(
-    (card.positionX - viewport.x) * viewport.zoom,
-  )
-  const translatedY = roundToDevicePixel(
-    (card.positionY - viewport.y) * viewport.zoom,
-  )
+  // World-space position; the canvas engine applies the camera transform.
+  const translatedX = card.positionX
+  const translatedY = card.positionY
 
   const cardStyle: CSSProperties & Record<string, string | number> = useMemo(
     () => ({
@@ -424,7 +411,7 @@ export function useLinkCardViewModel({
           : isDarkTheme
             ? 'drop-shadow(0 1px 1px rgba(255, 255, 255, 0.16)) saturate(1.02)'
             : 'drop-shadow(0 1px 1px rgba(255, 255, 255, 0.22)) saturate(0.98)',
-      transform: `translate(${translatedX}px, calc(${translatedY}px + var(--card-hover-offset, 0px))) scale(${viewport.zoom})`,
+      transform: `translate(${translatedX}px, calc(${translatedY}px + var(--card-hover-offset, 0px)))`,
       transformOrigin: 'top left',
     }),
     [

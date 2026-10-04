@@ -1,0 +1,16 @@
+.surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* One camera transform for all world-space content. */
+.world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}

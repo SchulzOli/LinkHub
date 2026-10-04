@@ -12,6 +12,11 @@ import {
   type SurfaceShadowStyle,
 } from '../../contracts/surfaceEffects'
 import {
+  isHtmlInCanvasSupported,
+  setCanvasEffectsEnabled,
+  useCanvasEffectsEnabled,
+} from '../../effects'
+import {
   getDefaultCardColorPresets,
   type getActiveThemeCardColorSettings,
 } from '../../features/appearance/cardColorPalette'
@@ -63,6 +68,8 @@ export function OptionsAppearanceSection({
   setThemeMode,
   tabListId,
 }: OptionsAppearanceSectionProps) {
+  const canvasEffectsEnabled = useCanvasEffectsEnabled()
+  const canvasEffectsSupported = isHtmlInCanvasSupported()
   const defaultColorPresets = getDefaultCardColorPresets(
     appearance.stylePreset,
     appearance.themeMode,
@@ -144,6 +151,28 @@ export function OptionsAppearanceSection({
                     }
                   />
                   <span>Favicons offline-only</span>
+                </label>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>Card effects</span>
+              <span className={styles.fieldHint}>
+                {canvasEffectsSupported
+                  ? 'Experimental light effects on cards (hover glint, ripple on new cards). Stored on this device only.'
+                  : 'Requires a Chromium browser with chrome://flags/#canvas-draw-element enabled.'}
+              </span>
+              <div className={styles.toggleGrid}>
+                <label className={styles.toggleField}>
+                  <input
+                    aria-label="Card effects"
+                    checked={canvasEffectsEnabled && canvasEffectsSupported}
+                    disabled={!canvasEffectsSupported}
+                    type="checkbox"
+                    onChange={(event) =>
+                      setCanvasEffectsEnabled(event.currentTarget.checked)
+                    }
+                  />
+                  <span>Card effects (html-in-canvas)</span>
                 </label>
               </div>
             </div>

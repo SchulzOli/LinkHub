@@ -1,6 +1,7 @@
 import {
   memo,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   type PointerEvent as ReactPointerEvent,
@@ -11,6 +12,8 @@ import type { LinkCard as LinkCardContract } from '../../contracts/linkCard'
 import type { PictureNode as PictureNodeContract } from '../../contracts/pictureNode'
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
+import { OptionalCardEffects } from '../../effects'
+import { CanvasEngineSurface, type GridOptions } from '../../engine'
 import {
   getCardUpdatesFromFormatPainter,
   getGroupUpdatesFromFormatPainter,
@@ -165,19 +168,14 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
     [visiblePictures, viewportBounds, gridSize],
   )
 
-  const gridStyle = useMemo(() => {
-    const { gridSize } = placementGuide
-    const scaledGridSize = gridSize * viewport.zoom
-    const backgroundPositionX = (-viewport.x * viewport.zoom) % scaledGridSize
-    const backgroundPositionY = (-viewport.y * viewport.zoom) % scaledGridSize
-
-    return {
-      backgroundImage:
-        'linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)',
-      backgroundPosition: `${backgroundPositionX}px ${backgroundPositionY}px`,
-      backgroundSize: `${scaledGridSize}px ${scaledGridSize}px`,
-    }
-  }, [placementGuide, viewport.x, viewport.y, viewport.zoom])
+  const grid = useMemo<GridOptions>(
+    () => ({
+      visible: placementGuide.gridVisible,
+      size: placementGuide.gridSize,
+      color: 'var(--grid-color)',
+    }),
+    [placementGuide.gridSize, placementGuide.gridVisible],
+  )
 
   const { handleContextMenu, handleWheel, handleRightClickPointerDown } =
     useCanvasPanZoom({
@@ -213,6 +211,26 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       visibleGroups,
       gridSize,
     })
+
+  // React registers wheel listeners as passive, so preventDefault() inside
+  // onWheel is ignored (and warns). Attach a non-passive native listener so
+  // wheel zoom/pan doesn't also scroll or zoom the page.
+  const handleWheelRef = useRef(handleWheel)
+  useEffect(() => {
+    handleWheelRef.current = handleWheel
+  }, [handleWheel])
+
+  useEffect(() => {
+    const element = canvasRef.current
+    if (!element) {
+      return
+    }
+
+    const listener = (event: WheelEvent) => handleWheelRef.current(event)
+    element.addEventListener('wheel', listener, { passive: false })
+
+    return () => element.removeEventListener('wheel', listener)
+  }, [])
 
   const handleFormatPainterCapture = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
@@ -279,46 +297,47 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       data-testid="infinite-canvas"
       onPointerDownCapture={handleFormatPainterCapture}
       onContextMenu={handleContextMenu}
-      onWheel={handleWheel}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onPointerDown={handlePointerDownCombined}
-      style={placementGuide.gridVisible ? gridStyle : undefined}
     >
-      {culledGroups.map((group) => (
-        <GroupFrame
-          key={group.id}
-          group={group}
-          groups={groups}
-          pictures={pictures}
-          guide={placementGuide}
-          isSelected={selectedGroupIdSet.has(group.id)}
-          interactionMode={interactionMode}
-          viewport={viewport}
-        />
-      ))}
-      {culledCards.map((card) => (
-        <LinkCard
-          key={card.id}
-          card={card}
-          guide={placementGuide}
-          isSelected={selectedCardIdSet.has(card.id)}
-          interactionMode={interactionMode}
-          viewport={viewport}
-        />
-      ))}
-      {culledPictures.map((picture) => (
-        <PictureNode
-          key={picture.id}
-          picture={picture}
-          guide={placementGuide}
-          isSelected={selectedPictureIdSet.has(picture.id)}
-          interactionMode={interactionMode}
-          viewport={viewport}
-        />
-      ))}
+      <CanvasEngineSurface viewport={viewport} grid={grid}>
+        {culledGroups.map((group) => (
+          <GroupFrame
+            key={group.id}
+            group={group}
+            groups={groups}
+            pictures={pictures}
+            guide={placementGuide}
+            isSelected={selectedGroupIdSet.has(group.id)}
+            interactionMode={interactionMode}
+            viewport={viewport}
+          />
+        ))}
+        {culledCards.map((card) => (
+          <LinkCard
+            key={card.id}
+            card={card}
+            guide={placementGuide}
+            isSelected={selectedCardIdSet.has(card.id)}
+            interactionMode={interactionMode}
+            viewport={viewport}
+          />
+        ))}
+        {culledPictures.map((picture) => (
+          <PictureNode
+            key={picture.id}
+            picture={picture}
+            guide={placementGuide}
+            isSelected={selectedPictureIdSet.has(picture.id)}
+            interactionMode={interactionMode}
+            viewport={viewport}
+          />
+        ))}
+      </CanvasEngineSurface>
+      <OptionalCardEffects rootRef={canvasRef} />
       {isFileDropActive ? (
         <div
           className="canvasFileDropOverlay"

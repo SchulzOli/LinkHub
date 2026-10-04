@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@grida/cmath": "^0.2.3",
+    "@grida/pixel-grid": "^0.0.0",
     "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
     "jszip": "^3.10.1",
