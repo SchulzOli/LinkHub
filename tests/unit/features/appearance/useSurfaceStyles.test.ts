@@ -36,10 +36,10 @@ describe('useSurfaceStyles', () => {
 
     expect(result.defaultColorPresets.fillPresets).toEqual([
       '#ffffff',
-      '#f4efff',
-      '#edf4ff',
-      '#eefbf7',
-      '#fff0f4',
+      '#f3f2ff',
+      '#eef5ff',
+      '#ecfaf5',
+      '#fff0f3',
     ])
     expect(result.activeColorSettings.fillPresets).toEqual([
       '#111111',
@@ -84,8 +84,8 @@ describe('useSurfaceStyles', () => {
       ],
     )
     expect(result.resolvedColors).toEqual({
-      borderColor: '#3a3947',
-      fillColor: '#232329',
+      borderColor: '#2a2a31',
+      fillColor: '#1a1a1f',
     })
   })
 })

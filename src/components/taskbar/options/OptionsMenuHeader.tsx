@@ -33,15 +33,9 @@ export function OptionsMenuHeader({
               color="var(--text-primary)"
             />
           </span>
-          <div className={styles.titleStack}>
-            <p className={styles.eyebrow}>Workspace menu</p>
-            <div className={styles.titleRow}>
-              <h2 className={styles.title}>LinkHub</h2>
-              <span className={styles.headerMeta}>Local</span>
-            </div>
-            <p className={styles.subtitle}>
-              Settings, templates, stats and canvas data in one place.
-            </p>
+          <div className={styles.titleRow}>
+            <h2 className={styles.title}>LinkHub</h2>
+            <span className={styles.headerMeta}>Local</span>
           </div>
         </div>
         <button

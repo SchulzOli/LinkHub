@@ -6,25 +6,24 @@
 .themeCard {
   display: grid;
   gap: 0.35rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--input-border);
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: var(--input-bg);
+  background: var(--panel-bg);
   cursor: pointer;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .themeCard:hover {
-  border-color: var(--accent);
-  background: var(--button-hover-bg);
+  border-color: color-mix(in srgb, var(--panel-border) 40%, var(--text-muted));
 }
 
 .themeCardActive {
   composes: themeCard;
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .themeHeader {
@@ -42,14 +41,12 @@
 }
 
 .themeBadge {
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--button-hover-bg);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -67,10 +64,10 @@
 }
 
 .swatch {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-radius: 0.25rem;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 50%, transparent);
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
 }
 
 .themeActions {
@@ -168,8 +165,6 @@
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .tokenRow {

@@ -10,7 +10,7 @@
 
 .label {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -117,9 +117,7 @@
 .editorTitle {
   margin: 0;
   font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--text-muted);
 }
 

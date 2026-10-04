@@ -102,8 +102,8 @@ test('switches between edit and view behavior', async ({ page, context }) => {
     .toEqual({
       width: '96px',
       height: '144px',
-      fillColor: '#24364a',
-      borderColor: '#66c7b5',
+      fillColor: '#1c2738',
+      borderColor: '#5cc6a7',
       layout: 'single-content',
     })
   await expect(card.getByTestId('card-title')).toHaveCount(0)

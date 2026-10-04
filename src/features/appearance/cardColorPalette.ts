@@ -17,22 +17,22 @@ const CARD_COLOR_PRESETS: Record<
 > = {
   excalidraw: {
     light: {
-      fillPresets: ['#ffffff', '#f4efff', '#edf4ff', '#eefbf7', '#fff0f4'],
-      borderPresets: ['#d9d8ec', '#8a78ff', '#78a9ff', '#4eb79a', '#ef7fa2'],
+      fillPresets: ['#ffffff', '#f3f2ff', '#eef5ff', '#ecfaf5', '#fff0f3'],
+      borderPresets: ['#e6e6ec', '#6965db', '#5b8def', '#3fae8c', '#e5718f'],
     },
     dark: {
-      fillPresets: ['#232329', '#312b47', '#24364a', '#1f3a35', '#402733'],
-      borderPresets: ['#3a3947', '#b1a5ff', '#88b6ff', '#66c7b5', '#ff9db9'],
+      fillPresets: ['#1a1a1f', '#25233a', '#1c2738', '#182c27', '#2e1d25'],
+      borderPresets: ['#2a2a31', '#a8a5ff', '#7aa7ff', '#5cc6a7', '#ff8fae'],
     },
   },
   blueprint: {
     light: {
-      fillPresets: ['#ffffff', '#e8f2ff', '#e6fbff', '#eef9f2', '#fff3e8'],
-      borderPresets: ['#8eb6de', '#1274c4', '#1ca6c9', '#4da46f', '#d28a32'],
+      fillPresets: ['#ffffff', '#ebf2ff', '#e8f8fb', '#ebf8f0', '#fff4e8'],
+      borderPresets: ['#e1e8f0', '#2563eb', '#0ea5c6', '#22a06b', '#e08a2e'],
     },
     dark: {
-      fillPresets: ['#11212f', '#17324a', '#153946', '#17372f', '#3b2b1f'],
-      borderPresets: ['#7fb8eb', '#7fc0ff', '#72d2ea', '#71c08f', '#e0a65f'],
+      fillPresets: ['#111b27', '#142640', '#112e36', '#122c24', '#2c2117'],
+      borderPresets: ['#1f2c3b', '#60a5fa', '#38bdf8', '#4ade80', '#fbbf24'],
     },
   },
 }

@@ -14,7 +14,6 @@ import {
   isDarkSurfaceColor,
 } from '../../features/appearance/surfaceContrast'
 import {
-  getScaledShadow,
   getSurfaceLayerColor,
   getSurfaceShadow,
 } from '../../features/appearance/surfaceEffects'
@@ -165,11 +164,18 @@ export function useLinkCardViewModel({
     ),
   )
   const titleTextBlockHeight = titleFontSize * titleLineHeight * titleLineClamp
+  const titlePaddingBlock = showCardImage
+    ? usesEdgeToEdgeCardImage
+      ? Math.max(4, Math.round(compactDimension * 0.026))
+      : Math.max(3, Math.round(compactDimension * 0.03))
+    : Math.max(8, Math.round(compactDimension * 0.06))
   const titleMaxHeight = showCardImage
     ? usesEdgeToEdgeCardImage
       ? Math.max(22, Math.round(availableContentHeight * 0.28))
-      : Math.max(22, Math.round(availableContentHeight * 0.32))
+      : Math.max(22, Math.round(availableContentHeight * 0.42))
     : Math.max(26, availableContentHeight)
+  // The zone must fit the clamped text plus its padding (border-box), so a
+  // two-line title never grows over the icon above it.
   const titleZoneHeight = showCardImage
     ? usesEdgeToEdgeCardImage
       ? Math.min(
@@ -182,16 +188,11 @@ export function useLinkCardViewModel({
       : Math.min(
           titleMaxHeight,
           Math.max(
-            Math.round(titleTextBlockHeight + 10),
-            Math.round(availableContentHeight * 0.27),
+            Math.ceil(titleTextBlockHeight + titlePaddingBlock * 2 + 2),
+            Math.round(availableContentHeight * 0.24),
           ),
         )
     : Math.min(titleMaxHeight, Math.round(titleTextBlockHeight + 18))
-  const titlePaddingBlock = showCardImage
-    ? usesEdgeToEdgeCardImage
-      ? Math.max(4, Math.round(compactDimension * 0.026))
-      : Math.max(4, Math.round(compactDimension * 0.038))
-    : Math.max(8, Math.round(compactDimension * 0.06))
   const titlePaddingInline = showCardImage
     ? usesEdgeToEdgeCardImage
       ? isCompactCircularEdgeToEdgeImageCard
@@ -234,11 +235,14 @@ export function useLinkCardViewModel({
     resolvedCardImageUrl.length > 0 &&
     !usesEdgeToEdgeCardImage
       ? Math.max(
-          36,
+          24,
           usesContainedTitleImage
-            ? Math.round(
-                Math.min(availableContentWidth, availableContentHeight) -
-                  containedTitleImageInset * 2,
+            ? // Icon sits above the title zone instead of under a title pill.
+              Math.round(
+                Math.min(
+                  availableContentWidth - containedTitleImageInset * 2,
+                  availableContentHeight - titleZoneHeight,
+                ) * 0.86,
               )
             : Math.round(
                 Math.min(availableContentWidth, availableContentHeight) * 0.9,
@@ -259,39 +263,18 @@ export function useLinkCardViewModel({
   const themeCanvasColor = appearance.styleTokens[appearance.themeMode].bgCanvas
   const lightTitleTextColor = appearance.styleTokens.dark.textPrimary
   const darkTitleTextColor = appearance.styleTokens.light.textPrimary
+  // Only full-bleed images get a (soft gradient) title scrim; contained
+  // icons show the title as plain text below the icon.
   const titleUsesOverlayTreatment = usesEdgeToEdgeCardImage && showCardTitle
-  const titlePanelOpacity = showCardImage
-    ? titleUsesOverlayTreatment
-      ? 0.92
-      : Math.max(0.78, (100 - resolvedSurfaceTransparency) / 100)
-    : 0
-  const titlePanelBackgroundColor = showCardImage
-    ? applyColorOpacity(resolvedCardColors.fillColor, titlePanelOpacity)
+  const titlePanelBackgroundColor = titleUsesOverlayTreatment
+    ? applyColorOpacity(resolvedCardColors.fillColor, 0.9)
     : 'transparent'
-  const titlePanelRadius = showCardImage
-    ? isCircularImageCard
-      ? Math.max(14, Math.round(compactDimension * 0.22))
-      : Math.max(10, Math.round(compactDimension * 0.12))
-    : 0
-  const titlePanelInsetInline = showCardImage
-    ? usesEdgeToEdgeCardImage
-      ? isCompactCircularEdgeToEdgeImageCard
-        ? Math.max(1, Math.round(compactDimension * 0.01))
-        : Math.max(2, Math.round(compactDimension * 0.008))
-      : Math.max(6, Math.round(cardContentPadding * 0.55))
-    : 0
-  const titlePanelInsetTop = showCardImage
-    ? usesEdgeToEdgeCardImage
-      ? Math.max(6, Math.round(titlePaddingBlock * 0.65))
-      : Math.max(4, Math.round(titlePaddingBlock * 0.45))
-    : 0
-  const titlePanelInsetBottom = showCardImage
-    ? usesEdgeToEdgeCardImage
-      ? Math.max(4, Math.round(titlePaddingBlock * 0.55))
-      : Math.max(3, Math.round(titlePaddingBlock * 0.35))
-    : 0
-  const titlePanelBlur = titleUsesOverlayTreatment ? 16 : 0
-  const effectiveTitleBackgroundColor = showCardImage
+  const titlePanelRadius = 0
+  const titlePanelInsetInline = 0
+  const titlePanelInsetTop = 0
+  const titlePanelInsetBottom = 0
+  const titlePanelBlur = titleUsesOverlayTreatment ? 10 : 0
+  const effectiveTitleBackgroundColor = titleUsesOverlayTreatment
     ? titlePanelBackgroundColor
     : applyColorOpacity(
         resolvedCardColors.fillColor,
@@ -303,38 +286,8 @@ export function useLinkCardViewModel({
     lightTextColor: lightTitleTextColor,
     darkTextColor: darkTitleTextColor,
   })
-  const titlePanelBorderColor = showCardImage
-    ? titleColor === lightTitleTextColor
-      ? 'rgba(255, 255, 255, 0.18)'
-      : 'rgba(15, 23, 42, 0.12)'
-    : 'transparent'
-  const titlePanelShadow = showCardImage
-    ? titleUsesOverlayTreatment
-      ? getScaledShadow(
-          isDarkTheme
-            ? ([
-                [0, 10, 22, -8, 'rgba(0, 0, 0, 0.34)'],
-                [0, 0, 0, 1, 'rgba(255, 255, 255, 0.06)'],
-              ] as const)
-            : ([
-                [0, 8, 18, -7, 'rgba(15, 23, 42, 0.18)'],
-                [0, 0, 0, 1, 'rgba(15, 23, 42, 0.08)'],
-              ] as const),
-          viewport.zoom,
-        )
-      : getScaledShadow(
-          useDarkSurfaceTreatment
-            ? ([
-                [0, 6, 14, -6, 'rgba(0, 0, 0, 0.2)'],
-                [0, 0, 0, 1, 'rgba(255, 255, 255, 0.05)'],
-              ] as const)
-            : ([
-                [0, 6, 14, -6, 'rgba(15, 23, 42, 0.14)'],
-                [0, 0, 0, 1, 'rgba(15, 23, 42, 0.07)'],
-              ] as const),
-          viewport.zoom,
-        )
-    : 'none'
+  const titlePanelBorderColor = 'transparent'
+  const titlePanelShadow = 'none'
   const imageShellBackground = usesEdgeToEdgeCardImage
     ? getSurfaceLayerColor(
         resolvedCardColors.fillColor,
