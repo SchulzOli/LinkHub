@@ -5,16 +5,18 @@
   will-change: transform;
   grid-template-rows: var(--group-header-height, 2rem) minmax(0, 1fr);
   gap: var(--group-gap, 0.5rem);
-  padding: var(--group-padding, 0.5rem);
-  border: 1px solid
+  /* Top chrome only: no side/bottom inset, so members use the full area. */
+  padding: var(--group-padding, 0.5rem) 0 0;
+  border: none;
+  border-top: 1px solid
     color-mix(
       in srgb,
-      var(--group-outline, var(--card-border)) 55%,
+      var(--group-outline, var(--card-border)) 80%,
       transparent
     );
   background: var(--group-shell-fill, var(--group-surface, var(--card-bg)));
   color: var(--text-primary);
-  box-shadow: var(--group-shadow, var(--panel-shadow));
+  box-shadow: none;
   transition:
     border-color var(--motion-base) var(--ease-standard),
     box-shadow var(--motion-base) var(--ease-standard);
@@ -37,14 +39,13 @@
 }
 
 .groupSelected {
-  border-color: var(--accent);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent),
-    var(--group-shadow, var(--panel-shadow));
+  border-top-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .header {
   min-width: 0;
+  margin-inline: var(--group-padding, 0.5rem);
   position: relative;
   z-index: 4;
   pointer-events: none;

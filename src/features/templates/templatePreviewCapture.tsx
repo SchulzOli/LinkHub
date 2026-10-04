@@ -208,7 +208,6 @@ function PreviewGroup(props: {
   const metrics = getGroupChromeMetrics(layoutSize, TEMPLATE_PREVIEW_GRID_SIZE)
   const surfaceTransparency =
     group.surfaceTransparency ?? appearance.defaultSurfaceTransparency
-  const shadowStyle = group.shadowStyle ?? appearance.defaultSurfaceShadowStyle
   const width = metrics.pixelWidth * transform.scale
   const height = metrics.pixelHeight * transform.scale
   const compactDimension = Math.min(width, height)
@@ -232,9 +231,8 @@ function PreviewGroup(props: {
     height,
     overflow: 'hidden',
     borderRadius: radius,
-    border: `1px solid ${withAlpha(colors.borderColor, 0.7)}`,
+    borderTop: `1px solid ${withAlpha(colors.borderColor, 0.8)}`,
     background: getSurfaceLayerColor(colors.fillColor, surfaceTransparency),
-    boxShadow: getSurfaceShadow(shadowStyle, appearance),
     boxSizing: 'border-box',
   }
   const titleStyle: CSSProperties = {

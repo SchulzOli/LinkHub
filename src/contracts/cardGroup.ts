@@ -151,13 +151,12 @@ export function getGroupBodyBounds(
 ) {
   const layoutSize = resolveGroupLayoutSize(group.size, group.collapsed)
   const metrics = getGroupChromeMetrics(layoutSize, gridSize)
-  const left = group.positionX + metrics.padding
+  // Groups only have chrome on top (the header); the body spans the full
+  // width and runs down to the bottom edge, so members can use every cell.
+  const left = group.positionX
   const top =
     group.positionY + metrics.padding + metrics.headerHeight + metrics.gap
-  const right = Math.max(
-    left,
-    group.positionX + metrics.pixelWidth - metrics.padding,
-  )
+  const right = Math.max(left, group.positionX + metrics.pixelWidth)
 
   if (group.collapsed) {
     return {
@@ -168,10 +167,7 @@ export function getGroupBodyBounds(
     }
   }
 
-  const bottom = Math.max(
-    top,
-    group.positionY + metrics.pixelHeight - metrics.padding,
-  )
+  const bottom = Math.max(top, group.positionY + metrics.pixelHeight)
 
   return {
     left,

@@ -11,7 +11,7 @@ import {
 import type { StoredImageAssetRecord } from '../../storage/imageRepository'
 import { createId } from '../../utils/id'
 import { resolveCardColors } from '../appearance/cardColorPalette'
-import { mixHexColors, withAlpha } from '../appearance/colorMath'
+import { withAlpha } from '../appearance/colorMath'
 import { getAppearanceStyleTokens } from '../appearance/stylePresets'
 import { getCardPixelDimensions } from '../appearance/themeTokens'
 import {
@@ -279,33 +279,19 @@ function drawTemplateGroup(input: {
   )
   const headerHeight = chrome.headerHeight * input.transform.scale
 
-  input.context.save()
-  input.context.shadowColor = withAlpha(groupColors.borderColor, 0.22)
-  input.context.shadowBlur = 12
-  input.context.shadowOffsetY = 8
-  roundRect(input.context, x, y, width, height, radius)
-  input.context.fillStyle = withAlpha(groupColors.fillColor, 0.18)
-  input.context.fill()
-  input.context.shadowColor = 'transparent'
-  input.context.lineWidth = Math.max(1.2, input.transform.scale * 1.4)
-  input.context.strokeStyle = withAlpha(groupColors.borderColor, 0.9)
-  input.context.stroke()
-  input.context.restore()
-
+  // Flat group: soft fill plus a single top rule; no side/bottom borders.
   input.context.save()
   clipRoundedRect(input.context, x, y, width, height, radius)
-  input.context.fillStyle = mixHexColors(
-    groupColors.fillColor,
-    tokens.accent,
-    0.18,
-  )
-  input.context.fillRect(x, y, width, Math.min(height, headerHeight + 4))
+  input.context.fillStyle = withAlpha(groupColors.fillColor, 0.18)
+  input.context.fillRect(x, y, width, height)
+  input.context.fillStyle = withAlpha(groupColors.borderColor, 0.9)
+  input.context.fillRect(x, y, width, Math.max(1, input.transform.scale))
   input.context.restore()
 
   if ((input.group.showTitle ?? true) && width >= 64 && height >= 24) {
     input.context.save()
     input.context.fillStyle = tokens.textPrimary
-    input.context.font = `700 ${Math.max(10, Math.min(13, headerHeight * 0.5))}px ${tokens.uiFont}`
+    input.context.font = `600 ${Math.max(10, Math.min(13, headerHeight * 0.5))}px ${tokens.uiFont}`
     input.context.textBaseline = 'middle'
     input.context.fillText(
       truncatePreviewText(
