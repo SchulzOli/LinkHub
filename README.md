@@ -1,19 +1,22 @@
 # LinkHub
 
 [![CI](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml)
-[![CD](https://github.com/SchulzOli/LinkHub/actions/workflows/cd.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/cd.yml)
+[![Publish](https://github.com/SchulzOli/LinkHub/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/publish.yml)
+[![Docs](https://github.com/SchulzOli/LinkHub/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/LinkHub/)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/linkhub/dpbgplhiaobnegcbfedihimnoamlpgmd)
 [![Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0A7FEA?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/linkhub/gkcpbfphinbaoplepknkinjfkdhljghp)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/link-hub/)
 
-LinkHub is a local-first infinite canvas for bookmarks, images, themes, and reusable layouts. It turns a blank tab into a spatial board where every link has a place, and the same React app powers both the hosted web build and the browser-extension new-tab experience for Chrome, Edge, and Firefox.
+LinkHub is a local-first infinite canvas for bookmarks, images, live charts, news feeds, themes, and reusable layouts. It turns a blank tab into a spatial board where every link has a place, and the same React app powers both the hosted web build and the browser-extension new-tab experience for Chrome, Edge, and Firefox.
+
+**Documentation:** [schulzoli.github.io/LinkHub](https://schulzoli.github.io/LinkHub/)
 
 ![LinkHub canvas overview](extension/screenshots/01-canvas-overview.png)
 
 ## Why LinkHub
 
 - Infinite canvas with pan, zoom, snap-to-grid placement, marquee multi-select, copy/cut/paste, undo, and format painter
-- Link cards, collapsible nested groups, and picture nodes on the same board
+- Link cards, collapsible nested groups, pictures, live charts, and RSS/Atom news feeds on the same board
 - Multiple workspaces with a pinned or auto-hiding workspace rail
 - Six built-in themes plus saved or imported custom themes and token-level customization
 - Reusable templates with preview thumbnails and bundled local images
@@ -37,6 +40,14 @@ LinkHub is a local-first infinite canvas for bookmarks, images, themes, and reus
 - Override favicons with uploaded gallery images
 - Organize content inside collapsible groups and nested groups
 - Drop images onto the canvas as standalone picture nodes
+- Collapsing a group hides every node inside it, including charts and feeds
+
+### Charts and news feeds
+
+- Chart nodes plot a time series from a WebSocket or SSE feed: ranges from 1D to Max, price or % change, moving averages, log scale, CSV export
+- Charts inside a group follow the group's settings; any chart can keep its own value
+- News feed nodes merge several RSS or Atom feeds into one list with filter, sort, time window, and per-source toggles; each article opens in a new tab
+- Optional local servers ship with the repository: `npm run feed:charts` (market data) and `npm run feed:news` (feed proxy). See [doc/CHART_FEED.md](doc/CHART_FEED.md) and [doc/NEWS_FEED.md](doc/NEWS_FEED.md)
 
 ### Themes, templates, and workspaces
 
@@ -75,6 +86,14 @@ LinkHub is a local-first infinite canvas for bookmarks, images, themes, and reus
 
 ![LinkHub template library](extension/screenshots/06-template-library.png)
 
+### Charts and news feeds
+
+![LinkHub charts and news feeds](extension/screenshots/07-charts-and-news.png)
+
+### Local statistics
+
+![LinkHub local statistics](extension/screenshots/08-local-statistics.png)
+
 ## Quick Start
 
 ### Prerequisites
@@ -100,22 +119,25 @@ npm run build
 
 ## Scripts
 
-| Command                   | Description                             |
-| ------------------------- | --------------------------------------- |
-| `npm run dev`             | Start the Vite development server       |
-| `npm run build`           | Type-check and build the production app |
-| `npm run preview`         | Preview the production build locally    |
-| `npm run lint`            | Run ESLint with zero warnings allowed   |
-| `npm run format`          | Format the repository with Prettier     |
-| `npm run test`            | Run Vitest with coverage                |
-| `npm run test:watch`      | Run Vitest in watch mode                |
-| `npm run test:e2e`        | Run Playwright end-to-end tests         |
-| `npm run build:extension` | Build the browser extension package     |
-| `npm run deploy`          | Run the extension deployment script     |
-| `npm run deploy:chrome`   | Publish only the Chrome build           |
-| `npm run deploy:edge`     | Publish only the Edge build             |
-| `npm run deploy:firefox`  | Publish only the Firefox build          |
-| `npm run deploy:dry`      | Dry-run the extension deployment flow   |
+| Command                   | Description                               |
+| ------------------------- | ----------------------------------------- |
+| `npm run dev`             | Start the Vite development server         |
+| `npm run build`           | Type-check and build the production app   |
+| `npm run preview`         | Preview the production build locally      |
+| `npm run feed:charts`     | Start the reference chart feed server     |
+| `npm run feed:news`       | Start the RSS/Atom feed proxy             |
+| `npm run docs:build`      | Build the documentation site into `site/` |
+| `npm run lint`            | Run ESLint with zero warnings allowed     |
+| `npm run format`          | Format the repository with Prettier       |
+| `npm run test`            | Run Vitest with coverage                  |
+| `npm run test:watch`      | Run Vitest in watch mode                  |
+| `npm run test:e2e`        | Run Playwright end-to-end tests           |
+| `npm run build:extension` | Build the browser extension package       |
+| `npm run deploy`          | Run the extension deployment script       |
+| `npm run deploy:chrome`   | Publish only the Chrome build             |
+| `npm run deploy:edge`     | Publish only the Edge build               |
+| `npm run deploy:firefox`  | Publish only the Firefox build            |
+| `npm run deploy:dry`      | Dry-run the extension deployment flow     |
 
 ## Browser Extension
 
@@ -153,15 +175,21 @@ LinkHub is local-first.
 - IndexedDB is the primary persistence layer for workspaces, templates, themes, image metadata, and image blobs
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
-- Creating a link card requests a favicon from Google's public favicon service using the target hostname
+- Creating a link card fetches the site's favicon once (from the site itself, then Google's public favicon service as a fallback) and caches it locally; **Favicons offline-only** skips the Google fallback
+- Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
+- News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
+- **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
-For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The shipped privacy page lives at [public/privacy/index.html](public/privacy/index.html).
+For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/LinkHub/privacy/](https://schulzoli.github.io/LinkHub/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
 
 ## Documentation
 
-- [doc/README.md](doc/README.md) for the documentation index
+- [Documentation website](https://schulzoli.github.io/LinkHub/), built from `doc/` by `npm run docs:build`
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
+- [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
+- [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy
+- [doc/CANVAS_ENGINE.md](doc/CANVAS_ENGINE.md) for the canvas engine and optional card effects
 - [extension/EXTENSION.md](extension/EXTENSION.md) for extension packaging and release workflow
 - [extension/STORE_LISTING.md](extension/STORE_LISTING.md) for store-copy and reviewer notes
 - [public/privacy/index.html](public/privacy/index.html) for the standalone privacy page

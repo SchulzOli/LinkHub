@@ -29,6 +29,7 @@ dist-extension
 coverage
 playwright-report
 test-results
+/site
 *zip
 
 # Store credentials (never commit these!)

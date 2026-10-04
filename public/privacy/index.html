@@ -195,12 +195,12 @@
           <p class="intro">
             LinkHub stores your workspace data locally in your browser on your
             device. It does not send your boards, templates, themes, images, or
-            local usage statistics to LinkHub servers. When you create a link
-            card, LinkHub may request a favicon from Google's public favicon
-            service using the target domain.
+            local usage statistics to LinkHub servers. Network requests only go
+            to the sites you link to, their favicons, and the chart or news feed
+            servers you configure yourself.
           </p>
           <div class="meta">
-            <span>Last updated: 2026-04-18</span>
+            <span>Last updated: 2026-10-04</span>
             <a class="back-link" href="../">Open LinkHub</a>
           </div>
         </header>
@@ -222,7 +222,8 @@
           <ul>
             <li>Workspaces and workspace names</li>
             <li>
-              Link cards, groups, picture nodes, layout positions, and board
+              Link cards, groups, pictures, chart and news feed nodes (their
+              feed addresses and display settings), layout positions, and board
               settings
             </li>
             <li>Uploaded images and image gallery items</li>
@@ -268,14 +269,39 @@
 
         <section>
           <h2>5. External requests</h2>
-          <p>
-            When you create a link card, LinkHub may request a favicon from
-            Google's public favicon service using the target domain so the card
-            can show a site icon.
-          </p>
+          <p>LinkHub makes these network requests, and only these:</p>
+          <ul>
+            <li>
+              <strong>Favicons.</strong> When you create a link card, LinkHub
+              loads the site's icon once, first from the site itself
+              (<code>/favicon.ico</code>), then from Google's public favicon
+              service as a fallback, and keeps it locally. The option
+              <em>Favicons offline-only</em> turns the Google fallback off.
+            </li>
+            <li>
+              <strong>Chart nodes.</strong> A chart connects to the feed server
+              address set on the chart (by default a server on your own
+              computer, <code>127.0.0.1</code>) and sends the symbol and time
+              range it should show.
+            </li>
+            <li>
+              <strong>News feed nodes.</strong> A feed node loads the RSS or
+              Atom addresses you add, through the feed proxy address set on the
+              node (by default a proxy on your own computer) or directly when
+              you clear the proxy. If <em>Images</em> is on in the feed options,
+              article images load directly from the news sites.
+            </li>
+            <li>
+              <strong>Check Links.</strong> When you start it in the Data tab,
+              LinkHub sends a <code>HEAD</code> request to each link card's
+              address to see whether it still answers.
+            </li>
+          </ul>
           <p class="note">
-            That request does not upload your canvas content, templates, themes,
-            imported bundles, or gallery images.
+            None of these requests upload your canvas content, templates,
+            themes, imported bundles, gallery images, or usage statistics. The
+            servers you connect to see your IP address and the address that was
+            requested, as with any web request.
           </p>
         </section>
 

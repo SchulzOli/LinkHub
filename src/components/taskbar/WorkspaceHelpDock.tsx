@@ -88,7 +88,7 @@ const privacySections: readonly PrivacySection[] = [
   {
     bullets: [
       'Workspaces and workspace names',
-      'Link cards, groups, picture nodes, layout positions, and board settings',
+      'Link cards, groups, pictures, chart and news feed nodes, layout positions, and board settings',
       'Uploaded images and gallery items',
       'Themes, templates, and appearance preferences',
       'Local usage statistics such as canvas opens and link opens',
@@ -114,8 +114,9 @@ const privacySections: readonly PrivacySection[] = [
   },
   {
     paragraphs: [
-      "When you create a link card, LinkHub may request a favicon from Google's public favicon service using the target hostname so the card can show a site icon.",
-      'That request does not upload your canvas content, templates, themes, imported bundles, or gallery images.',
+      "When you create a link card, LinkHub loads the site's favicon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. Favicons offline-only turns the Google fallback off.",
+      'Chart nodes connect only to the feed server set on the chart. News feed nodes load your feeds through the proxy set on the node, or directly when it is cleared; by default both are optional servers on your own computer. With Images on, article images load from the news sites. Check Links sends a HEAD request to each card URL when you start it.',
+      'None of these requests upload your canvas content, templates, themes, imported bundles, gallery images, or usage statistics.',
     ],
     title: 'External requests',
   },

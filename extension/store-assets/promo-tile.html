@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LinkHub promo tile</title>
+    <!--
+      Source of the store promotional tiles. Rendered by
+      tests/e2e/screenshots.spec.ts ("09 — Promotional tiles") at the exact
+      store sizes: ?size=large (1400x560) or ?size=small (440x280).
+    -->
+    <style>
+      @font-face {
+        font-family: 'Inter Variable';
+        src: url('../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+          format('woff2-variations');
+        font-weight: 100 900;
+      }
+
+      :root {
+        --bg: #0f0f12;
+        --panel: #1a1a1f;
+        --border: #2a2a31;
+        --text: #ededf0;
+        --muted: #9b9ba6;
+        --accent: #a8a5ff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      html,
+      body {
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+      }
+
+      .tile {
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(
+            circle at 18% 22%,
+            rgba(168, 165, 255, 0.18),
+            transparent 42%
+          ),
+          radial-gradient(
+            circle at 85% 90%,
+            rgba(168, 165, 255, 0.1),
+            transparent 45%
+          ),
+          var(--bg);
+      }
+
+      .grid {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(
+          rgba(237, 237, 240, 0.07) 1px,
+          transparent 1.2px
+        );
+        background-size: 22px 22px;
+      }
+
+      .copy {
+        position: absolute;
+        display: grid;
+        align-content: center;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+      }
+
+      .mark {
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .mark img {
+        display: block;
+      }
+
+      .name {
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .headline {
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        text-wrap: balance;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(26, 26, 31, 0.9);
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .shot {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid rgba(237, 237, 240, 0.14);
+        background: var(--panel);
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.55),
+          0 2px 6px rgba(0, 0, 0, 0.4);
+      }
+
+      .shot img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+      }
+
+      /* ── 1400 x 560 (Chrome marquee, Edge large) ───────────── */
+      .large {
+        width: 1400px;
+        height: 560px;
+      }
+
+      .large .copy {
+        top: 0;
+        bottom: 0;
+        left: 72px;
+        width: 520px;
+        gap: 22px;
+      }
+
+      .large .brand {
+        gap: 16px;
+      }
+
+      .large .mark {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+      }
+
+      .large .mark img {
+        width: 36px;
+        height: 36px;
+      }
+
+      .large .name {
+        font-size: 56px;
+      }
+
+      .large .eyebrow {
+        font-size: 15px;
+      }
+
+      .large .headline {
+        font-size: 34px;
+      }
+
+      .large .chips {
+        gap: 10px;
+      }
+
+      .large .chip {
+        padding: 9px 16px;
+        font-size: 16px;
+      }
+
+      .large .shot-main {
+        top: 48px;
+        left: 640px;
+        width: 720px;
+        height: 450px;
+        border-radius: 18px;
+        transform: perspective(1800px) rotateY(-9deg) rotateX(3deg);
+        transform-origin: left center;
+      }
+
+      .large .shot-side {
+        top: 262px;
+        left: 980px;
+        width: 384px;
+        height: 240px;
+        border-radius: 14px;
+        transform: rotate(-2deg);
+      }
+
+      /* ── 440 x 280 (Chrome small, Edge small) ──────────────── */
+      .small {
+        width: 440px;
+        height: 280px;
+      }
+
+      .small .copy {
+        top: 0;
+        bottom: 0;
+        left: 26px;
+        width: 200px;
+        gap: 12px;
+      }
+
+      .small .brand {
+        gap: 10px;
+      }
+
+      .small .mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+      }
+
+      .small .mark img {
+        width: 22px;
+        height: 22px;
+      }
+
+      .small .name {
+        font-size: 30px;
+      }
+
+      .small .headline {
+        font-size: 17px;
+      }
+
+      .small .eyebrow,
+      .small .chips,
+      .small .shot-side {
+        display: none;
+      }
+
+      .small .shot-main {
+        top: 46px;
+        left: 236px;
+        width: 300px;
+        height: 188px;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile" id="tile">
+      <div class="grid"></div>
+      <div class="copy">
+        <div class="brand">
+          <span class="mark"
+            ><img alt="" src="../../public/linkhub-mark.svg"
+          /></span>
+          <span class="name">LinkHub</span>
+        </div>
+        <p class="eyebrow">Your new tab, as a canvas</p>
+        <p class="headline">
+          Links, groups, charts and news on one infinite board.
+        </p>
+        <div class="chips">
+          <span class="chip">Local-first</span>
+          <span class="chip">Live charts</span>
+          <span class="chip">RSS feeds</span>
+          <span class="chip">Templates</span>
+        </div>
+      </div>
+      <div class="shot shot-main">
+        <img alt="" src="../screenshots/01-canvas-overview.png" />
+      </div>
+      <div class="shot shot-side">
+        <img alt="" src="../screenshots/07-charts-and-news.png" />
+      </div>
+    </div>
+    <script>
+      const size = new URLSearchParams(location.search).get('size') ?? 'large'
+
+      document.getElementById('tile').classList.add(size)
+    </script>
+  </body>
+</html>

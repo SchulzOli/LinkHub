@@ -1,24 +1,152 @@
 /**
- * Playwright script to generate 6 promotional screenshots for the browser
- * extension store listing (AMO / Chrome Web Store).
+ * Playwright script to generate the promotional screenshots for the browser
+ * extension store listings (AMO / Chrome Web Store / Edge Add-ons) and the
+ * project website.
  *
  * Screenshots are saved to: extension/screenshots/
  *
- * Run:
- *   npx playwright test screenshots --project=chromium
+ * Run (opt-in, skipped in the regular suite and CI):
+ *   STORE_SCREENSHOTS=1 npx playwright test screenshots --project=chromium
+ *
+ * Chart and feed data are mocked. Link cards load the real site favicons on
+ * purpose, so the store images show the real product.
  *
  * Prerequisites:
  *   Dev server running on http://127.0.0.1:4173 (Playwright auto-starts it)
  */
+
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { moveElementToPoint } from './dragHelpers'
 import { dismissVisibleEditPanels } from './fixtures'
 
-// ── Viewport: 1280×800 (AMO recommended) ────────────────────────
+// ── Viewport: 1280×800 at 1x - the exact size Chrome, Edge and AMO accept ──
 const VIEWPORT = { width: 1280, height: 800 }
 const SCREENSHOT_DIR = 'extension/screenshots'
+
+test.use({ deviceScaleFactor: 1, viewport: VIEWPORT })
+
+const CHART_FEED_URL = 'ws://127.0.0.1:8787/feed'
+const FEED_PROXY_URL = 'http://127.0.0.1:8788/rss'
+const NOW = Date.UTC(2026, 9, 2, 15, 30)
+const DAY = 86_400_000
+
+/** Deterministic random walk so every run renders the same chart. */
+function createSeries(seed: number, start: number, drift: number) {
+  let value = start
+  let state = seed
+
+  return Array.from({ length: 260 }, (_, index) => {
+    state = (state * 16807) % 2147483647
+    value *= 1 + drift + (state / 2147483647 - 0.5) * 0.035
+
+    return [NOW - (259 - index) * DAY, Math.round(value * 100) / 100]
+  })
+}
+
+const CHART_SERIES: Record<
+  string,
+  { name: string; currency: string; seed: number; start: number; drift: number }
+> = {
+  AAPL: {
+    name: 'Apple Inc.',
+    currency: 'USD',
+    seed: 11,
+    start: 182,
+    drift: 0.0011,
+  },
+  'SAP.DE': {
+    name: 'SAP SE',
+    currency: 'EUR',
+    seed: 29,
+    start: 168,
+    drift: 0.0016,
+  },
+  '^GDAXI': {
+    name: 'DAX',
+    currency: 'EUR',
+    seed: 47,
+    start: 18200,
+    drift: 0.0008,
+  },
+}
+
+/** Stands in for `npm run feed:charts` with a fixed, realistic series. */
+async function mockChartFeed(page: Page) {
+  await page.routeWebSocket(CHART_FEED_URL, (ws) => {
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw))
+
+      if (message.type !== 'subscribe') {
+        return
+      }
+
+      const series = CHART_SERIES[message.symbol] ?? CHART_SERIES.AAPL
+
+      ws.send(
+        JSON.stringify({
+          type: 'snapshot',
+          id: message.id,
+          symbol: message.symbol,
+          range: message.range,
+          currency: series.currency,
+          name: series.name,
+          points: createSeries(series.seed, series.start, series.drift),
+        }),
+      )
+    })
+  })
+}
+
+const NEWS_ITEMS = [
+  [
+    'Open-source browser engines agree on a shared canvas API',
+    'Tech Daily',
+    0.4,
+  ],
+  ['Central bank holds rates steady, signals patience', 'Markets Wire', 1.2],
+  ['New study maps how people organise their bookmarks', 'Research Notes', 2.5],
+  ['Rail network adds night trains between five capitals', 'Europe Today', 3.1],
+  ['Chipmakers report strong demand for edge AI hardware', 'Tech Daily', 5.6],
+  ['City council approves car-free old town on weekends', 'Europe Today', 7.9],
+  ['Why local-first software is having a moment', 'Research Notes', 11.4],
+  [
+    'Quarterly earnings: software stocks lead the rebound',
+    'Markets Wire',
+    14.2,
+  ],
+] as const
+
+function createRss(title: string) {
+  const items = NEWS_ITEMS.filter(([, source]) => source === title)
+    .map(
+      ([headline, , hoursAgo], index) => `<item><title>${headline}</title>
+<link>https://news.example/${encodeURIComponent(title)}/${index}</link>
+<guid>https://news.example/${encodeURIComponent(title)}/${index}</guid>
+<pubDate>${new Date(Date.now() - hoursAgo * 3_600_000).toUTCString()}</pubDate>
+<description>${headline}.</description></item>`,
+    )
+    .join('\n')
+
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
+<title>${title}</title><link>https://news.example/</link>${items}</channel></rss>`
+}
+
+/** Stands in for `npm run feed:news`: four fixed feeds. */
+async function mockFeedProxy(page: Page) {
+  await page.route(`${FEED_PROXY_URL}?**`, async (route) => {
+    const target = new URL(route.request().url()).searchParams.get('url') ?? ''
+    const title = decodeURIComponent(target.split('/').at(-1) ?? '')
+
+    await route.fulfill({
+      contentType: 'application/rss+xml',
+      body: createRss(title),
+    })
+  })
+}
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -147,8 +275,19 @@ async function screenshot(page: Page, name: string) {
 // ── Test Suite ───────────────────────────────────────────────────
 
 test.describe('Store listing screenshots', () => {
+  // Opt-in: these tests rewrite committed store assets and load real site
+  // favicons, so the regular suite and CI skip them.
+  test.skip(
+    !process.env.STORE_SCREENSHOTS,
+    'set STORE_SCREENSHOTS=1 to regenerate the store assets',
+  )
+  // Store assets are desktop images; the mobile project would overwrite them
+  // with a scaled, mobile-emulated layout.
+  test.skip(
+    ({ isMobile }) => isMobile,
+    'store screenshots are generated on the desktop project only',
+  )
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSize(VIEWPORT)
     await page.goto('/')
     await clearAppState(page)
   })
@@ -474,7 +613,7 @@ test.describe('Store listing screenshots', () => {
 
     await createCard(page, 'github.com', 'GitHub')
     await createCard(page, 'developer.mozilla.org', 'MDN Web Docs')
-    await createCard(page, 'typescript-lang.org', 'TypeScript')
+    await createCard(page, 'stackoverflow.com', 'Stack Overflow')
 
     const cards = page.getByTestId(/link-card-/)
     await moveCardToPoint(page, cards.nth(0), { x: 300, y: 200 })
@@ -507,8 +646,6 @@ test.describe('Store listing screenshots', () => {
     // Switch back to Home — rail is pinned so tabs are accessible
     await page.getByRole('tab', { name: 'Home' }).click({ force: true })
     await page.waitForTimeout(500)
-
-    await screenshot(page, '05-multiple-workspaces')
 
     await screenshot(page, '05-multiple-workspaces')
   })
@@ -561,7 +698,17 @@ test.describe('Store listing screenshots', () => {
       await dismissVisibleEditPanels(page)
     }
 
-    await group.getByTestId(/card-group-header-/).click({ force: true })
+    // Select the whole group: clear the card selection first, then click the
+    // group header so the template contains the group and its five cards.
+    await page.mouse.click(1240, 60)
+    const headerBox = await group
+      .getByTestId(/card-group-header-/)
+      .boundingBox()
+    if (!headerBox) {
+      throw new Error('group header has no box')
+    }
+    await page.mouse.click(headerBox.x + headerBox.width - 30, headerBox.y + 10)
+    await expect(group).toHaveAttribute('data-selected', 'true')
 
     await openMenu(page)
     await page.getByRole('tab', { name: 'Templates' }).click()
@@ -591,11 +738,203 @@ test.describe('Store listing screenshots', () => {
       }),
     ).toBeVisible()
 
-    await launchKitTemplate.getByRole('button', { name: 'Duplicate' }).click()
-    await expect(page.getByTestId('templates-panel')).toContainText(
-      'Launch Kit copy',
-    )
+    await expect(page.getByTestId('templates-panel')).toContainText('Cards: 5')
 
     await screenshot(page, '06-template-library')
+  })
+
+  /**
+   * Screenshot 7: Live charts and a merged news feed inside one group
+   * Shows: Two chart nodes and a news feed node with sources, filter and sort
+   */
+  test('07 — Charts and news feeds', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockChartFeed(page)
+    await mockFeedProxy(page)
+    await page.reload()
+
+    await openMenu(page)
+    await applyTheme(page, 'Excalidraw')
+    await page.getByRole('tab', { name: 'Options' }).click()
+    await selectOption(page, 'Color mode', 'Dark')
+    await closeMenu(page)
+
+    const drag = (node: Locator, x: number, y: number) =>
+      // Grab the node by its title row and drop its top-left at (x, y).
+      moveElementToPoint(
+        page,
+        node,
+        { x: x + 40, y: y + 14 },
+        {
+          pointerDownMethod: 'mouse',
+          sourceOffset: { x: 40, y: 14 },
+          settleMs: 150,
+          steps: 8,
+        },
+      )
+
+    // Each node is placed right after it is created, so nothing overlaps.
+    const chartSlots = [
+      { symbol: 'AAPL', x: 48, y: 48 },
+      { symbol: 'SAP.DE', x: 48, y: 312 },
+      { symbol: '^GDAXI', x: 856, y: 48 },
+    ]
+
+    for (const slot of chartSlots) {
+      await page.getByRole('button', { name: 'Add chart' }).click()
+      const chart = page.getByTestId(/chart-node-/).last()
+
+      await expect(chart.getByTestId('chart-price')).not.toBeEmpty()
+
+      if (slot.symbol !== 'AAPL') {
+        await chart.getByRole('button', { name: 'Chart options' }).click()
+        const options = page.getByTestId('chart-options')
+        await options.getByLabel('Chart symbol').fill(slot.symbol)
+        await options.getByRole('button', { name: 'Apply source' }).click()
+        await page.keyboard.press('Escape')
+        await expect(options).toHaveCount(0)
+      }
+
+      const chartId = await chart.getAttribute('data-testid')
+      await drag(page.getByTestId(chartId ?? ''), slot.x, slot.y)
+    }
+
+    // News feed with four sources.
+    await page.getByRole('button', { name: 'Add news feed' }).click()
+    const feed = page.getByTestId(/feed-node-/).first()
+
+    await feed.getByLabel('Feed URL').fill('https://news.example/Tech%20Daily')
+    await feed.getByRole('button', { name: 'Add feed' }).click()
+    await expect(feed.getByTestId('feed-item').first()).toBeVisible()
+
+    await feed.getByRole('button', { name: 'Feed options' }).click()
+    const feedOptions = page.getByTestId('feed-options')
+    for (const source of ['Markets Wire', 'Research Notes', 'Europe Today']) {
+      await feedOptions
+        .getByLabel('Feed URL')
+        .fill(`https://news.example/${encodeURIComponent(source)}`)
+      await feedOptions.getByRole('button', { name: 'Add feed' }).click()
+    }
+    await page.keyboard.press('Escape')
+    await expect(feed.getByTestId('feed-item')).toHaveCount(NEWS_ITEMS.length)
+    await drag(feed, 464, 48)
+
+    for (const [index, [url, title]] of [
+      ['finance.yahoo.com', 'Yahoo Finance'],
+      ['reuters.com', 'Reuters'],
+      ['tagesschau.de', 'Tagesschau'],
+    ].entries()) {
+      await createCard(page, url, title)
+      const cardId = await page
+        .getByTestId(/link-card-/)
+        .last()
+        .getAttribute('data-testid')
+      await drag(page.getByTestId(cardId ?? ''), 856 + index * 128, 336)
+    }
+
+    await page.mouse.click(1240, 700)
+    await screenshot(page, '07-charts-and-news')
+  })
+
+  /**
+   * Screenshot 8: Statistics tab of the redesigned menu
+   * Shows: Overview strip, timeline and top cards for a small board
+   */
+  test('08 — Local statistics', async ({ page }) => {
+    await openMenu(page)
+    await applyTheme(page, 'Minimal')
+    await page.getByRole('tab', { name: 'Options' }).click()
+    await selectOption(page, 'Color mode', 'Light')
+    await closeMenu(page)
+
+    const links = [
+      ['github.com', 'GitHub'],
+      ['developer.mozilla.org', 'MDN Web Docs'],
+      ['news.ycombinator.com', 'Hacker News'],
+      ['figma.com', 'Figma'],
+    ] as const
+
+    for (const [url, title] of links) {
+      await createCard(page, url, title)
+    }
+
+    const cards = page.getByTestId(/link-card-/)
+    for (let index = 0; index < links.length; index += 1) {
+      await moveCardToPoint(page, cards.nth(index), {
+        x: 110 + (index % 2) * 160,
+        y: 170 + Math.floor(index / 2) * 170,
+      })
+    }
+
+    // Some link opens so the timeline and the top-cards table have data.
+    await page.getByRole('button', { name: 'Toggle interaction mode' }).click()
+    await page
+      .context()
+      .route('**/*', (route) =>
+        route.request().resourceType() === 'document' &&
+        !route.request().url().startsWith('http://127.0.0.1:4173')
+          ? route.fulfill({ body: '<title>ok</title>' })
+          : route.continue(),
+      )
+    for (const [index, opens] of [5, 3, 2, 1].entries()) {
+      for (let open = 0; open < opens; open += 1) {
+        const popup = page.context().waitForEvent('page')
+        await cards.nth(index).locator('a').click()
+        await (await popup).close()
+      }
+    }
+
+    await openMenu(page)
+    await page.getByRole('tab', { name: 'Statistics' }).click()
+    await expect(page.getByTestId('statistics-panel')).toBeVisible()
+    await screenshot(page, '08-local-statistics')
+  })
+
+  /**
+   * Promotional tiles for Chrome and Edge, rendered from
+   * extension/store-assets/promo-tile.html with the screenshots above.
+   */
+  test('09 — Promotional tiles', async ({ page }) => {
+    const tiles = [
+      {
+        size: 'large',
+        width: 1400,
+        height: 560,
+        files: [
+          'chrome-marquee-promotional-tile-1400x560',
+          'edge-large-promotional-tile-1400x560',
+        ],
+      },
+      {
+        size: 'small',
+        width: 440,
+        height: 280,
+        files: [
+          'chrome-small-promotional-tile-440x280',
+          'edge-small-promotional-tile-440x280',
+        ],
+      },
+    ] as const
+    const source = pathToFileURL(
+      resolve('extension/store-assets/promo-tile.html'),
+    ).href
+
+    for (const tile of tiles) {
+      await page.setViewportSize({ width: tile.width, height: tile.height })
+      await page.goto(`${source}?size=${tile.size}`)
+      await page.evaluate(() => document.fonts.ready)
+      await page.waitForFunction(() =>
+        [...document.images].every(
+          (image) => image.complete && image.naturalWidth > 0,
+        ),
+      )
+
+      for (const file of tile.files) {
+        await page.screenshot({
+          path: `extension/store-assets/${file}.png`,
+          clip: { x: 0, y: 0, width: tile.width, height: tile.height },
+        })
+      }
+    }
   })
 })

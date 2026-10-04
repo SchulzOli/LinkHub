@@ -636,3 +636,33 @@ test('prefers a newly copied link over stale in-memory card clipboard data', asy
   await expect(cards).toHaveCount(2)
   await expect(cards.nth(1)).not.toContainText('One')
 })
+
+test('never contacts the Google favicon service in offline-only mode', async ({
+  page,
+}) => {
+  const googleRequests: string[] = []
+
+  page.on('request', (request) => {
+    if (request.url().includes('google.com/s2/favicons')) {
+      googleRequests.push(request.url())
+    }
+  })
+  // The site's own favicon is missing, which used to trigger the fallback.
+  await page.route('https://offline-favicon.example/**', (route) =>
+    route.fulfill({ status: 404, body: '' }),
+  )
+
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await page.getByLabel('Favicons offline-only').check()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'Add link' }).click()
+  await page.getByLabel('Link URL').fill('offline-favicon.example')
+  await page.getByLabel('Link title').fill('Offline')
+  await page.getByRole('button', { name: 'Create' }).click()
+  await expect(page.getByTestId(/link-card-/)).toHaveCount(1)
+  await page.waitForTimeout(1500)
+
+  expect(googleRequests).toEqual([])
+})
