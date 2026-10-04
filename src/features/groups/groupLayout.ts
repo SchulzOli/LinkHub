@@ -178,6 +178,47 @@ export function getVisibleCards(cards: LinkCard[], groups: CardGroup[]) {
   })
 }
 
+/**
+ * Groups whose members are hidden: collapsed groups and every group below a
+ * collapsed one.
+ */
+function getHiddenBodyGroups(groups: CardGroup[]) {
+  const groupsById = getGroupsById(groups)
+
+  return groups.filter(
+    (group) =>
+      group.collapsed === true ||
+      hasCollapsedGroupInChain(group.parentGroupId, groupsById),
+  )
+}
+
+/**
+ * Pictures, charts and feeds have no `groupId`; membership follows their
+ * bounds. A node inside the expanded body of a collapsed group (or of a
+ * group nested in one) is hidden, like the cards of that group.
+ */
+export function getVisiblePictures(
+  pictures: PictureNode[],
+  groups: CardGroup[],
+  gridSize: number,
+) {
+  const hiddenBodies = getHiddenBodyGroups(groups)
+
+  if (pictures.length === 0 || hiddenBodies.length === 0) {
+    return pictures
+  }
+
+  const hiddenIds = new Set(
+    getPictureIdsWithinGroupBodies(pictures, hiddenBodies, gridSize, {
+      useExpandedBody: true,
+    }),
+  )
+
+  return hiddenIds.size === 0
+    ? pictures
+    : pictures.filter((picture) => !hiddenIds.has(picture.id))
+}
+
 export function getGroupPlacementFrames(groups: CardGroup[]) {
   return getVisibleGroups(groups).map((group) => ({
     ...group,

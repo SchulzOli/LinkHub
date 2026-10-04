@@ -108,6 +108,49 @@ export function getCardColorsFromAppearance(
   }
 }
 
+/**
+ * A stored hex colour that is one of the theme presets (light or dark,
+ * current or built-in palette) is treated as that preset slot, so it follows
+ * the light/dark switch. Older workspaces, the custom colour input and the
+ * format painter can store such a hex instead of the preset index.
+ */
+export function findPresetSlotForColor(
+  color: string | undefined,
+  kind: 'fill' | 'border',
+  appearance: Pick<
+    AppearanceProfile,
+    'fillPresetsByTheme' | 'borderPresetsByTheme'
+  >,
+): number | undefined {
+  if (!color) {
+    return undefined
+  }
+
+  const needle = color.trim().toLowerCase()
+  const stored =
+    kind === 'fill'
+      ? appearance.fillPresetsByTheme
+      : appearance.borderPresetsByTheme
+  const builtin = (Object.keys(CARD_COLOR_PRESETS) as StylePreset[]).flatMap(
+    (preset) =>
+      (['light', 'dark'] as const).map((mode) =>
+        kind === 'fill'
+          ? CARD_COLOR_PRESETS[preset][mode].fillPresets
+          : CARD_COLOR_PRESETS[preset][mode].borderPresets,
+      ),
+  )
+
+  for (const row of [stored.light, stored.dark, ...builtin]) {
+    const index = row.findIndex((entry) => entry.toLowerCase() === needle)
+
+    if (index >= 0) {
+      return index
+    }
+  }
+
+  return undefined
+}
+
 export function resolveCardColors(
   card: Pick<
     LinkCard,
@@ -124,17 +167,23 @@ export function resolveCardColors(
     defaultFillPresetIndexByTheme: { light: 0, dark: 0 },
     defaultBorderPresetIndexByTheme: { light: 0, dark: 0 },
   })
+  const fillIndex =
+    card.fillPresetIndex ??
+    findPresetSlotForColor(card.fillColor, 'fill', appearance)
+  const borderIndex =
+    card.borderPresetIndex ??
+    findPresetSlotForColor(card.borderColor, 'border', appearance)
 
   return {
     fillColor:
-      (typeof card.fillPresetIndex === 'number'
-        ? activeSettings.fillPresets[card.fillPresetIndex]
+      (typeof fillIndex === 'number'
+        ? activeSettings.fillPresets[fillIndex]
         : undefined) ??
       card.fillColor ??
       fallback.fillColor,
     borderColor:
-      (typeof card.borderPresetIndex === 'number'
-        ? activeSettings.borderPresets[card.borderPresetIndex]
+      (typeof borderIndex === 'number'
+        ? activeSettings.borderPresets[borderIndex]
         : undefined) ??
       card.borderColor ??
       fallback.borderColor,

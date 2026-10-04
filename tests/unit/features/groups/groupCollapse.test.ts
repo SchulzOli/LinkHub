@@ -8,7 +8,10 @@ import {
 import type { LinkCard } from '../../../../src/contracts/linkCard'
 import type { PictureNode } from '../../../../src/contracts/pictureNode'
 import { createDefaultWorkspace } from '../../../../src/contracts/workspace'
-import { isPlacementBlockedByOccupiedItem } from '../../../../src/features/groups/groupLayout'
+import {
+  getVisiblePictures,
+  isPlacementBlockedByOccupiedItem,
+} from '../../../../src/features/groups/groupLayout'
 import { useWorkspaceStore } from '../../../../src/state/useWorkspaceStore'
 
 function createCard(overrides: Partial<LinkCard> = {}): LinkCard {
@@ -546,5 +549,45 @@ describe('group collapse', () => {
         .getState()
         .workspace.cards.find((card) => card.id === childCard.id)?.groupId,
     ).toBe(childGroup.id)
+  })
+
+  it('hides pictures, charts and feeds inside collapsed groups', () => {
+    const gridSize = 24
+    const outer = createGroup({
+      id: 'outer',
+      size: { columns: 20, rows: 20 },
+    })
+    const inner = createGroup({
+      id: 'inner',
+      parentGroupId: 'outer',
+      positionX: 48,
+      positionY: 96,
+      size: { columns: 10, rows: 10 },
+    })
+    const inOuter = createPicture({
+      id: 'in-outer',
+      positionX: 300,
+      positionY: 72,
+      size: { columns: 3, rows: 3 },
+    })
+    const inInner = createPicture({
+      id: 'in-inner',
+      positionX: 72,
+      positionY: 144,
+      size: { columns: 3, rows: 3 },
+    })
+    const outside = createPicture({ id: 'outside', positionX: 1000 })
+    const pictures = [inOuter, inInner, outside]
+    const ids = (groups: CardGroup[]) =>
+      getVisiblePictures(pictures, groups, gridSize).map((node) => node.id)
+
+    expect(ids([outer, inner])).toEqual(['in-outer', 'in-inner', 'outside'])
+    // Collapsed inner group: only its own members disappear.
+    expect(ids([outer, { ...inner, collapsed: true }])).toEqual([
+      'in-outer',
+      'outside',
+    ])
+    // Collapsed outer group: everything below it disappears, also nested.
+    expect(ids([{ ...outer, collapsed: true }, inner])).toEqual(['outside'])
   })
 })
