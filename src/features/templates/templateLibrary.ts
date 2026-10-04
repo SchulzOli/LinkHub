@@ -279,13 +279,14 @@ function drawTemplateGroup(input: {
   )
   const headerHeight = chrome.headerHeight * input.transform.scale
 
-  // Flat group: soft fill plus a single top rule; no side/bottom borders.
+  // Flat group: soft fill plus a thin outline in the group's border colour.
   input.context.save()
-  clipRoundedRect(input.context, x, y, width, height, radius)
+  roundRect(input.context, x, y, width, height, radius)
   input.context.fillStyle = withAlpha(groupColors.fillColor, 0.18)
-  input.context.fillRect(x, y, width, height)
-  input.context.fillStyle = withAlpha(groupColors.borderColor, 0.9)
-  input.context.fillRect(x, y, width, Math.max(1, input.transform.scale))
+  input.context.fill()
+  input.context.lineWidth = 1
+  input.context.strokeStyle = withAlpha(groupColors.borderColor, 0.9)
+  input.context.stroke()
   input.context.restore()
 
   if ((input.group.showTitle ?? true) && width >= 64 && height >= 24) {

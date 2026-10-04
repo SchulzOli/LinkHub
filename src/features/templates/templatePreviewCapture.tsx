@@ -231,7 +231,7 @@ function PreviewGroup(props: {
     height,
     overflow: 'hidden',
     borderRadius: radius,
-    borderTop: `1px solid ${withAlpha(colors.borderColor, 0.8)}`,
+    border: `1px solid ${withAlpha(colors.borderColor, 0.8)}`,
     background: getSurfaceLayerColor(colors.fillColor, surfaceTransparency),
     boxSizing: 'border-box',
   }

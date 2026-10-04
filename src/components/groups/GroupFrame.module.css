@@ -7,8 +7,9 @@
   gap: var(--group-gap, 0.5rem);
   /* Top chrome only: no side/bottom inset, so members use the full area. */
   padding: var(--group-padding, 0.5rem) 0 0;
-  border: none;
-  border-top: 1px solid
+  /* Thin outline in the group's border colour; the body still spans the
+     full inner area (members may sit flush against it). */
+  border: 1px solid
     color-mix(
       in srgb,
       var(--group-outline, var(--card-border)) 80%,
@@ -39,8 +40,8 @@
 }
 
 .groupSelected {
-  border-top-color: var(--accent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .header {
