@@ -85,11 +85,12 @@ Releases run in one manual GitHub Actions workflow,
 [Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml):
 
 1. Open **Actions → Release → Run workflow**.
-2. Enter the new version (`X.Y.Z`, higher than the current one) and pick the
-   stores.
+2. Enter the new version (`X.Y.Z`, higher than the latest release tag) and
+   pick the stores.
 3. The workflow sets the version in `package.json`, `package-lock.json` and
-   `extension/manifest.json`, builds the app and the extension, commits and
-   tags `vX.Y.Z` on `main`, and creates the GitHub Release with both ZIPs.
+   `extension/manifest.json`, builds the app and the extension, commits this
+   on top of the current `main` commit, pushes it as tag `vX.Y.Z`, and
+   creates the GitHub Release with both ZIPs.
 4. Then one job per selected store publishes that same build in parallel. If a
    store fails, use **Re-run failed jobs**; the other stores are not touched.
 
@@ -106,8 +107,11 @@ Required repository secrets (each store job receives only its own):
 | Edge    | `EDGE_CLIENT_ID`, `EDGE_API_KEY`, `EDGE_PRODUCT_ID`                     |
 | Firefox | `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`, `FIREFOX_EXT_ID` (optional) |
 
-Do not bump versions by hand: the stores reject a version that is not higher
-than the published one.
+`main` only accepts pull requests, so the workflow pushes only the tag; the
+version commit is not merged back. The version in `package.json` on `main`
+therefore stays at its last value, and the latest `v*` tag is the current
+version. Do not bump versions by hand: the stores reject a version that is not
+higher than the published one.
 
 ---
 
