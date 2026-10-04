@@ -9,6 +9,7 @@ import type {
   ChartSettingKey,
   ChartSettings,
 } from '../contracts/chartNode'
+import type { FeedNode } from '../contracts/feedNode'
 import type { CardSize, LinkCard } from '../contracts/linkCard'
 import type { PictureNode } from '../contracts/pictureNode'
 import type { PlacementGuide } from '../contracts/placementGuide'
@@ -83,6 +84,10 @@ export type PictureUpdateFields = Partial<
 export type ChartUpdateFields = Partial<
   Pick<ChartNode, 'title' | 'source' | 'settings'>
 >
+
+export type FeedUpdateFields = Partial<
+  Pick<FeedNode, 'title' | 'sources' | 'proxyUrl'>
+> & { settings?: Partial<FeedNode['settings']> }
 
 export type CardBatchUpdate = {
   cardId: string
@@ -215,6 +220,8 @@ export type WorkspaceDataState = {
   removeCards: (cardIds: string[]) => void
   removePicture: (pictureId: string) => void
   updateChart: (chartId: string, updates: ChartUpdateFields) => void
+  /** `settings` is merged into the feed's current settings. */
+  updateFeed: (feedId: string, updates: FeedUpdateFields) => void
   /** Sets (or clears with `undefined`) one setting on a single chart. */
   setChartSetting: <K extends ChartSettingKey>(
     chartId: string,

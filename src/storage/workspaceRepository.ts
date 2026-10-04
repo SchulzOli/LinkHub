@@ -174,10 +174,17 @@ export async function loadWorkspaceDirectory() {
 
   try {
     const db = await openLinkHubDb()
-    const raw = await db.get(
+    const stored = await db.get(
       STORAGE_STORES.workspaceMetadata,
       WORKSPACE_DIRECTORY_KEY,
     )
+    // The localStorage mirror is written synchronously; the IDB put may not
+    // have committed before a quick reload. Use whichever copy is newer.
+    const mirror = readJsonFromLocalStorage(FALLBACK_DIRECTORY_KEY)
+    const raw =
+      mirror && getDirectorySavedAt(mirror) > getDirectorySavedAt(stored)
+        ? mirror
+        : stored
     const directory = normalizeWorkspaceDirectory(raw, seedWorkspace)
 
     if (!raw) {
@@ -284,17 +291,30 @@ export async function saveWorkspace(workspace: Workspace) {
   }
 }
 
+/** `savedAt` stamp of a stored directory copy; 0 for legacy copies. */
+function getDirectorySavedAt(value: unknown): number {
+  const savedAt =
+    typeof value === 'object' && value !== null
+      ? (value as { savedAt?: unknown }).savedAt
+      : undefined
+
+  return typeof savedAt === 'number' && Number.isFinite(savedAt) ? savedAt : 0
+}
+
+let lastDirectorySavedAt = 0
+
 export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
+  // Strictly increasing, so two saves in the same millisecond still order.
+  lastDirectorySavedAt = Math.max(Date.now(), lastDirectorySavedAt + 1)
+  const stamped = { ...directory, savedAt: lastDirectorySavedAt }
+
   // localStorage wird immer gespiegelt, damit ein sp\u00e4terer App-Start
   // ohne IDB (oder bei IDB-Fehlern beim \u00d6ffnen) last-known-good
   // Directory-State wiederherstellen kann. Directory-Writes sind
   // selten (Workspace-Switch, Pin-Toggle, Interaction-Mode), daher
   // ist der doppelte Write-Pfad unkritisch.
   try {
-    window.localStorage.setItem(
-      FALLBACK_DIRECTORY_KEY,
-      JSON.stringify(directory),
-    )
+    window.localStorage.setItem(FALLBACK_DIRECTORY_KEY, JSON.stringify(stamped))
   } catch {
     // Quota oder Private-Mode: IDB bleibt zust\u00e4ndig.
   }
@@ -303,7 +323,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
     const db = await openLinkHubDb()
     await db.put(
       STORAGE_STORES.workspaceMetadata,
-      directory,
+      stamped,
       WORKSPACE_DIRECTORY_KEY,
     )
   } catch {

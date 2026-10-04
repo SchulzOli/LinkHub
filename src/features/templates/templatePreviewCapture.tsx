@@ -337,6 +337,43 @@ function PreviewPicture(props: {
             {picture.source.symbol}
           </text>
         </svg>
+      ) : picture.type === 'feed' ? (
+        // Articles are not captured; show the feed as a list of lines.
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        >
+          {[18, 38, 58, 78].map((y) => (
+            <g key={y}>
+              <rect
+                x="8"
+                y={y}
+                width="62"
+                height="5"
+                rx="2"
+                fill={withAlpha(tokens.textPrimary, 0.7)}
+              />
+              <rect
+                x="8"
+                y={y + 8}
+                width="42"
+                height="4"
+                rx="2"
+                fill={withAlpha(tokens.textMuted, 0.6)}
+              />
+              <rect
+                x="76"
+                y={y}
+                width="16"
+                height="12"
+                rx="2"
+                fill={withAlpha(tokens.accent, 0.35)}
+              />
+            </g>
+          ))}
+        </svg>
       ) : imageUrl ? (
         <img alt="" draggable={false} src={imageUrl} style={imageStyle} />
       ) : (

@@ -9,6 +9,7 @@ import { OptionsMenu } from './OptionsMenu'
 import { QuickAddAction } from './QuickAddAction'
 import {
   AddChartIcon,
+  AddFeedIcon,
   AddGroupIcon,
   ImageGalleryIcon,
   UploadImageIcon,
@@ -22,6 +23,7 @@ type BottomTaskbarProps = {
   optionsMenuOpen: boolean
   onCreateGroup: () => void
   onCreateChart: () => void
+  onCreateFeed: () => void
   onCreateWorkspace: () => void
   onSelectWorkspace: (workspaceId: string) => void
   onToggleInteractionMode: () => void
@@ -46,6 +48,7 @@ export function BottomTaskbar({
   optionsMenuOpen,
   onCreateGroup,
   onCreateChart,
+  onCreateFeed,
   onCreateWorkspace,
   onToggleInteractionMode,
   onToggleQuickAdd,
@@ -294,6 +297,17 @@ export function BottomTaskbar({
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
                   <AddChartIcon className={styles.modeSvg} />
+                </span>
+              </button>
+              <button
+                aria-label="Add news feed"
+                className={styles.modeButton}
+                onClick={onCreateFeed}
+                title="Add news feed"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.modeIcon}>
+                  <AddFeedIcon className={styles.modeSvg} />
                 </span>
               </button>
             </>
