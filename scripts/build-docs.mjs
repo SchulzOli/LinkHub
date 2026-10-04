@@ -97,11 +97,39 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
 }
 
+/** Plain text of inline Markdown tokens - no HTML involved. */
+function tokensToText(tokens = []) {
+  return tokens
+    .map((token) =>
+      token.tokens
+        ? tokensToText(token.tokens)
+        : (token.text ?? token.raw ?? ''),
+    )
+    .join('')
+}
+
+/** Plain text of a whole Markdown document (for the search index). */
+function markdownToText(markdown) {
+  return new Marked({ gfm: true })
+    .lexer(markdown)
+    .map((token) =>
+      token.type === 'code'
+        ? token.text
+        : token.type === 'table'
+          ? [...token.header, ...token.rows.flat()]
+              .map((cell) => tokensToText(cell.tokens))
+              .join(' ')
+          : token.type === 'list'
+            ? token.items.map((item) => tokensToText(item.tokens)).join(' ')
+            : tokensToText(token.tokens ?? [{ text: token.text ?? '' }]),
+    )
+    .join(' ')
+}
+
+/** Keeps only [a-z0-9-], so the result can never contain markup. */
 function slugify(text) {
   return text
     .toLowerCase()
-    .replace(/<[^>]+>/g, '')
-    .replace(/&[a-z]+;/g, '')
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-')
@@ -144,10 +172,11 @@ function renderMarkdown(body, pagesByFile, sourceFile) {
     renderer: {
       heading({ tokens, depth }) {
         const text = this.parser.parseInline(tokens)
-        const id = slugify(text)
+        const plain = tokensToText(tokens)
+        const id = slugify(plain)
 
         if (depth === 2 || depth === 3) {
-          headings.push({ depth, id, text: text.replace(/<[^>]+>/g, '') })
+          headings.push({ depth, id, text: plain })
         }
 
         const anchor =
@@ -403,10 +432,8 @@ function build() {
       title: page.title,
       section: page.section,
       headings: headings.map(({ id, text }) => ({ id, text })),
-      text: html
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .slice(0, 6000),
+      // Plain text from the Markdown lexer, not by stripping HTML.
+      text: markdownToText(page.body).replace(/\s+/g, ' ').slice(0, 6000),
     })
   }
 
