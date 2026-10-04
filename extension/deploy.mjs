@@ -244,8 +244,12 @@ async function chromeApiRequest(
   const data = rawBody ? JSON.parse(rawBody) : {}
 
   if (!response.ok) {
+    const hint = rawBody.includes('PKG_INVALID_VERSION_NUMBER')
+      ? `\nThe manifest version must be higher than the version in the Chrome Web Store. Release a new version first (Release workflow).`
+      : ''
+
     throw new Error(
-      `Chrome Web Store API ${method} ${url} failed (${response.status}): ${rawBody}`,
+      `Chrome Web Store API ${method} ${url} failed (${response.status}): ${rawBody}${hint}`,
     )
   }
 

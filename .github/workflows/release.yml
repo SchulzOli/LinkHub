@@ -1,105 +1,186 @@
 name: Release
 
+# One manual flow: set the version, build, commit and tag on main, create the
+# GitHub Release, then publish to each selected store in parallel. A failed
+# store can be retried with "Re-run failed jobs" without touching the others.
+
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (semver, e.g. 1.1.0)'
+        description: 'New version, X.Y.Z (must be higher than the current one)'
         required: true
+      chrome:
+        description: 'Publish to Chrome Web Store'
+        type: boolean
+        default: true
+      edge:
+        description: 'Publish to Edge Add-ons'
+        type: boolean
+        default: true
+      firefox:
+        description: 'Publish to Firefox Add-ons'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
-  group: release-${{ github.workflow }}
+  group: release
   cancel-in-progress: false
 
 jobs:
-  bump-version:
+  release:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      stores: ${{ steps.stores.outputs.list }}
 
     steps:
-      - name: Check out repository
+      - name: Check out main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Validate version input
-        shell: bash
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Stores accept only dotted integers and reject a version that is not
+      # higher than the published one (Chrome: PKG_INVALID_VERSION_NUMBER).
+      - name: Check version
+        id: version
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
-            echo "Invalid semver version: $VERSION"
+          VERSION=$(echo "$VERSION" | xargs)
+          VERSION="${VERSION#v}"
+          CURRENT=$(node -p "require('./package.json').version")
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::\"$VERSION\" is not X.Y.Z - the stores reject other formats"
             exit 1
           fi
-
-      - name: Check current version
-        id: check
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          CURRENT=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")
-          if [ "$CURRENT" = "$VERSION" ]; then
-            echo "Already at version $VERSION — nothing to do"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          HIGHEST=$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -1)
+          if [ "$VERSION" = "$CURRENT" ] || [ "$HIGHEST" != "$VERSION" ]; then
+            echo "::error::$VERSION must be higher than the current version $CURRENT"
+            exit 1
           fi
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Sync package version
-        if: steps.check.outputs.changed == 'true'
-        shell: bash
-        run: npm version "${{ inputs.version }}" --no-git-tag-version
-
-      - name: Sync extension manifest version
-        if: steps.check.outputs.changed == 'true'
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Select stores
+        id: stores
         run: |
-          node --input-type=module <<'EOF'
-          import fs from 'node:fs'
-          const path = 'extension/manifest.json'
-          const manifest = JSON.parse(fs.readFileSync(path, 'utf8'))
-          manifest.version = process.env.VERSION
-          fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n')
-          EOF
+          STORES='[]'
+          if ${{ inputs.chrome }}; then STORES=$(jq -c '. + ["chrome"]' <<< "$STORES"); fi
+          if ${{ inputs.edge }}; then STORES=$(jq -c '. + ["edge"]' <<< "$STORES"); fi
+          if ${{ inputs.firefox }}; then STORES=$(jq -c '. + ["firefox"]' <<< "$STORES"); fi
+          echo "list=$STORES" >> "$GITHUB_OUTPUT"
+          echo "Stores: $STORES"
 
-      - name: Create release PR with auto-merge
-        if: steps.check.outputs.changed == 'true'
-        shell: bash
+      - name: Set version
         env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          BRANCH="release/v$VERSION"
+          npm version "$VERSION" --no-git-tag-version
+          node -e "
+            const fs = require('node:fs')
+            const path = 'extension/manifest.json'
+            const manifest = JSON.parse(fs.readFileSync(path, 'utf8'))
+            manifest.version = process.env.VERSION
+            fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n')
+          "
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app and extension
+        run: |
+          npm run build
+          npm run build:extension
+
+      - name: Commit and tag on main
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Clean up any stale branch from a previous run
-          git push origin --delete "$BRANCH" 2>/dev/null || true
-
-          git checkout -b "$BRANCH"
           git add package.json package-lock.json extension/manifest.json
-          if git diff --cached --quiet; then
-            echo "No files changed — nothing to commit"
-            exit 0
-          fi
-          git commit -m "chore: bump version to $VERSION"
-          git push origin "$BRANCH"
+          git commit -m "chore: release $TAG"
+          git tag "$TAG"
+          git push --atomic origin HEAD:main "$TAG"
 
-          PR_URL=$(gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore: bump version to $VERSION" \
-            --body "Automated version bump to $VERSION." \
-            --label release)
-          echo "Created PR: $PR_URL"
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          (cd dist && zip -qr "../linkhub-app-$TAG.zip" .)
+          (cd dist-extension && zip -qr "../linkhub-extension-$TAG.zip" .)
+          gh release create "$TAG" \
+            "linkhub-app-$TAG.zip" "linkhub-extension-$TAG.zip" \
+            --title "LinkHub $TAG" --generate-notes
 
-          gh pr merge --squash --auto --delete-branch "$BRANCH"
-          echo "Auto-merge enabled — the publish workflow will take over once merged."
+      - name: Keep extension build for the stores
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: dist-extension
+          if-no-files-found: error
+
+  publish:
+    name: publish (${{ matrix.store }})
+    needs: release
+    if: needs.release.outputs.stores != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        store: ${{ fromJSON(needs.release.outputs.stores) }}
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The same build that is attached to the GitHub Release.
+      - name: Download extension build
+        uses: actions/download-artifact@v4
+        with:
+          name: extension
+          path: dist-extension
+
+      # Each job only receives the secrets of its own store.
+      - name: Publish to ${{ matrix.store }}
+        env:
+          STORE: ${{ matrix.store }}
+          CHROME_EXT_ID: ${{ matrix.store == 'chrome' && secrets.CHROME_EXT_ID || '' }}
+          CHROME_PUBLISHER_ID: ${{ matrix.store == 'chrome' && secrets.CHROME_PUBLISHER_ID || '' }}
+          CHROME_SERVICE_ACCOUNT_JSON: ${{ matrix.store == 'chrome' && secrets.CHROME_SERVICE_ACCOUNT_JSON || '' }}
+          EDGE_CLIENT_ID: ${{ matrix.store == 'edge' && secrets.EDGE_CLIENT_ID || '' }}
+          EDGE_API_KEY: ${{ matrix.store == 'edge' && secrets.EDGE_API_KEY || '' }}
+          EDGE_PRODUCT_ID: ${{ matrix.store == 'edge' && secrets.EDGE_PRODUCT_ID || '' }}
+          FIREFOX_JWT_ISSUER: ${{ matrix.store == 'firefox' && secrets.FIREFOX_JWT_ISSUER || '' }}
+          FIREFOX_JWT_SECRET: ${{ matrix.store == 'firefox' && secrets.FIREFOX_JWT_SECRET || '' }}
+          FIREFOX_EXT_ID: ${{ matrix.store == 'firefox' && secrets.FIREFOX_EXT_ID || '' }}
+        run: node extension/deploy.mjs --publish-only "$STORE"

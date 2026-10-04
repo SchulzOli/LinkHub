@@ -41,10 +41,16 @@ tiles from the current app, with fixed demo data for charts and feeds (link card
 
 ## Publish
 
-`npm run deploy` (or `deploy:chrome`, `deploy:edge`, `deploy:firefox`)
+Releases run in one manual workflow: **Actions → Release → Run workflow**.
+Enter the new version (`X.Y.Z`, higher than the current one) and pick the
+stores. The workflow sets the version, builds, tags `vX.Y.Z` on `main`,
+creates the GitHub Release, and then publishes the same build to each selected
+store in parallel. A failed store can be retried with **Re-run failed jobs**.
+
+Locally, `npm run deploy` (or `deploy:chrome`, `deploy:edge`, `deploy:firefox`)
 uploads the ZIP with the credentials in `chrome.env`, `edge.env` and
-`firefox.env`, or from CI secrets. The full release guide, including the
-one-time store setup, is in
+`firefox.env`. The full release guide, including the one-time store setup and
+the required secrets, is in
 [extension/EXTENSION.md](https://github.com/SchulzOli/LinkHub/blob/main/extension/EXTENSION.md).
 Store copy and reviewer notes:
 [extension/STORE_LISTING.md](https://github.com/SchulzOli/LinkHub/blob/main/extension/STORE_LISTING.md).
