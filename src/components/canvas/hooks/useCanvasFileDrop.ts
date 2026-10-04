@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
 
+import type { Viewport } from '../../../contracts/workspace'
 import {
   getSupportedDroppedImageFiles,
   hasFileDataTransfer,
 } from '../../../features/images/imageDrop'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
-import type { Viewport } from '../../../contracts/workspace'
 
 export type UseCanvasFileDropArgs = {
   canvasRef: React.RefObject<HTMLDivElement | null>
@@ -75,20 +75,17 @@ export function useCanvasFileDrop({
     [isFileDropActive],
   )
 
-  const handleDragLeave = useCallback(
-    (event: React.DragEvent<HTMLElement>) => {
-      if (!hasFileDataTransfer(event.dataTransfer)) {
-        return
-      }
+  const handleDragLeave = useCallback((event: React.DragEvent<HTMLElement>) => {
+    if (!hasFileDataTransfer(event.dataTransfer)) {
+      return
+    }
 
-      fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1)
+    fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1)
 
-      if (fileDragDepthRef.current === 0) {
-        setIsFileDropActive(false)
-      }
-    },
-    [],
-  )
+    if (fileDragDepthRef.current === 0) {
+      setIsFileDropActive(false)
+    }
+  }, [])
 
   const handleDrop = useCallback(
     (event: React.DragEvent<HTMLElement>) => {
@@ -115,7 +112,13 @@ export function useCanvasFileDrop({
         ),
       )
     },
-    [getLocalPoint, onDropImageFiles, onInvalidImageDrop, resetFileDropState, viewport],
+    [
+      getLocalPoint,
+      onDropImageFiles,
+      onInvalidImageDrop,
+      resetFileDropState,
+      viewport,
+    ],
   )
 
   return {

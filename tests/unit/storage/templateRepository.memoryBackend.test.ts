@@ -34,7 +34,7 @@ function createInMemoryBackend(): LinkHubStorageBackend {
       async put(storeName: string, value: unknown, key: string) {
         stores.get(storeName)?.set(key, value)
       },
-      transaction(storeNames: string[]) {
+      transaction() {
         return {
           done: Promise.resolve(),
           objectStore(name: string) {

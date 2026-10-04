@@ -2,10 +2,7 @@ import {
   TemplateDocumentSchema,
   type TemplateDocument,
 } from '../contracts/template'
-import {
-  openLinkHubDb,
-  STORAGE_STORES,
-} from './db'
+import { openLinkHubDb, STORAGE_STORES } from './db'
 import type { StoredImageAssetRecord } from './imageRepository'
 
 function createTemplateImageStoreKey(templateId: string, imageId: string) {
@@ -105,7 +102,9 @@ export async function putTemplate(input: {
     const key = createTemplateImageStoreKey(input.template.id, image.asset.id)
 
     knownKeys.add(key)
-    await transaction.objectStore(STORAGE_STORES.templateImageAsset).put(image, key)
+    await transaction
+      .objectStore(STORAGE_STORES.templateImageAsset)
+      .put(image, key)
   }
 
   for (const record of input.records) {

@@ -302,9 +302,7 @@ export const LinkCardView = memo(function LinkCardView({
           title="This link could not be reached"
         >
           <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-            <path
-              d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2v2Zm0-4h-2V7h2v6Z"
-            />
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2v2Zm0-4h-2V7h2v6Z" />
           </svg>
         </div>
       ) : null}

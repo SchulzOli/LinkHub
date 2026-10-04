@@ -113,10 +113,23 @@ export function useOptionsMenuData({
       return
     }
 
-    void Promise.all([refreshTemplateCount(), refreshThemeCount()]).catch(
-      () => undefined,
-    )
-  }, [activeTab, open, refreshTemplateCount, refreshThemeCount])
+    let cancelled = false
+
+    void Promise.all([listTemplates(), listThemes()])
+      .then(([storedTemplates, storedThemes]) => {
+        if (cancelled) {
+          return
+        }
+
+        setSavedTemplateCount(storedTemplates.length)
+        setSavedThemeCount(storedThemes.length)
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab, open])
 
   useEffect(() => {
     if (!open || activeTab !== 'statistics') {
@@ -124,20 +137,6 @@ export function useOptionsMenuData({
     }
 
     let cancelled = false
-
-    setStorageStatistics((current) =>
-      current.snapshot
-        ? {
-            kind: 'ready',
-            message: '',
-            snapshot: current.snapshot,
-          }
-        : {
-            kind: 'loading',
-            message: '',
-            snapshot: null,
-          },
-    )
 
     void loadWorkspaceStorageSnapshot(workspace)
       .then((snapshot) => {
@@ -183,7 +182,12 @@ export function useOptionsMenuData({
     savedTemplateCount,
     savedThemeCount,
     setTemplates,
-    storageStatistics,
+    // While the statistics tab is open and nothing has loaded yet, report
+    // a loading state (derived instead of set synchronously in the effect).
+    storageStatistics:
+      storageStatistics.kind === 'idle' && open && activeTab === 'statistics'
+        ? ({ kind: 'loading', message: '', snapshot: null } as const)
+        : storageStatistics,
     templates,
   }
 }

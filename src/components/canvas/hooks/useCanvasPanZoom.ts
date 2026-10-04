@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 
-import { screenDeltaToCanvas, screenPointToCanvas } from '../../../features/placement/canvasMath'
 import type { Viewport } from '../../../contracts/workspace'
+import {
+  screenDeltaToCanvas,
+  screenPointToCanvas,
+} from '../../../features/placement/canvasMath'
 import type { InteractionMode } from '../../../state/workspaceStoreTypes'
 
 const MIN_ZOOM = 0.1
@@ -39,10 +42,7 @@ export function useCanvasPanZoom({
 
   const handleContextMenu = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (
-        interactionMode === 'edit' ||
-        event.target === event.currentTarget
-      ) {
+      if (interactionMode === 'edit' || event.target === event.currentTarget) {
         event.preventDefault()
       }
     },

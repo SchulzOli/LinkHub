@@ -36,8 +36,8 @@ import {
   useCanvasEditActions,
   type CanvasDragPreview,
 } from './CanvasActionsContext'
-import { useCanvasPanZoom } from './hooks/useCanvasPanZoom'
 import { useCanvasFileDrop } from './hooks/useCanvasFileDrop'
+import { useCanvasPanZoom } from './hooks/useCanvasPanZoom'
 import { useMarqueeSelection } from './hooks/useMarqueeSelection'
 
 type InfiniteCanvasProps = {
@@ -187,13 +187,18 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       onPanViewport,
     })
 
-  const { isFileDropActive, handleDragEnter, handleDragOver, handleDragLeave, handleDrop } =
-    useCanvasFileDrop({
-      canvasRef,
-      viewport,
-      onDropImageFiles,
-      onInvalidImageDrop,
-    })
+  const {
+    isFileDropActive,
+    handleDragEnter,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+  } = useCanvasFileDrop({
+    canvasRef,
+    viewport,
+    onDropImageFiles,
+    onInvalidImageDrop,
+  })
 
   const { handlePointerDown, canvasInteraction, selectionMarquee } =
     useMarqueeSelection({

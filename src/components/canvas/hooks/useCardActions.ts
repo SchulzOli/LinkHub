@@ -162,6 +162,7 @@ export function useCardActions({
       toggleInteractionMode,
       nodePlacementFrames,
       setAutoEditTarget,
+      updateCard,
       workspace.appearance,
       workspace.placementGuide,
       viewport,

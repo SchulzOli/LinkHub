@@ -171,8 +171,19 @@ export function ThemeGallery({
   // Lazy-load user themes on first mount
   useEffect(() => {
     if (loaded) return
-    void refreshUserThemes()
-  }, [loaded, refreshUserThemes])
+
+    let cancelled = false
+
+    void listThemes().then((themes) => {
+      if (cancelled) return
+      setUserThemes(themes)
+      setLoaded(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [loaded])
 
   const allThemes = [...BUILTIN_THEMES, ...userThemes]
 

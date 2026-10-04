@@ -142,17 +142,12 @@ export function useGroupActions({
       position: { x: number; y: number },
       pictureIds?: string[],
     ) => {
-      if (
-        !selectedGroupIds.includes(groupId) ||
-        selectedGroupIds.length <= 1
-      ) {
+      if (!selectedGroupIds.includes(groupId) || selectedGroupIds.length <= 1) {
         moveGroup(groupId, position, pictureIds)
         return
       }
 
-      const anchorGroup = workspaceGroups.find(
-        (group) => group.id === groupId,
-      )
+      const anchorGroup = workspaceGroups.find((group) => group.id === groupId)
 
       if (!anchorGroup) {
         return
@@ -169,9 +164,7 @@ export function useGroupActions({
           continue
         }
 
-        const group = workspaceGroups.find(
-          (g) => g.id === selectedGroupId,
-        )
+        const group = workspaceGroups.find((g) => g.id === selectedGroupId)
 
         if (!group) {
           continue

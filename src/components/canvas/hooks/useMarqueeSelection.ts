@@ -1,16 +1,19 @@
 import { useCallback, useState } from 'react'
 
-import { getGroupLayoutSize, type CardGroup } from '../../../contracts/cardGroup'
+import {
+  getGroupLayoutSize,
+  type CardGroup,
+} from '../../../contracts/cardGroup'
 import type { LinkCard } from '../../../contracts/linkCard'
+import type { Viewport } from '../../../contracts/workspace'
+import type { FormatPainterPayload } from '../../../features/appearance/formatPainter'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
 import {
   getRootSelectedGroupIds,
   getSelectedGroupSubtree,
 } from '../../../features/groups/groupLayout'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
-import type { Viewport } from '../../../contracts/workspace'
 import type { InteractionMode } from '../../../state/useWorkspaceStore'
-import type { FormatPainterPayload } from '../../../features/appearance/formatPainter'
 
 type CanvasInteractionState = 'idle' | 'panning' | 'selecting'
 
@@ -214,10 +217,7 @@ export function useMarqueeSelection({
           getLocalPoint(upEvent.clientX, upEvent.clientY),
           viewport,
         )
-        const selectionRect = createCanvasRect(
-          startCanvasPoint,
-          endCanvasPoint,
-        )
+        const selectionRect = createCanvasRect(startCanvasPoint, endCanvasPoint)
         const enclosedGroupIds = getFullyEnclosedGroupIds(
           visibleGroups,
           selectionRect,
