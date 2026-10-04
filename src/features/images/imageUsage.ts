@@ -54,6 +54,10 @@ export function getImageUsageSummaryMapForEntities(
   }
 
   for (const picture of pictures) {
+    if (picture.type !== 'picture') {
+      continue
+    }
+
     const summary = getOrCreateImageUsageSummary(usageById, picture.imageId)
 
     summary.pictureIds.push(picture.id)

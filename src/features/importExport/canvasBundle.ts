@@ -239,7 +239,9 @@ export function collectReferencedImageIds(
 ) {
   return [
     ...new Set([
-      ...workspace.pictures.map((picture) => picture.imageId),
+      ...workspace.pictures.flatMap((picture) =>
+        picture.type === 'picture' ? [picture.imageId] : [],
+      ),
       ...workspace.cards.flatMap((card) =>
         card.faviconOverrideImageId ? [card.faviconOverrideImageId] : [],
       ),

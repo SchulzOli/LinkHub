@@ -91,6 +91,55 @@
   transition: background-color var(--motion-fast) var(--ease-standard);
 }
 
+/* Right-aligned header tools (chart controls). In edit mode they move left
+   of the group's action bar, which overlaps the top-right corner. */
+.groupEdit .headerTools {
+  right: calc(
+    var(--action-button-size, 2rem) * 2 + var(--action-bar-gap, 0.35rem) -
+      var(--action-bar-offset, 0.7rem) + 0.25rem
+  );
+}
+
+.headerTools {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.headerToolButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: calc(var(--group-header-height, 1.5rem) - 2px);
+  min-height: 1.2rem;
+  padding: 0 0.4rem;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.headerToolButton:hover,
+.headerToolButton[aria-expanded='true'] {
+  border-color: transparent;
+  background: var(--button-hover-bg);
+  color: var(--text-primary);
+}
+
+.headerToolButton svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .headerSurface:hover {
   background: color-mix(in srgb, var(--text-primary) 5%, transparent);
 }

@@ -22,6 +22,7 @@ describe('BottomTaskbar', () => {
         optionsMenuOpen={true}
         quickAddOpen={false}
         onCreateGroup={() => undefined}
+        onCreateChart={() => undefined}
         onCreateWorkspace={() => undefined}
         onCloseOptionsMenu={() => undefined}
         onOpenImageGallery={() => undefined}
@@ -82,6 +83,7 @@ describe('BottomTaskbar', () => {
         optionsMenuOpen={false}
         quickAddOpen={false}
         onCreateGroup={() => undefined}
+        onCreateChart={() => undefined}
         onCreateWorkspace={() => undefined}
         onCloseOptionsMenu={() => undefined}
         onOpenImageGallery={() => undefined}
@@ -116,6 +118,7 @@ describe('BottomTaskbar', () => {
         optionsMenuOpen={false}
         quickAddOpen={false}
         onCreateGroup={() => undefined}
+        onCreateChart={() => undefined}
         onCreateWorkspace={() => undefined}
         onCloseOptionsMenu={() => undefined}
         onOpenImageGallery={() => undefined}
@@ -153,6 +156,7 @@ describe('BottomTaskbar', () => {
         optionsMenuOpen={false}
         quickAddOpen={true}
         onCreateGroup={() => undefined}
+        onCreateChart={() => undefined}
         onCreateWorkspace={() => undefined}
         onCloseOptionsMenu={() => undefined}
         onOpenImageGallery={() => undefined}

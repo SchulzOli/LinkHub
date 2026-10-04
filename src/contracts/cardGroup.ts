@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import {
+  ChartSettingsOverridesSchema,
+  coerceChartSettingsOverrides,
+} from './chartNode'
 
 import {
   CardColorHexSchema,
@@ -304,6 +308,8 @@ export const CardGroupSchema = z.object({
   borderColor: CardColorHexSchema.optional(),
   surfaceTransparency: SurfaceTransparencySchema.optional(),
   shadowStyle: SurfaceShadowStyleSchema.optional(),
+  /** Chart interactions set on the group, inherited by member charts. */
+  chartSettings: ChartSettingsOverridesSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -334,6 +340,7 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
     surfaceTransparency?: unknown
     edgeFade?: unknown
     shadowStyle?: unknown
+    chartSettings?: unknown
   }
 
   if (
@@ -377,6 +384,13 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
       candidate.shadowStyle,
       DEFAULT_SURFACE_SHADOW_STYLE,
     ),
+    ...(() => {
+      const chartSettings = coerceChartSettingsOverrides(
+        candidate.chartSettings,
+      )
+
+      return Object.keys(chartSettings).length > 0 ? { chartSettings } : {}
+    })(),
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
   }

@@ -240,7 +240,11 @@ export function duplicateCanvasEntityBundle(input: {
     pictures: input.bundle.pictures.map((picture) => ({
       ...picture,
       id: createId(),
-      imageId: input.imageIdMap?.get(picture.imageId) ?? picture.imageId,
+      ...(picture.type === 'picture'
+        ? {
+            imageId: input.imageIdMap?.get(picture.imageId) ?? picture.imageId,
+          }
+        : {}),
       positionX: picture.positionX + offset.x,
       positionY: picture.positionY + offset.y,
       createdAt: now,

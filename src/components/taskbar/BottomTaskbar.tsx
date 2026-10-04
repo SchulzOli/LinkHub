@@ -7,7 +7,12 @@ import type { InteractionMode } from '../../state/useWorkspaceStore'
 import { EditIcon } from '../ui/EditIcon'
 import { OptionsMenu } from './OptionsMenu'
 import { QuickAddAction } from './QuickAddAction'
-import { AddGroupIcon, ImageGalleryIcon, UploadImageIcon } from './TaskbarIcons'
+import {
+  AddChartIcon,
+  AddGroupIcon,
+  ImageGalleryIcon,
+  UploadImageIcon,
+} from './TaskbarIcons'
 
 type BottomTaskbarProps = {
   activeWorkspaceId: string
@@ -16,6 +21,7 @@ type BottomTaskbarProps = {
   quickAddOpen: boolean
   optionsMenuOpen: boolean
   onCreateGroup: () => void
+  onCreateChart: () => void
   onCreateWorkspace: () => void
   onSelectWorkspace: (workspaceId: string) => void
   onToggleInteractionMode: () => void
@@ -39,6 +45,7 @@ export function BottomTaskbar({
   quickAddOpen,
   optionsMenuOpen,
   onCreateGroup,
+  onCreateChart,
   onCreateWorkspace,
   onToggleInteractionMode,
   onToggleQuickAdd,
@@ -276,6 +283,17 @@ export function BottomTaskbar({
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
                   <ImageGalleryIcon className={styles.modeSvg} />
+                </span>
+              </button>
+              <button
+                aria-label="Add chart"
+                className={styles.modeButton}
+                onClick={onCreateChart}
+                title="Add chart"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.modeIcon}>
+                  <AddChartIcon className={styles.modeSvg} />
                 </span>
               </button>
             </>

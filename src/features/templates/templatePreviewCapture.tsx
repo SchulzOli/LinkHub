@@ -275,7 +275,10 @@ function PreviewPicture(props: {
   const radius = Math.max(8, Math.round(Math.min(width, height) * 0.08))
   const left = transform.x + picture.positionX * transform.scale
   const top = transform.y + picture.positionY * transform.scale
-  const imageUrl = imageUrlById.get(picture.imageId) ?? null
+  const imageUrl =
+    picture.type === 'picture'
+      ? (imageUrlById.get(picture.imageId) ?? null)
+      : null
   const shellStyle: CSSProperties = {
     position: 'absolute',
     left,
@@ -308,7 +311,33 @@ function PreviewPicture(props: {
 
   return (
     <div style={shellStyle}>
-      {imageUrl ? (
+      {picture.type === 'chart' ? (
+        // Live data is not captured; show the symbol with a neutral trend line.
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 100 60"
+          preserveAspectRatio="none"
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        >
+          <polyline
+            points="4,48 22,40 38,44 54,26 70,30 96,12"
+            fill="none"
+            stroke={tokens.accent}
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+          />
+          <text
+            x="6"
+            y="14"
+            fill={tokens.textPrimary}
+            fontFamily={tokens.uiFont}
+            fontSize="11"
+            fontWeight="600"
+          >
+            {picture.source.symbol}
+          </text>
+        </svg>
+      ) : imageUrl ? (
         <img alt="" draggable={false} src={imageUrl} style={imageStyle} />
       ) : (
         <div style={placeholderStyle}>Image</div>

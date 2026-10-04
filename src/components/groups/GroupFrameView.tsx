@@ -2,6 +2,7 @@ import {
   memo,
   type MouseEventHandler,
   type PointerEventHandler,
+  type ReactNode,
   type RefObject,
 } from 'react'
 
@@ -47,6 +48,7 @@ type GroupFrameViewProps = {
   group: CardGroup
   isEditMode: boolean
   isSelected: boolean
+  headerTools?: ReactNode
   resolvedShadowStyle: SurfaceShadowStyle
   resolvedSurfaceTransparency: SurfaceTransparency
   viewModel: GroupFrameViewModel
@@ -69,6 +71,7 @@ export const GroupFrameView = memo(function GroupFrameView({
   group,
   isEditMode,
   isSelected,
+  headerTools,
   resolvedShadowStyle,
   resolvedSurfaceTransparency,
   viewModel,
@@ -109,6 +112,7 @@ export const GroupFrameView = memo(function GroupFrameView({
             ))
           : null}
         <GroupHeaderBar
+          tools={headerTools}
           displayTitle={displayTitle}
           groupId={group.id}
           groupName={group.name}

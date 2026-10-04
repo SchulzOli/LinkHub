@@ -38,6 +38,12 @@ const vendorChunkGroups = [
     priority: 25,
   },
   {
+    // Only needed once a chart node renders (ChartCanvas is lazy-loaded).
+    name: 'chart-vendor',
+    test: /node_modules[\\/](?:chart\.js|@kurkle)(?:[\\/]|$)/,
+    priority: 25,
+  },
+  {
     name: 'vendor',
     test: /node_modules[\\/]/,
     priority: 10,

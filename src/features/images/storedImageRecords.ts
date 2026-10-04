@@ -55,10 +55,14 @@ export function rewriteWorkspaceImageReferences(
           card.faviconOverrideImageId)
         : undefined,
     })),
-    pictures: workspace.pictures.map((picture) => ({
-      ...picture,
-      imageId: imageIdMap.get(picture.imageId) ?? picture.imageId,
-    })),
+    pictures: workspace.pictures.map((picture) =>
+      picture.type === 'picture'
+        ? {
+            ...picture,
+            imageId: imageIdMap.get(picture.imageId) ?? picture.imageId,
+          }
+        : picture,
+    ),
   }
 }
 

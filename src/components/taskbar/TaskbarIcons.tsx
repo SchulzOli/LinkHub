@@ -85,3 +85,14 @@ export function ImageGalleryIcon({ className }: IconProps) {
     </StrokeIcon>
   )
 }
+
+/** Add chart: trend line on axes with a plus. */
+export function AddChartIcon({ className }: IconProps) {
+  return (
+    <StrokeIcon className={className}>
+      <path d="M4 4v14a2 2 0 0 0 2 2h7" />
+      <path d="m8 14 3.5-3.5 2.5 2.5L20 7" />
+      <path d="M18 15.5v5M15.5 18h5" />
+    </StrokeIcon>
+  )
+}

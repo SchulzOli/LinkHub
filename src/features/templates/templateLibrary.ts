@@ -443,7 +443,11 @@ function drawTemplatePicture(input: {
   const width = size.width * input.transform.scale
   const height = size.height * input.transform.scale
   const radius = Math.max(8, Math.min(width, height) * 0.08)
-  const image = input.imageById.get(input.picture.imageId) ?? null
+  // Charts have no stored image; they render as the neutral placeholder.
+  const image =
+    input.picture.type === 'picture'
+      ? (input.imageById.get(input.picture.imageId) ?? null)
+      : null
 
   input.context.save()
   roundRect(input.context, x, y, width, height, radius)
@@ -590,7 +594,9 @@ export function collectBundleImageIds(bundle: CanvasEntityBundle) {
       ...bundle.cards.flatMap((card) =>
         card.faviconOverrideImageId ? [card.faviconOverrideImageId] : [],
       ),
-      ...bundle.pictures.map((picture) => picture.imageId),
+      ...bundle.pictures.flatMap((picture) =>
+        picture.type === 'picture' ? [picture.imageId] : [],
+      ),
     ]),
   ]
 }

@@ -33,6 +33,7 @@ import {
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
 import { LinkCardContainer as LinkCard } from '../cards/LinkCardContainer'
+import { ChartNode } from '../charts/ChartNode'
 import { GroupFrameContainer as GroupFrame } from '../groups/GroupFrameContainer'
 import { PictureNode } from '../pictures/PictureNode'
 import {
@@ -326,16 +327,27 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
             viewport={viewport}
           />
         ))}
-        {culledPictures.map((picture) => (
-          <PictureNode
-            key={picture.id}
-            picture={picture}
-            guide={placementGuide}
-            isSelected={selectedPictureIdSet.has(picture.id)}
-            interactionMode={interactionMode}
-            viewport={viewport}
-          />
-        ))}
+        {culledPictures.map((picture) =>
+          picture.type === 'chart' ? (
+            <ChartNode
+              key={picture.id}
+              chart={picture}
+              guide={placementGuide}
+              isSelected={selectedPictureIdSet.has(picture.id)}
+              interactionMode={interactionMode}
+              viewport={viewport}
+            />
+          ) : (
+            <PictureNode
+              key={picture.id}
+              picture={picture}
+              guide={placementGuide}
+              isSelected={selectedPictureIdSet.has(picture.id)}
+              interactionMode={interactionMode}
+              viewport={viewport}
+            />
+          ),
+        )}
       </CanvasEngineSurface>
       <OptionalCardEffects rootRef={canvasRef} />
       {isFileDropActive ? (

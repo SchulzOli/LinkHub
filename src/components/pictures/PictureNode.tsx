@@ -2,30 +2,26 @@ import { memo, type CSSProperties } from 'react'
 
 import styles from './PictureNode.module.css'
 
+import type { ImagePictureNode } from '../../contracts/pictureNode'
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
 import {
   getCardPixelDimensions,
   getOverlayActionMetrics,
 } from '../../features/appearance/themeTokens'
-import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
-import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
-import { useDragPlacement } from '../../features/placement/useDragPlacement'
-import {
-  useResizePlacement,
-  type ResizeDirection,
-} from '../../features/placement/useResizePlacement'
+import type { ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
   useCanvasEditActions,
-  useCanvasPlacementActions,
   useCanvasSelectionActions,
 } from '../canvas/CanvasActionsContext'
 import { EditIcon } from '../ui/EditIcon'
 
+import { NODE_RESIZE_HANDLES, useNodePlacement } from './useNodePlacement'
+
 type PictureNodeProps = {
-  picture: import('../../contracts/pictureNode').PictureNode
+  picture: ImagePictureNode
   guide: PlacementGuide
   isSelected: boolean
   interactionMode: InteractionMode
@@ -43,55 +39,16 @@ export const PictureNode = memo(function PictureNode({
   const {
     onRemovePicture: onRemove,
     onRequestPictureImagePicker: onRequestImagePicker,
-    onUpdatePicture: onUpdate,
   } = useCanvasEditActions()
-  const { onMovePicture: onMove, onPreviewChange } = useCanvasPlacementActions()
   const isEditMode = interactionMode === 'edit'
   const imageUrl = useImageAssetUrl(picture.imageId)
   const size = getCardPixelDimensions(picture.size, guide.gridSize)
   const actionMetrics = getOverlayActionMetrics(size.width, size.height)
-  const handlePointerDown = useDragPlacement({
-    cardId: picture.id,
-    cardSize: picture.size,
-    position: { x: picture.positionX, y: picture.positionY },
-    getCards: getPlaceableItemsSnapshot,
-    enabled: isEditMode,
+  const { handlePointerDown, createResizePointerDown } = useNodePlacement({
+    node: picture,
     guide,
-    isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
-      isPlacementBlockedByOccupiedItem({
-        candidate,
-        gridSize: currentGuide.gridSize,
-        occupiedItem,
-      }),
     viewport,
-    onMove,
-    onPreviewChange,
-  })
-  const createResizePointerDown = useResizePlacement({
-    card: {
-      id: picture.id,
-      positionX: picture.positionX,
-      positionY: picture.positionY,
-      size: picture.size,
-    },
-    getCards: getPlaceableItemsSnapshot,
     enabled: isEditMode,
-    guide,
-    isOccupiedItemBlocking: (candidate, occupiedItem, currentGuide) =>
-      isPlacementBlockedByOccupiedItem({
-        candidate,
-        gridSize: currentGuide.gridSize,
-        occupiedItem,
-      }),
-    viewport,
-    onResize: (pictureId, frame) => {
-      onUpdate(pictureId, {
-        size: frame.size,
-        positionX: frame.position.x,
-        positionY: frame.position.y,
-      })
-    },
-    onPreviewChange,
   })
 
   const nodeStyle: CSSProperties & Record<string, string | number> = {
@@ -103,16 +60,7 @@ export const PictureNode = memo(function PictureNode({
     ['--action-bar-offset' as const]: `${actionMetrics.offset}px`,
     transform: `translate(${picture.positionX}px, ${picture.positionY}px)`,
   }
-  const resizeHandles: ResizeDirection[] = [
-    'n',
-    's',
-    'e',
-    'w',
-    'ne',
-    'nw',
-    'se',
-    'sw',
-  ]
+  const resizeHandles = NODE_RESIZE_HANDLES
   const resizeHandleClassNameByDirection: Record<ResizeDirection, string> = {
     n: styles.resizeHandleN,
     s: styles.resizeHandleS,
