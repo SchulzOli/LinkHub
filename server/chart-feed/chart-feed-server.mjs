@@ -155,7 +155,17 @@ function startStream({ symbol, range, live, send }) {
 }
 
 const server = createServer((request, response) => {
-  const url = new URL(request.url ?? '/', `http://${request.headers.host}`)
+  // Fixed base: the Host header is untrusted and only path + query matter.
+  // A malformed request-target (e.g. "//[") must not crash the server.
+  let url
+
+  try {
+    url = new URL(request.url ?? '/', 'http://localhost')
+  } catch {
+    response.writeHead(400, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: 'Malformed request URL' }))
+    return
+  }
 
   response.setHeader('access-control-allow-origin', '*')
 

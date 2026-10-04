@@ -305,7 +305,14 @@ let lastDirectorySavedAt = 0
 
 export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
   // Strictly increasing, so two saves in the same millisecond still order.
-  lastDirectorySavedAt = Math.max(Date.now(), lastDirectorySavedAt + 1)
+  // Above the persisted mirror too, so a save after a reload (or a clock
+  // change) never reuses or goes below an existing stamp. Directory saves
+  // are rare, so reading the mirror each time is cheap.
+  lastDirectorySavedAt = Math.max(
+    Date.now(),
+    lastDirectorySavedAt + 1,
+    getDirectorySavedAt(readJsonFromLocalStorage(FALLBACK_DIRECTORY_KEY)) + 1,
+  )
   const stamped = { ...directory, savedAt: lastDirectorySavedAt }
 
   // localStorage wird immer gespiegelt, damit ein sp\u00e4terer App-Start

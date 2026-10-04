@@ -191,7 +191,28 @@ async function readLimited(response) {
   return Buffer.concat(chunks)
 }
 
+const CACHE_MAX_ENTRIES = 50
 const cache = new Map()
+
+/** Drops expired entries, then the oldest ones beyond the cap. */
+function storeInCache(key, value, now = Date.now()) {
+  for (const [entryKey, entry] of cache) {
+    if (now - entry.at >= CACHE_MS) {
+      cache.delete(entryKey)
+    }
+  }
+
+  cache.delete(key)
+  cache.set(key, { at: now, value })
+
+  while (cache.size > CACHE_MAX_ENTRIES) {
+    cache.delete(cache.keys().next().value)
+  }
+}
+
+export function getCacheSize() {
+  return cache.size
+}
 
 /** Returns `{ body: Buffer, contentType, finalUrl }`. */
 export async function fetchFeed(value, options = {}) {
@@ -201,7 +222,7 @@ export async function fetchFeed(value, options = {}) {
   const cacheKey = url.href
   const cached = cache.get(cacheKey)
 
-  if (!options.fetch && cached && Date.now() - cached.at < CACHE_MS) {
+  if (!options.skipCache && cached && Date.now() - cached.at < CACHE_MS) {
     return cached.value
   }
 
@@ -251,7 +272,7 @@ export async function fetchFeed(value, options = {}) {
         finalUrl: url.href,
       }
 
-      cache.set(cacheKey, { at: Date.now(), value })
+      storeInCache(cacheKey, value)
 
       return value
     }

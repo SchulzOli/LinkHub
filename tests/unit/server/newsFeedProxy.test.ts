@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 // @ts-expect-error -- plain ESM server module without type declarations
 import {
   fetchFeed,
+  getCacheSize,
   isPrivateAddress,
   parseTargetUrl,
 } from '../../../server/news-feed/fetchFeed.mjs'
@@ -83,6 +84,7 @@ describe('news feed proxy', () => {
   it('returns the feed body and content type', async () => {
     const result = await fetchFeed('https://a.example/rss', {
       lookup: publicLookup,
+      skipCache: true,
       fetch: async () =>
         response(200, '<rss/>', { 'content-type': 'application/rss+xml' }),
     })
@@ -95,6 +97,7 @@ describe('news feed proxy', () => {
     const calls: string[] = []
     const result = await fetchFeed('https://a.example/old', {
       lookup: publicLookup,
+      skipCache: true,
       fetch: async (url: URL) => {
         calls.push(url.href)
 
@@ -110,16 +113,45 @@ describe('news feed proxy', () => {
     await expect(
       fetchFeed('https://a.example/old', {
         lookup: publicLookup,
+        skipCache: true,
         fetch: async () =>
           response(302, '', { location: 'http://127.0.0.1:8080/admin' }),
       }),
     ).rejects.toMatchObject({ status: 403 })
   })
 
+  it('caches responses and caps the cache size', async () => {
+    let calls = 0
+    const fetch = async () => {
+      calls += 1
+      return response(200, '<rss/>')
+    }
+
+    await fetchFeed('https://cache.example/rss', {
+      lookup: publicLookup,
+      fetch,
+    })
+    await fetchFeed('https://cache.example/rss', {
+      lookup: publicLookup,
+      fetch,
+    })
+    expect(calls).toBe(1)
+
+    for (let index = 0; index < 80; index += 1) {
+      await fetchFeed(`https://cache.example/${index}`, {
+        lookup: publicLookup,
+        fetch,
+      })
+    }
+
+    expect(getCacheSize()).toBeLessThanOrEqual(50)
+  })
+
   it('reports upstream errors', async () => {
     await expect(
       fetchFeed('https://a.example/rss', {
         lookup: publicLookup,
+        skipCache: true,
         fetch: async () => response(404),
       }),
     ).rejects.toThrow(/HTTP 404/)

@@ -117,4 +117,61 @@ describe('workspace repository', () => {
       expect(session.workspaceRailPinned).toBe(true)
     },
   )
+
+  itWithIndexedDb(
+    'prefers the newer localStorage directory mirror over a stale IDB copy',
+    async () => {
+      const workspace = createDefaultWorkspace({ name: 'Home' })
+      const directory = {
+        activeWorkspaceId: workspace.id,
+        interactionMode: 'edit' as const,
+        workspaceRailPinned: false,
+        workspaces: [createWorkspaceSummary(workspace)],
+      }
+
+      await saveWorkspace(workspace)
+      await saveWorkspaceDirectory(directory)
+
+      // Simulates a reload before the IDB put of the pin toggle committed:
+      // only the synchronous mirror has the newer state.
+      const stored = JSON.parse(
+        window.localStorage.getItem('linkhub.workspace-directory')!,
+      )
+
+      window.localStorage.setItem(
+        'linkhub.workspace-directory',
+        JSON.stringify({
+          ...stored,
+          workspaceRailPinned: true,
+          savedAt: stored.savedAt + 1,
+        }),
+      )
+
+      expect((await loadWorkspaceSession()).workspaceRailPinned).toBe(true)
+    },
+  )
+
+  itWithIndexedDb(
+    'stamps the next directory save above the persisted mirror',
+    async () => {
+      const workspace = createDefaultWorkspace({ name: 'Home' })
+      const future = Date.now() + 3_600_000
+
+      window.localStorage.setItem(
+        'linkhub.workspace-directory',
+        JSON.stringify({ savedAt: future }),
+      )
+      await saveWorkspaceDirectory({
+        activeWorkspaceId: workspace.id,
+        interactionMode: 'edit',
+        workspaceRailPinned: false,
+        workspaces: [createWorkspaceSummary(workspace)],
+      })
+
+      expect(
+        JSON.parse(window.localStorage.getItem('linkhub.workspace-directory')!)
+          .savedAt,
+      ).toBeGreaterThan(future)
+    },
+  )
 })

@@ -124,13 +124,20 @@ export const FeedNode = memo(function FeedNode({
     reloadToken,
   })
 
+  // Auto refresh moves the time-window cutoff forward with each fetch.
+  const effectiveNow = Math.max(now, state.updatedAt ?? 0)
+
   const visibleItems = useMemo(
     () =>
       sortFeedItems(
-        filterFeedItems(state.items, { settings, query, now }),
+        filterFeedItems(state.items, {
+          settings,
+          query,
+          now: effectiveNow,
+        }),
         settings.sort,
       ),
-    [now, query, settings, state.items],
+    [effectiveNow, query, settings, state.items],
   )
 
   const sourceTitles = feed.sources.map((source) => {
@@ -232,7 +239,7 @@ export const FeedNode = memo(function FeedNode({
                 ? 'No feeds yet'
                 : `${visibleItems.length} of ${state.items.length} articles${
                     state.updatedAt
-                      ? ` · updated ${formatRelativeTime(state.updatedAt, Math.max(now, state.updatedAt))}`
+                      ? ` · updated ${formatRelativeTime(state.updatedAt, effectiveNow)}`
                       : ''
                   }`}
             </span>
@@ -398,7 +405,7 @@ export const FeedNode = memo(function FeedNode({
                   <FeedItemRow
                     item={item}
                     key={`${item.sourceUrl}|${item.id}`}
-                    now={now}
+                    now={effectiveNow}
                     showImage={settings.showImages}
                     showSource={feed.sources.length > 1}
                     showSummary={settings.showSummaries}
