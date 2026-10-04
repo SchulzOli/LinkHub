@@ -82,86 +82,96 @@ export const GroupFrameView = memo(function GroupFrameView({
   const { displayTitle, groupStyle, isCollapsed } = viewModel
 
   return (
-    <article
-      ref={articleRef}
-      className={`${styles.group} ${isEditMode ? styles.groupEdit : ''} ${isSelected ? styles.groupSelected : ''}`}
-      data-collapsed={String(isCollapsed)}
-      data-entity-id={group.id}
-      data-entity-kind="group"
-      data-selected={isSelected}
-      data-shadow-style={resolvedShadowStyle}
-      data-surface-transparency={String(resolvedSurfaceTransparency)}
-      data-testid={`card-group-${group.id}`}
-      style={groupStyle}
-    >
-      {isEditMode && !isCollapsed
-        ? RESIZE_HANDLES.map((direction) => (
-            <button
-              aria-label={`Resize group ${direction}`}
-              className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
-              data-role="resize-handle"
-              key={direction}
-              onPointerDown={createResizePointerDown(direction)}
-              tabIndex={-1}
-              type="button"
-            />
-          ))
-        : null}
-      <GroupHeaderBar
-        displayTitle={displayTitle}
-        groupId={group.id}
-        groupName={group.name}
-        isCollapsed={isCollapsed}
-        isEditMode={isEditMode}
-        onCollapseToggleButtonPointerDown={onCollapseToggleButtonPointerDown}
-        onHeaderClick={onHeaderClick}
-        onHeaderPointerDown={onHeaderPointerDown}
-        onToggleCollapsed={onToggleCollapsed}
-      />
-      {!isCollapsed ? (
-        <div
-          className={styles.body}
-          data-testid={`card-group-body-${group.id}`}
+    <>
+      <article
+        ref={articleRef}
+        className={`${styles.group} ${isEditMode ? styles.groupEdit : ''} ${isSelected ? styles.groupSelected : ''}`}
+        data-collapsed={String(isCollapsed)}
+        data-entity-id={group.id}
+        data-entity-kind="group"
+        data-selected={isSelected}
+        data-shadow-style={resolvedShadowStyle}
+        data-surface-transparency={String(resolvedSurfaceTransparency)}
+        data-testid={`card-group-${group.id}`}
+        style={groupStyle}
+      >
+        {isEditMode && !isCollapsed
+          ? RESIZE_HANDLES.map((direction) => (
+              <button
+                aria-label={`Resize group ${direction}`}
+                className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
+                data-role="resize-handle"
+                key={direction}
+                onPointerDown={createResizePointerDown(direction)}
+                tabIndex={-1}
+                type="button"
+              />
+            ))
+          : null}
+        <GroupHeaderBar
+          displayTitle={displayTitle}
+          groupId={group.id}
+          groupName={group.name}
+          isCollapsed={isCollapsed}
+          isEditMode={isEditMode}
+          onCollapseToggleButtonPointerDown={onCollapseToggleButtonPointerDown}
+          onHeaderClick={onHeaderClick}
+          onHeaderPointerDown={onHeaderPointerDown}
+          onToggleCollapsed={onToggleCollapsed}
         />
-      ) : null}
-      {isEditMode ? (
-        <div className={styles.actionBar} data-role="action-bar">
-          <button
-            aria-label="Update group"
-            className={`${styles.actionButton} ${styles.actionButtonEdit}`}
-            title="Update group"
-            type="button"
-            onClick={onOpenEditor}
-          >
-            <span
-              aria-hidden="true"
-              className={`${styles.actionIcon} ${styles.actionIconEdit}`}
+        {!isCollapsed ? (
+          <div
+            className={styles.body}
+            data-testid={`card-group-body-${group.id}`}
+          />
+        ) : null}
+        {isEditMode ? (
+          <div className={styles.actionBar} data-role="action-bar">
+            <button
+              aria-label="Update group"
+              className={`${styles.actionButton} ${styles.actionButtonEdit}`}
+              title="Update group"
+              type="button"
+              onClick={onOpenEditor}
             >
-              <EditIcon className={styles.actionSvg} />
-            </span>
-          </button>
-          <button
-            aria-label="Delete group"
-            className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-            title="Delete group"
-            type="button"
-            onClick={onDelete}
-          >
-            <span aria-hidden="true" className={styles.actionIcon}>
-              <svg
-                viewBox="0 0 24 24"
-                focusable="false"
-                className={styles.actionSvg}
+              <span
+                aria-hidden="true"
+                className={`${styles.actionIcon} ${styles.actionIconEdit}`}
               >
-                <path
-                  d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
-          </button>
-        </div>
-      ) : null}
-    </article>
+                <EditIcon className={styles.actionSvg} />
+              </span>
+            </button>
+            <button
+              aria-label="Delete group"
+              className={`${styles.actionButton} ${styles.actionButtonDanger}`}
+              title="Delete group"
+              type="button"
+              onClick={onDelete}
+            >
+              <span aria-hidden="true" className={styles.actionIcon}>
+                <svg
+                  viewBox="0 0 24 24"
+                  focusable="false"
+                  className={styles.actionSvg}
+                >
+                  <path
+                    d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+        ) : null}
+      </article>
+      {/* Outline lives in its own layer above cards/pictures so members that
+        sit flush against the edge never cover the border. */}
+      <div
+        aria-hidden="true"
+        className={`${styles.groupOutline} ${isSelected ? styles.groupOutlineSelected : ''}`}
+        data-role="group-outline"
+        style={groupStyle}
+      />
+    </>
   )
 })

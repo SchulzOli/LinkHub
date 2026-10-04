@@ -9,12 +9,8 @@
   padding: var(--group-padding, 0.5rem) 0 0;
   /* Thin outline in the group's border colour; the body still spans the
      full inner area (members may sit flush against it). */
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--group-outline, var(--card-border)) 80%,
-      transparent
-    );
+  /* The visible outline is drawn by .groupOutline (above members). */
+  border: 1px solid transparent;
   background: var(--group-shell-fill, var(--group-surface, var(--card-bg)));
   color: var(--text-primary);
   box-shadow: none;
@@ -43,7 +39,28 @@
   padding-top: 0;
 }
 
-.groupSelected {
+.groupOutline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--group-outline, var(--card-border));
+  border-radius: var(
+      --group-shell-top-radius,
+      var(--group-radius, var(--radius-md))
+    )
+    var(--group-shell-top-radius, var(--group-radius, var(--radius-md)))
+    var(--group-shell-bottom-radius, var(--group-radius, var(--radius-md)))
+    var(--group-shell-bottom-radius, var(--group-radius, var(--radius-md)));
+  pointer-events: none;
+  /* Above cards (1) and hovered cards (24), below card overlays/menus. */
+  z-index: 26;
+  transition:
+    border-color var(--motion-base) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.groupOutlineSelected {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
