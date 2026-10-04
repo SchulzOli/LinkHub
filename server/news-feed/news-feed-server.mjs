@@ -25,7 +25,8 @@ function sendJson(response, status, body) {
 }
 
 const server = createServer((request, response) => {
-  const url = new URL(request.url ?? '/', `http://${request.headers.host}`)
+  // Fixed base: the Host header is untrusted and only path + query matter.
+  const url = new URL(request.url ?? '/', 'http://localhost')
 
   const origin = request.headers.origin
 

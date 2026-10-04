@@ -177,7 +177,15 @@ export function fetchFeedSource(
 
   const promise = loadSource(source.url, proxyUrl)
 
-  cache.set(key, { at: Date.now(), promise })
+  const now = Date.now()
+
+  for (const [entryKey, entry] of cache) {
+    if (now - entry.at >= SHARED_CACHE_MS) {
+      cache.delete(entryKey)
+    }
+  }
+
+  cache.set(key, { at: now, promise })
 
   return promise
 }
