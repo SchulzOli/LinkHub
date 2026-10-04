@@ -19,16 +19,44 @@
  */
 
 import { GoogleAuth } from 'google-auth-library'
-import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import JSZip from 'jszip'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const distDir = resolve(root, 'dist-extension')
+const webExtDeployCli = resolve(root, 'node_modules/web-ext-deploy/dist/cli.js')
 const chromeScope = 'https://www.googleapis.com/auth/chromewebstore'
 const supportedStores = ['firefox', 'chrome', 'edge']
+
+/** Zips every file under `directory` with paths relative to it. */
+async function zipDirectory(directory) {
+  const zip = new JSZip()
+  const entries = readdirSync(directory, {
+    recursive: true,
+    withFileTypes: true,
+  })
+
+  for (const entry of entries) {
+    if (!entry.isFile()) {
+      continue
+    }
+
+    const absolutePath = resolve(entry.parentPath ?? entry.path, entry.name)
+    const zipPath = relative(directory, absolutePath).split(sep).join('/')
+
+    zip.file(zipPath, readFileSync(absolutePath))
+  }
+
+  return zip.generateAsync({
+    type: 'nodebuffer',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 9 },
+  })
+}
 
 function fail(message) {
   console.error(message)
@@ -325,10 +353,14 @@ function createSourceArchive() {
   const sourceZip = resolve(root, 'linkhub-source.zip')
   console.log('\nCreating source archive…')
   try {
-    execSync('git archive --format=zip -o linkhub-source.zip HEAD', {
-      cwd: root,
-      stdio: 'inherit',
-    })
+    execFileSync(
+      'git',
+      ['archive', '--format=zip', '-o', 'linkhub-source.zip', 'HEAD'],
+      {
+        cwd: root,
+        stdio: 'inherit',
+      },
+    )
     console.log('✓ linkhub-source.zip')
   } catch (err) {
     fail(
@@ -353,11 +385,15 @@ function runWebExtDeploy(stores, { dryRun, passThroughArgs }) {
     '--verbose',
   ]
 
-  const cmd = `npx web-ext-deploy ${args.join(' ')}`
-  console.log(`\nRunning: ${cmd}\n`)
+  console.log(`\nRunning: web-ext-deploy ${args.join(' ')}\n`)
 
   try {
-    execSync(cmd, { cwd: root, stdio: 'inherit' })
+    // Run the CLI with node and an argument array - no shell, so pass-through
+    // values can't inject commands (works the same on Windows).
+    execFileSync(process.execPath, [webExtDeployCli, ...args], {
+      cwd: root,
+      stdio: 'inherit',
+    })
   } catch {
     fail('\n❌ Deployment failed')
   }
@@ -376,25 +412,18 @@ for (const store of cliArgs.publishOnly) {
 // ── 1. Ensure extension is built ─────────────────────────────────
 if (!existsSync(resolve(distDir, 'manifest.json'))) {
   console.log('dist-extension/ not found — building extension first…')
-  execSync('node extension/build.mjs', { cwd: root, stdio: 'inherit' })
+  execFileSync(process.execPath, [resolve(root, 'extension/build.mjs')], {
+    cwd: root,
+    stdio: 'inherit',
+  })
 }
 
 // ── 2. Create extension ZIP from dist-extension/ ─────────────────
 const extensionZip = resolve(root, 'dist-extension.zip')
 console.log('\nCreating extension ZIP…')
 try {
-  // Use PowerShell on Windows, zip on Unix
-  if (process.platform === 'win32') {
-    execSync(
-      `powershell -Command "Compress-Archive -Path '${distDir}\\*' -DestinationPath '${extensionZip}' -Force"`,
-      { cwd: root, stdio: 'inherit' },
-    )
-  } else {
-    execSync(`cd dist-extension && zip -r ../dist-extension.zip .`, {
-      cwd: root,
-      stdio: 'inherit',
-    })
-  }
+  // Built in-process with jszip: no shell, PowerShell or zip binary.
+  writeFileSync(extensionZip, await zipDirectory(distDir))
   console.log('✓ dist-extension.zip')
 } catch (err) {
   console.error('Failed to create extension ZIP:', err.message)
