@@ -23,10 +23,10 @@ describe('surfaceEffects', () => {
 
   it('keeps the balanced shadow compact and readable in both theme modes', () => {
     expect(getSurfaceShadow('soft', { themeMode: 'dark' })).toBe(
-      '0px 7px 18px -2px rgba(0, 0, 0, 0.32), 0px 2px 6px 0px rgba(0, 0, 0, 0.18), 0px 0px 0px 1px rgba(255, 255, 255, 0.05)',
+      '0px 1px 2px 0px rgba(0, 0, 0, 0.32), 0px 6px 16px -4px rgba(0, 0, 0, 0.4)',
     )
     expect(getSurfaceShadow('soft', { themeMode: 'light' })).toBe(
-      '0px 7px 18px -3px rgba(15, 23, 42, 0.12), 0px 2px 6px 0px rgba(15, 23, 42, 0.06), 0px 0px 0px 1px rgba(15, 23, 42, 0.05)',
+      '0px 1px 2px 0px rgba(16, 24, 40, 0.05), 0px 6px 16px -4px rgba(16, 24, 40, 0.1)',
     )
   })
 

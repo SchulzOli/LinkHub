@@ -25,6 +25,7 @@ import {
   getTemplateImageRecords,
   putTemplate,
 } from '../../../storage/templateRepository'
+import { DeleteIcon } from '../../ui/DeleteIcon'
 import { EditIcon } from '../../ui/EditIcon'
 import {
   DATE_TIME_FORMATTER,
@@ -870,16 +871,7 @@ export function TemplatesPanel({
                           aria-hidden="true"
                           className={styles.templateActionIcon}
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            focusable="false"
-                            className={styles.templateActionSvg}
-                          >
-                            <path
-                              d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                              fill="currentColor"
-                            />
-                          </svg>
+                          <DeleteIcon className={styles.templateActionSvg} />
                         </span>
                       </button>
                     </div>

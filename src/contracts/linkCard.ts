@@ -13,7 +13,7 @@ import {
 
 export const CARD_SIZE_LIMITS = {
   min: 2,
-  max: 12,
+  max: 40,
 } as const
 
 export const CARD_CORNER_RADIUS_LIMITS = {

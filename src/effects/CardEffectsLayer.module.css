@@ -1,0 +1,10 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  /* Above the world layer, below marquee (13) and drop overlay (20). */
+  z-index: 12;
+}

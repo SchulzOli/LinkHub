@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { defaultAppearanceProfile } from '../../../src/contracts/appearanceProfile'
 import { createDefaultWorkspace } from '../../../src/contracts/workspace'
 import { ensureLatestWorkspace } from '../../../src/storage/storageMigrations'
 
@@ -55,12 +54,12 @@ describe('storage migrations', () => {
     const legacyWorkspace = createDefaultWorkspace()
 
     // Remove faviconsOfflineOnly as if it was never persisted
-    const { faviconsOfflineOnly: _, ...legacyAppearance } =
-      legacyWorkspace.appearance
+    const legacyAppearance: Partial<typeof legacyWorkspace.appearance> = {
+      ...legacyWorkspace.appearance,
+    }
+    delete legacyAppearance.faviconsOfflineOnly
     legacyWorkspace.appearance =
-      legacyAppearance as typeof legacyAppearance & {
-        faviconsOfflineOnly?: boolean
-      }
+      legacyAppearance as typeof legacyWorkspace.appearance
 
     expect(
       (legacyWorkspace.appearance as { faviconsOfflineOnly?: boolean })

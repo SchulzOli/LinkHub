@@ -127,6 +127,7 @@ export function useCanvasActions(args: UseCanvasActionsArgs) {
     handleUpdateCard: cardActions.handleUpdateCard,
     handleUpdateGroup: groupActions.handleUpdateGroup,
     handleUpdatePicture: pictureActions.handleUpdatePicture,
+    placeChartAtViewportCenter: pictureActions.placeChartAtViewportCenter,
     placePictureAssetAtViewportCenter:
       pictureActions.placePictureAssetAtViewportCenter,
     placePictureAssetsAtCanvasPoint:

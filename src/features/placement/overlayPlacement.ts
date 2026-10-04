@@ -1,4 +1,5 @@
 type OverlayPlacementSide = 'above' | 'below'
+type OverlayPlacement = OverlayPlacementSide | 'right' | 'left'
 
 type AnchorRect = {
   left: number
@@ -26,7 +27,7 @@ type AnchoredOverlayPositionArgs = {
 type AnchoredOverlayPosition = {
   left: number
   maxHeight: number
-  placement: OverlayPlacementSide
+  placement: OverlayPlacement
   top: number
 }
 
@@ -52,7 +53,34 @@ export function getAnchoredOverlayPosition({
   const preferredFits = overlayRect.height <= availableSpace[preferredPlacement]
   const alternateFits = overlayRect.height <= availableSpace[alternatePlacement]
 
-  let placement = preferredPlacement
+  // Too tall for above and below: open beside the anchor when there is room,
+  // so the element being edited stays visible next to its settings.
+  if (!preferredFits && !alternateFits) {
+    const anchorRight = anchorRect.left + anchorRect.width
+    const rightLeft = anchorRight + anchorGap
+    const leftLeft = anchorRect.left - anchorGap - overlayRect.width
+    const fitsRight =
+      rightLeft + overlayRect.width <= viewportWidth - viewportPadding
+    const fitsLeft = leftLeft >= viewportPadding
+
+    if (fitsRight || fitsLeft) {
+      const maxHeight = Math.max(1, bottomBoundary - topBoundary)
+      const renderedHeight = Math.min(overlayRect.height, maxHeight)
+
+      return {
+        left: fitsRight ? rightLeft : leftLeft,
+        maxHeight,
+        placement: fitsRight ? 'right' : 'left',
+        top: clamp(
+          anchorRect.top,
+          topBoundary,
+          bottomBoundary - renderedHeight,
+        ),
+      }
+    }
+  }
+
+  let placement: OverlayPlacementSide = preferredPlacement
 
   if (!preferredFits && alternateFits) {
     placement = alternatePlacement

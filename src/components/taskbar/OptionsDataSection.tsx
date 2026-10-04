@@ -3,6 +3,7 @@ import type { RefObject } from 'react'
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
 import type { LinkCheckStatus } from './options/useLinkCheck'
 
+import { DeleteIcon } from '../ui/DeleteIcon'
 import styles from './OptionsMenu.module.css'
 
 type DataStatus = {
@@ -437,16 +438,9 @@ export function OptionsDataSection({
                                   aria-hidden="true"
                                   className={styles.templateActionIcon}
                                 >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
+                                  <DeleteIcon
                                     className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
+                                  />
                                 </span>
                               </button>
                             </div>

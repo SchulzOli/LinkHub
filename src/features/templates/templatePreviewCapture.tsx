@@ -14,7 +14,7 @@ import type { LinkCard } from '../../contracts/linkCard'
 import type { PictureNode } from '../../contracts/pictureNode'
 import type { StoredImageAssetRecord } from '../../storage/imageRepository'
 import { resolveCardColors } from '../appearance/cardColorPalette'
-import { mixHexColors, withAlpha } from '../appearance/colorMath'
+import { withAlpha } from '../appearance/colorMath'
 import { getAppearanceStyleTokens } from '../appearance/stylePresets'
 import {
   getSurfaceLayerColor,
@@ -63,7 +63,16 @@ export type TemplatePreviewAppearance = Pick<
   | 'themeMode'
   | 'fillPresetsByTheme'
   | 'borderPresetsByTheme'
->
+> &
+  Partial<Pick<AppearanceProfile, 'styleTokens'>>
+
+/** Prefer the active theme's tokens so previews match the real canvas. */
+function getPreviewTokens(appearance: TemplatePreviewAppearance) {
+  return (
+    appearance.styleTokens?.[appearance.themeMode] ??
+    getAppearanceStyleTokens(appearance.stylePreset, appearance.themeMode)
+  )
+}
 
 type PreviewTransform = {
   scale: number
@@ -190,19 +199,19 @@ function PreviewGroup(props: {
   transform: PreviewTransform
 }) {
   const { appearance, group, transform } = props
-  const tokens = getAppearanceStyleTokens(
-    appearance.stylePreset,
-    appearance.themeMode,
-  )
+  const tokens = getPreviewTokens(appearance)
   const colors = resolveCardColors(group, appearance, {
     fillColor: tokens.cardBg,
     borderColor: tokens.cardBorder,
   })
   const layoutSize = getGroupLayoutSize(group)
-  const metrics = getGroupChromeMetrics(layoutSize, TEMPLATE_PREVIEW_GRID_SIZE)
+  const metrics = getGroupChromeMetrics(
+    layoutSize,
+    TEMPLATE_PREVIEW_GRID_SIZE,
+    group.size,
+  )
   const surfaceTransparency =
     group.surfaceTransparency ?? appearance.defaultSurfaceTransparency
-  const shadowStyle = group.shadowStyle ?? appearance.defaultSurfaceShadowStyle
   const width = metrics.pixelWidth * transform.scale
   const height = metrics.pixelHeight * transform.scale
   const compactDimension = Math.min(width, height)
@@ -226,27 +235,19 @@ function PreviewGroup(props: {
     height,
     overflow: 'hidden',
     borderRadius: radius,
-    border: `1px solid ${withAlpha(colors.borderColor, 0.88)}`,
-    background: withAlpha(colors.fillColor, (100 - surfaceTransparency) / 360),
-    boxShadow: getSurfaceShadow(shadowStyle, appearance),
+    border: `1px solid ${withAlpha(colors.borderColor, 0.8)}`,
+    background: getSurfaceLayerColor(colors.fillColor, surfaceTransparency),
     boxSizing: 'border-box',
-  }
-  const headerStyle: CSSProperties = {
-    position: 'absolute',
-    inset: '0 0 auto 0',
-    height: Math.min(height, headerHeight + 2),
-    background: `linear-gradient(180deg, ${mixHexColors(colors.fillColor, tokens.accent, 0.28)}, ${mixHexColors(colors.fillColor, tokens.accent, 0.14)})`,
-    borderBottom: `1px solid ${withAlpha(colors.borderColor, 0.52)}`,
   }
   const titleStyle: CSSProperties = {
     position: 'absolute',
-    left: 10,
-    right: 10,
-    top: Math.max(4, headerHeight * 0.18),
+    left: Math.max(6, Math.round(headerHeight * 0.35)),
+    right: 8,
+    top: Math.max(3, Math.round(headerHeight * 0.3)),
     color: tokens.textPrimary,
     fontFamily: tokens.uiFont,
-    fontSize: Math.max(9, Math.min(12, width * 0.06)),
-    fontWeight: 700,
+    fontSize: Math.max(7, Math.min(11, headerHeight * 0.42)),
+    fontWeight: 600,
     lineHeight: 1.1,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -255,7 +256,6 @@ function PreviewGroup(props: {
 
   return (
     <div style={shellStyle}>
-      <div style={headerStyle} />
       {titleVisible ? <div style={titleStyle}>{group.name.trim()}</div> : null}
     </div>
   )
@@ -268,17 +268,17 @@ function PreviewPicture(props: {
   transform: PreviewTransform
 }) {
   const { appearance, imageUrlById, picture, transform } = props
-  const tokens = getAppearanceStyleTokens(
-    appearance.stylePreset,
-    appearance.themeMode,
-  )
+  const tokens = getPreviewTokens(appearance)
   const size = getCardPixelDimensions(picture.size, TEMPLATE_PREVIEW_GRID_SIZE)
   const width = size.width * transform.scale
   const height = size.height * transform.scale
   const radius = Math.max(8, Math.round(Math.min(width, height) * 0.08))
   const left = transform.x + picture.positionX * transform.scale
   const top = transform.y + picture.positionY * transform.scale
-  const imageUrl = imageUrlById.get(picture.imageId) ?? null
+  const imageUrl =
+    picture.type === 'picture'
+      ? (imageUrlById.get(picture.imageId) ?? null)
+      : null
   const shellStyle: CSSProperties = {
     position: 'absolute',
     left,
@@ -307,13 +307,37 @@ function PreviewPicture(props: {
     color: withAlpha(tokens.textMuted, 0.8),
     fontFamily: tokens.uiFont,
     fontSize: Math.max(8, Math.min(11, width * 0.08)),
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
   }
 
   return (
     <div style={shellStyle}>
-      {imageUrl ? (
+      {picture.type === 'chart' ? (
+        // Live data is not captured; show the symbol with a neutral trend line.
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 100 60"
+          preserveAspectRatio="none"
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        >
+          <polyline
+            points="4,48 22,40 38,44 54,26 70,30 96,12"
+            fill="none"
+            stroke={tokens.accent}
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+          />
+          <text
+            x="6"
+            y="14"
+            fill={tokens.textPrimary}
+            fontFamily={tokens.uiFont}
+            fontSize="11"
+            fontWeight="600"
+          >
+            {picture.source.symbol}
+          </text>
+        </svg>
+      ) : imageUrl ? (
         <img alt="" draggable={false} src={imageUrl} style={imageStyle} />
       ) : (
         <div style={placeholderStyle}>Image</div>
@@ -329,10 +353,7 @@ function PreviewCard(props: {
   transform: PreviewTransform
 }) {
   const { appearance, card, imageUrlById, transform } = props
-  const tokens = getAppearanceStyleTokens(
-    appearance.stylePreset,
-    appearance.themeMode,
-  )
+  const tokens = getPreviewTokens(appearance)
   const colors = resolveCardColors(card, appearance, {
     fillColor: tokens.cardBg,
     borderColor: tokens.cardBorder,
@@ -387,15 +408,20 @@ function PreviewCard(props: {
     boxShadow: getSurfaceShadow(shadowStyle, appearance),
   }
 
+  const titleZone = showTitle ? Math.max(12, Math.round(height * 0.26)) : 0
   const renderContainedImage = () => {
-    const imageSize = Math.max(26, Math.round(compactDimension * 0.78))
+    const imageSize = Math.max(
+      14,
+      Math.round(Math.min(width * 0.62, (height - titleZone) * 0.74)),
+    )
+    const imageTop = (height - titleZone) / 2
     const imageRadius = Math.round(
       (imageSize * cornerRadius) / compactDimension,
     )
     const imageStyle: CSSProperties = {
       position: 'absolute',
       left: '50%',
-      top: '50%',
+      top: imageTop,
       width: imageSize,
       height: imageSize,
       transform: 'translate(-50%, -50%)',
@@ -412,7 +438,7 @@ function PreviewCard(props: {
       const placeholderStyle: CSSProperties = {
         position: 'absolute',
         left: '50%',
-        top: '50%',
+        top: imageTop,
         width: imageSize,
         height: imageSize,
         transform: 'translate(-50%, -50%)',
@@ -426,8 +452,8 @@ function PreviewCard(props: {
         boxShadow: `inset 0 0 0 1px ${withAlpha(tokens.textPrimary, appearance.themeMode === 'dark' ? 0.16 : 0.12)}`,
         color: tokens.textPrimary,
         fontFamily: tokens.uiFont,
-        fontSize: Math.max(11, Math.min(28, imageSize * 0.42)),
-        fontWeight: 700,
+        fontSize: Math.max(8, Math.min(24, imageSize * 0.46)),
+        fontWeight: 600,
         textTransform: 'uppercase',
       }
       const placeholderLabel = (displayUrl || titleText || 'L')
@@ -489,22 +515,27 @@ function PreviewCard(props: {
     display: 'grid',
     alignContent: 'center',
     justifyItems: 'center',
-    minHeight: Math.max(20, Math.round(height * 0.24)),
-    padding: `${Math.max(4, Math.round(compactDimension * 0.035))}px ${titlePaddingInline}px`,
+    minHeight: usesFullBleedCardImageSource
+      ? Math.max(12, Math.round(height * 0.24))
+      : titleZone,
+    padding: `${usesFullBleedCardImageSource ? Math.max(3, Math.round(compactDimension * 0.035)) : 0}px ${titlePaddingInline}px ${Math.max(2, Math.round(compactDimension * 0.05))}px`,
     background: usesFullBleedCardImageSource
-      ? 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.24) 50%, rgba(0, 0, 0, 0.72) 100%)'
+      ? `linear-gradient(180deg, transparent 0%, ${withAlpha(colors.fillColor, 0.9)} 70%)`
       : 'transparent',
-    color: showImage ? 'rgba(255, 255, 255, 0.98)' : tokens.textPrimary,
+    color: tokens.textPrimary,
     fontFamily: tokens.uiFont,
-    fontSize: titleFontSize,
-    fontWeight: 700,
+    fontSize: Math.min(
+      titleFontSize,
+      Math.max(6, titleZone * 0.52) || titleFontSize,
+    ),
+    fontWeight: 600,
     lineHeight: isCompactCircularImageCard
       ? 1.1
       : usesFullBleedCardImageSource
         ? 1.08
         : 1.06,
     textAlign: 'center',
-    textShadow: showImage ? '0 1px 2px rgba(0, 0, 0, 0.42)' : 'none',
+    textShadow: 'none',
     overflow: 'hidden',
     boxSizing: 'border-box',
   }
@@ -517,9 +548,9 @@ function PreviewCard(props: {
     boxSizing: 'border-box',
     color: tokens.textPrimary,
     fontFamily: tokens.uiFont,
-    fontSize: Math.max(10, Math.min(18, compactDimension * 0.12)),
-    fontWeight: 700,
-    lineHeight: 1.1,
+    fontSize: Math.max(8, Math.min(16, compactDimension * 0.12)),
+    fontWeight: 600,
+    lineHeight: 1.15,
     textAlign: 'center',
   }
 
@@ -570,29 +601,21 @@ function TemplatePreviewSurface(props: {
   }
 
   const transform = getPreviewTransform(bounds)
-  const tokens = getAppearanceStyleTokens(
-    appearance.stylePreset,
-    appearance.themeMode,
-  )
+  const tokens = getPreviewTokens(appearance)
   const rootStyle: CSSProperties = {
     position: 'relative',
     width: TEMPLATE_PREVIEW_WIDTH,
     height: TEMPLATE_PREVIEW_HEIGHT,
     overflow: 'hidden',
     boxSizing: 'border-box',
-    background: `radial-gradient(circle at top center, ${tokens.bgShell}, ${tokens.bgCanvas} 48%)`,
+    backgroundColor: tokens.bgCanvas,
+    backgroundImage: `linear-gradient(${tokens.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${tokens.gridColor} 1px, transparent 1px)`,
+    backgroundSize: '12px 12px',
     fontFamily: tokens.uiFont,
     color: tokens.textPrimary,
   }
-  const canvasGlowStyle: CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    background: `linear-gradient(180deg, ${withAlpha(tokens.accent, 0.05)}, transparent 38%, ${withAlpha(tokens.accentStrong, 0.05)})`,
-  }
-
   return (
     <div style={rootStyle}>
-      <div style={canvasGlowStyle} />
       {bundle.groups
         .slice()
         .sort(

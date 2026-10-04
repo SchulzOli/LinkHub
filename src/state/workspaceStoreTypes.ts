@@ -4,6 +4,11 @@ import type {
   ThemeMode,
 } from '../contracts/appearanceProfile'
 import type { CardGroup } from '../contracts/cardGroup'
+import type {
+  ChartNode,
+  ChartSettingKey,
+  ChartSettings,
+} from '../contracts/chartNode'
 import type { CardSize, LinkCard } from '../contracts/linkCard'
 import type { PictureNode } from '../contracts/pictureNode'
 import type { PlacementGuide } from '../contracts/placementGuide'
@@ -44,6 +49,7 @@ export type GroupUpdateFields = Partial<
     | 'borderColor'
     | 'surfaceTransparency'
     | 'shadowStyle'
+    | 'chartSettings'
   >
 >
 
@@ -69,8 +75,13 @@ export type CardUpdateFields = Partial<
   >
 >
 
+/** Geometry applies to every node kind; `imageId` only to image pictures. */
 export type PictureUpdateFields = Partial<
-  Pick<PictureNode, 'imageId' | 'positionX' | 'positionY' | 'size'>
+  Pick<PictureNode, 'positionX' | 'positionY' | 'size'>
+> & { imageId?: string }
+
+export type ChartUpdateFields = Partial<
+  Pick<ChartNode, 'title' | 'source' | 'settings'>
 >
 
 export type CardBatchUpdate = {
@@ -203,6 +214,26 @@ export type WorkspaceDataState = {
   removeCard: (cardId: string) => void
   removeCards: (cardIds: string[]) => void
   removePicture: (pictureId: string) => void
+  updateChart: (chartId: string, updates: ChartUpdateFields) => void
+  /** Sets (or clears with `undefined`) one setting on a single chart. */
+  setChartSetting: <K extends ChartSettingKey>(
+    chartId: string,
+    key: K,
+    value: ChartSettings[K] | undefined,
+  ) => void
+  /**
+   * Sets one chart setting on a group. Member charts (and nested groups)
+   * that set the key themselves keep their value unless `force` is true,
+   * which clears those overrides so every member follows the group.
+   */
+  setGroupChartSetting: <K extends ChartSettingKey>(
+    groupId: string,
+    key: K,
+    value: ChartSettings[K],
+    options?: { force?: boolean },
+  ) => void
+  /** Clears every own chart setting of the group's member charts. */
+  resetGroupChartOverrides: (groupId: string) => void
   removePictures: (pictureIds: string[]) => void
   moveCard: (cardId: string, position: { x: number; y: number }) => void
   movePicture: (pictureId: string, position: { x: number; y: number }) => void

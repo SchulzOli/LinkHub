@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import {
+  ChartSettingsOverridesSchema,
+  coerceChartSettingsOverrides,
+} from './chartNode'
 
 import {
   CardColorHexSchema,
@@ -57,10 +61,20 @@ function resolveGroupLayoutSize(
     : size
 }
 
-export function getGroupChromeMetrics(size: GroupSize, gridSize: number) {
+/**
+ * `size` is the rendered (layout) size; `chromeSize` drives header, padding
+ * and gap. Pass the expanded size there so the header keeps the same height
+ * whether the group is collapsed or expanded.
+ */
+export function getGroupChromeMetrics(
+  size: GroupSize,
+  gridSize: number,
+  chromeSize: GroupSize = size,
+) {
   const pixelWidth = size.columns * gridSize
   const pixelHeight = size.rows * gridSize
-  const compactDimension = Math.min(pixelWidth, pixelHeight)
+  const chromeHeight = chromeSize.rows * gridSize
+  const compactDimension = Math.min(chromeSize.columns * gridSize, chromeHeight)
   const padding = Math.max(
     GROUP_CHROME_LIMITS.minPaddingPx,
     Math.min(
@@ -79,7 +93,7 @@ export function getGroupChromeMetrics(size: GroupSize, gridSize: number) {
     GROUP_CHROME_LIMITS.minHeaderHeightPx,
     Math.min(
       GROUP_CHROME_LIMITS.maxHeaderHeightPx,
-      Math.round(pixelHeight * 0.14),
+      Math.round(chromeHeight * 0.14),
     ),
   )
 
@@ -99,7 +113,7 @@ export function getGroupCornerRadii(input: {
   size: GroupSize
 }) {
   const layoutSize = resolveGroupLayoutSize(input.size, input.collapsed)
-  const metrics = getGroupChromeMetrics(layoutSize, input.gridSize)
+  const metrics = getGroupChromeMetrics(layoutSize, input.gridSize, input.size)
   const expandedMetrics = getGroupChromeMetrics(input.size, input.gridSize)
   const compactDimension = Math.min(
     expandedMetrics.pixelWidth,
@@ -150,14 +164,13 @@ export function getGroupBodyBounds(
   gridSize: number,
 ) {
   const layoutSize = resolveGroupLayoutSize(group.size, group.collapsed)
-  const metrics = getGroupChromeMetrics(layoutSize, gridSize)
-  const left = group.positionX + metrics.padding
+  const metrics = getGroupChromeMetrics(layoutSize, gridSize, group.size)
+  // Groups only have chrome on top (the header); the body spans the full
+  // width and runs down to the bottom edge, so members can use every cell.
+  const left = group.positionX
   const top =
     group.positionY + metrics.padding + metrics.headerHeight + metrics.gap
-  const right = Math.max(
-    left,
-    group.positionX + metrics.pixelWidth - metrics.padding,
-  )
+  const right = Math.max(left, group.positionX + metrics.pixelWidth)
 
   if (group.collapsed) {
     return {
@@ -168,10 +181,7 @@ export function getGroupBodyBounds(
     }
   }
 
-  const bottom = Math.max(
-    top,
-    group.positionY + metrics.pixelHeight - metrics.padding,
-  )
+  const bottom = Math.max(top, group.positionY + metrics.pixelHeight)
 
   return {
     left,
@@ -298,6 +308,8 @@ export const CardGroupSchema = z.object({
   borderColor: CardColorHexSchema.optional(),
   surfaceTransparency: SurfaceTransparencySchema.optional(),
   shadowStyle: SurfaceShadowStyleSchema.optional(),
+  /** Chart interactions set on the group, inherited by member charts. */
+  chartSettings: ChartSettingsOverridesSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -328,6 +340,7 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
     surfaceTransparency?: unknown
     edgeFade?: unknown
     shadowStyle?: unknown
+    chartSettings?: unknown
   }
 
   if (
@@ -371,6 +384,13 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
       candidate.shadowStyle,
       DEFAULT_SURFACE_SHADOW_STYLE,
     ),
+    ...(() => {
+      const chartSettings = coerceChartSettingsOverrides(
+        candidate.chartSettings,
+      )
+
+      return Object.keys(chartSettings).length > 0 ? { chartSettings } : {}
+    })(),
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
   }

@@ -89,7 +89,7 @@ describe('formatPainter', () => {
       shadowStyle: 'long',
       showTitle: false,
       size: {
-        columns: 13,
+        columns: 45,
         rows: 1,
       },
       surfaceTransparency: 42,
@@ -105,7 +105,7 @@ describe('formatPainter', () => {
       showImage: undefined,
       showTitle: false,
       size: {
-        columns: 12,
+        columns: 40,
         rows: 2,
       },
       surfaceTransparency: 42,
@@ -120,7 +120,7 @@ describe('formatPainter', () => {
       shadowStyle: 'long',
       showTitle: false,
       size: {
-        columns: 13,
+        columns: 45,
         rows: 2,
       },
       surfaceTransparency: 42,

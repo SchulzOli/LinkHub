@@ -23,16 +23,16 @@ import { clampSurfaceTransparency } from '../../contracts/surfaceEffects'
 import type { Viewport } from '../../contracts/workspace'
 import { createFormatPainterFromCard } from '../../features/appearance/formatPainter'
 import { useSurfaceStyles } from '../../features/appearance/useSurfaceStyles'
+import {
+  fetchFaviconBlob,
+  storeFaviconAsImageAsset,
+} from '../../features/favicon/faviconCache'
 import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
 import {
   createFaviconUrl,
   normalizeUrl,
 } from '../../features/links/urlValidation'
-import {
-  fetchFaviconBlob,
-  storeFaviconAsImageAsset,
-} from '../../features/favicon/faviconCache'
 import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
 import { getPlaceableItemsSnapshot } from '../../features/placement/placeableItemsSnapshot'
 import { useDragPlacement } from '../../features/placement/useDragPlacement'
@@ -85,13 +85,11 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const startFormatPainter = useWorkspaceStore(
     (state) => state.startFormatPainter,
   )
-  const linkStatus: 'ok' | 'broken' | 'unknown' = useLinkCheckStore(
-    (state) => {
-      const s = state.statuses[card.id]
+  const linkStatus: 'ok' | 'broken' | 'unknown' = useLinkCheckStore((state) => {
+    const s = state.statuses[card.id]
 
-      return s === 'checking' ? 'unknown' : (s ?? 'unknown')
-    },
-  )
+    return s === 'checking' ? 'unknown' : (s ?? 'unknown')
+  })
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(card.title)
   const [urlDraft, setUrlDraft] = useState(card.url)

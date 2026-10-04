@@ -376,8 +376,8 @@ test('updates preset-based card colors and favicon treatment after a theme switc
       })),
     )
     .toEqual({
-      fillColor: '#24364a',
-      borderColor: '#66c7b5',
+      fillColor: '#1c2738',
+      borderColor: '#5cc6a7',
       faviconPlateBg: 'transparent',
       faviconPlateBorder: 'transparent',
       faviconFilter:
@@ -409,8 +409,8 @@ test('updates preset-based card colors and favicon treatment after a theme switc
       })),
     )
     .toEqual({
-      fillColor: '#edf4ff',
-      borderColor: '#4eb79a',
+      fillColor: '#eef5ff',
+      borderColor: '#3fae8c',
       faviconPlateBg: 'transparent',
       faviconPlateBorder: 'transparent',
       faviconFilter:

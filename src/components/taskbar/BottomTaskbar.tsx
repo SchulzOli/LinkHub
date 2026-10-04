@@ -7,6 +7,12 @@ import type { InteractionMode } from '../../state/useWorkspaceStore'
 import { EditIcon } from '../ui/EditIcon'
 import { OptionsMenu } from './OptionsMenu'
 import { QuickAddAction } from './QuickAddAction'
+import {
+  AddChartIcon,
+  AddGroupIcon,
+  ImageGalleryIcon,
+  UploadImageIcon,
+} from './TaskbarIcons'
 
 type BottomTaskbarProps = {
   activeWorkspaceId: string
@@ -15,6 +21,7 @@ type BottomTaskbarProps = {
   quickAddOpen: boolean
   optionsMenuOpen: boolean
   onCreateGroup: () => void
+  onCreateChart: () => void
   onCreateWorkspace: () => void
   onSelectWorkspace: (workspaceId: string) => void
   onToggleInteractionMode: () => void
@@ -38,6 +45,7 @@ export function BottomTaskbar({
   quickAddOpen,
   optionsMenuOpen,
   onCreateGroup,
+  onCreateChart,
   onCreateWorkspace,
   onToggleInteractionMode,
   onToggleQuickAdd,
@@ -252,36 +260,7 @@ export function BottomTaskbar({
                 type="button"
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    focusable="false"
-                    className={`${styles.modeSvg} ${styles.modeSvgLarge}`}
-                  >
-                    <path
-                      d="M6.1 3.35a.85.85 0 0 1 .85.85V6.2h2a.85.85 0 1 1 0 1.7h-2v2a.85.85 0 1 1-1.7 0v-2h-2a.85.85 0 1 1 0-1.7h2V4.2a.85.85 0 0 1 .85-.85Z"
-                      fill="currentColor"
-                    />
-                    <rect
-                      x="10.25"
-                      y="7.1"
-                      width="8"
-                      height="6.2"
-                      rx="1.35"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                    />
-                    <rect
-                      x="7.75"
-                      y="10.7"
-                      width="8"
-                      height="6.2"
-                      rx="1.35"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                    />
-                  </svg>
+                  <AddGroupIcon className={styles.modeSvg} />
                 </span>
               </button>
               <button
@@ -292,46 +271,7 @@ export function BottomTaskbar({
                 type="button"
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    focusable="false"
-                    className={`${styles.modeSvg} ${styles.modeSvgLarge}`}
-                  >
-                    <rect
-                      x="6.9"
-                      y="8.1"
-                      width="10.2"
-                      height="8.3"
-                      rx="1.45"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                    />
-                    <circle cx="10.15" cy="10.7" r=".95" fill="currentColor" />
-                    <path
-                      d="M8.9 14.25 11.35 11.8l1.85 1.85 1.65-1.65 1.35 1.35"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.6"
-                    />
-                    <path
-                      d="M12 3.9v4.7"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeWidth="1.6"
-                    />
-                    <path
-                      d="m9.95 6.1 2.05-2.05 2.05 2.05"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.6"
-                    />
-                  </svg>
+                  <UploadImageIcon className={styles.modeSvg} />
                 </span>
               </button>
               <button
@@ -342,16 +282,18 @@ export function BottomTaskbar({
                 type="button"
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    focusable="false"
-                    className={styles.modeSvg}
-                  >
-                    <path
-                      d="M4.75 5.5A1.75 1.75 0 0 1 6.5 3.75h11A1.75 1.75 0 0 1 19.25 5.5v13A1.75 1.75 0 0 1 17.5 20.25h-11A1.75 1.75 0 0 1 4.75 18.5v-13Zm1.5 0v13c0 .14.11.25.25.25h11a.25.25 0 0 0 .25-.25v-13a.25.25 0 0 0-.25-.25h-11a.25.25 0 0 0-.25.25Zm2 2a.75.75 0 0 1 .75-.75h6a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm0 3.5A.75.75 0 0 1 9 10.25h6a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm0 3.5A.75.75 0 0 1 9 13.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <ImageGalleryIcon className={styles.modeSvg} />
+                </span>
+              </button>
+              <button
+                aria-label="Add chart"
+                className={styles.modeButton}
+                onClick={onCreateChart}
+                title="Add chart"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.modeIcon}>
+                  <AddChartIcon className={styles.modeSvg} />
                 </span>
               </button>
             </>

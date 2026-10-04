@@ -56,7 +56,11 @@ export function useGroupFrameViewModel({
   const isCollapsed = group.collapsed === true
   const layoutSize = getGroupLayoutSize(group)
   const size = getCardPixelDimensions(layoutSize, guide.gridSize)
-  const chromeMetrics = getGroupChromeMetrics(layoutSize, guide.gridSize)
+  const chromeMetrics = getGroupChromeMetrics(
+    layoutSize,
+    guide.gridSize,
+    group.size,
+  )
   const resolvedCornerRadius =
     group.cornerRadius ?? appearance.defaultCardCornerRadius
   const groupCornerRadii = getGroupCornerRadii({
@@ -105,7 +109,7 @@ export function useGroupFrameViewModel({
       ['--action-icon-size' as const]: `${actionMetrics.iconSize}px`,
       ['--action-bar-gap' as const]: `${actionMetrics.gap}px`,
       ['--action-bar-offset' as const]: `${actionMetrics.offset}px`,
-      transform: `translate(${(group.positionX - viewport.x) * viewport.zoom}px, ${(group.positionY - viewport.y) * viewport.zoom}px) scale(${viewport.zoom})`,
+      transform: `translate(${group.positionX}px, ${group.positionY}px)`,
       transformOrigin: 'top left' as const,
     }),
     [
@@ -131,8 +135,6 @@ export function useGroupFrameViewModel({
       resolvedSurfaceTransparency,
       size.height,
       size.width,
-      viewport.x,
-      viewport.y,
       viewport.zoom,
     ],
   )

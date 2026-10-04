@@ -13,7 +13,7 @@ type LinkCheckResult = 'ok' | 'broken'
 
 type HostQueue = {
   active: boolean
-  queue: string[]  // unique URLs to check for this host
+  queue: string[] // unique URLs to check for this host
 }
 
 const hostQueues = new Map<string, HostQueue>()

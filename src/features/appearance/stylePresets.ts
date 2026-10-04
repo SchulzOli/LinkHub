@@ -14,131 +14,165 @@ export interface AppearanceStyleDefinition {
   modes: Record<ThemeMode, AppearanceStyleTokens>
 }
 
-const lightExcalidrawTokens: AppearanceStyleTokens = {
-  uiFont: 'Assistant, "Segoe UI", system-ui, sans-serif',
-  bgCanvas: '#ffffff',
-  bgShell: '#f6f6f9',
-  panelBg: 'rgba(255, 255, 255, 0.96)',
-  panelBorder: '#d9d8ec',
-  panelShadow:
-    '0 0 1px rgba(0, 0, 0, 0.17), 0 0 3px rgba(0, 0, 0, 0.08), 0 7px 14px rgba(0, 0, 0, 0.05)',
-  cardBg: '#ffffff',
-  cardBorder: '#d9d8ec',
-  inputBg: '#ffffff',
-  inputBorder: '#d9d8ec',
-  gridColor: 'rgba(18, 18, 18, 0.08)',
-  textPrimary: '#1f1f25',
-  textMuted: '#6f6a86',
+export const UI_FONT_SANS =
+  '"Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+export const UI_FONT_MONO =
+  '"JetBrains Mono", "Cascadia Code", ui-monospace, "SFMono-Regular", Menlo, monospace'
+
+function hexToRgba(hex: string, alpha: number) {
+  const value = hex.replace('#', '')
+  const full =
+    value.length === 3
+      ? value
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : value
+  const red = parseInt(full.slice(0, 2), 16)
+  const green = parseInt(full.slice(2, 4), 16)
+  const blue = parseInt(full.slice(4, 6), 16)
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
+export type StyleTokenSeed = {
+  mode: ThemeMode
+  /** Canvas background. */
+  canvas: string
+  /** App chrome behind the canvas (taskbar backdrop, shell). */
+  shell: string
+  /** Panels, menus, cards. */
+  surface: string
+  /** Hairline borders. */
+  border: string
+  /** Slightly stronger border for inputs. */
+  inputBorder?: string
+  text: string
+  muted: string
+  accent: string
+  accentStrong: string
+  /** Hover / pressed fills for buttons and menu items. */
+  hover: string
+  active: string
+  grid: string
+  font?: string
+  radius?: { sm: string; md: string; lg: string }
+  /** Override for tinted shadows (rgb triplet), defaults to neutral. */
+  shadowTint?: string
+}
+
+const DEFAULT_RADIUS = { sm: '0.5rem', md: '0.75rem', lg: '1rem' }
+
+/**
+ * Builds a complete token set from a small seed so every theme shares the
+ * same structure: hairline borders, soft layered shadows, one accent.
+ */
+export function createStyleTokens(seed: StyleTokenSeed): AppearanceStyleTokens {
+  const radius = seed.radius ?? DEFAULT_RADIUS
+  const tint =
+    seed.shadowTint ?? (seed.mode === 'dark' ? '0, 0, 0' : '16, 24, 40')
+  const isDark = seed.mode === 'dark'
+
+  return {
+    uiFont: seed.font ?? UI_FONT_SANS,
+    bgCanvas: seed.canvas,
+    bgShell: seed.shell,
+    panelBg: seed.surface,
+    panelBorder: seed.border,
+    panelShadow: isDark
+      ? `0 1px 2px rgba(${tint}, 0.4), 0 12px 32px -8px rgba(${tint}, 0.6)`
+      : `0 1px 2px rgba(${tint}, 0.05), 0 12px 32px -8px rgba(${tint}, 0.14)`,
+    cardBg: seed.surface,
+    cardBorder: seed.border,
+    inputBg: seed.surface,
+    inputBorder: seed.inputBorder ?? seed.border,
+    gridColor: seed.grid,
+    textPrimary: seed.text,
+    textMuted: seed.muted,
+    accent: seed.accent,
+    accentStrong: seed.accentStrong,
+    buttonHoverBg: seed.hover,
+    buttonActiveBg: seed.active,
+    menuBg: seed.surface,
+    menuBorder: seed.border,
+    menuShadow: isDark
+      ? `0 2px 6px rgba(${tint}, 0.4), 0 24px 56px -12px rgba(${tint}, 0.7)`
+      : `0 2px 6px rgba(${tint}, 0.05), 0 24px 56px -12px rgba(${tint}, 0.2)`,
+    menuItemHoverBg: seed.hover,
+    tabBg: seed.hover,
+    tabActiveBg: seed.surface,
+    tabActiveBorder: seed.accent,
+    focusRing: hexToRgba(seed.accent, isDark ? 0.32 : 0.24),
+    radiusSm: radius.sm,
+    radiusMd: radius.md,
+    radiusLg: radius.lg,
+  }
+}
+
+const lightExcalidrawTokens = createStyleTokens({
+  mode: 'light',
+  canvas: '#fafafb',
+  shell: '#f4f4f6',
+  surface: '#ffffff',
+  border: '#e6e6ec',
+  inputBorder: '#dcdce4',
+  text: '#18181b',
+  muted: '#6b6b76',
   accent: '#6965db',
-  accentStrong: '#4e49bf',
-  buttonHoverBg: '#f1f0ff',
-  buttonActiveBg: '#e7e5ff',
-  menuBg: 'rgba(255, 255, 255, 0.98)',
-  menuBorder: '#d9d8ec',
-  menuShadow:
-    '0 10px 30px rgba(17, 16, 44, 0.12), 0 2px 10px rgba(17, 16, 44, 0.08)',
-  menuItemHoverBg: '#f1f0ff',
-  tabBg: '#ececf4',
-  tabActiveBg: '#ffffff',
-  tabActiveBorder: '#6965db',
-  focusRing: 'rgba(105, 101, 219, 0.22)',
-  radiusSm: '0.5rem',
-  radiusMd: '0.625rem',
-  radiusLg: '0.875rem',
-}
+  accentStrong: '#4f4ac4',
+  hover: '#f4f4f7',
+  active: '#ececf1',
+  grid: 'rgba(24, 24, 27, 0.045)',
+})
 
-const darkExcalidrawTokens: AppearanceStyleTokens = {
-  uiFont: 'Assistant, "Segoe UI", system-ui, sans-serif',
-  bgCanvas: '#121212',
-  bgShell: '#1c1c22',
-  panelBg: 'rgba(35, 35, 41, 0.96)',
-  panelBorder: '#3a3947',
-  panelShadow: '0 20px 44px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.2)',
-  cardBg: '#232329',
-  cardBorder: '#3a3947',
-  inputBg: '#1c1c22',
-  inputBorder: '#3a3947',
-  gridColor: 'rgba(227, 227, 232, 0.07)',
-  textPrimary: '#e3e3e8',
-  textMuted: '#adadbf',
+const darkExcalidrawTokens = createStyleTokens({
+  mode: 'dark',
+  canvas: '#0f0f12',
+  shell: '#141418',
+  surface: '#1a1a1f',
+  border: '#2a2a31',
+  inputBorder: '#33333b',
+  text: '#ededf0',
+  muted: '#9b9ba6',
   accent: '#a8a5ff',
-  accentStrong: '#cac8ff',
-  buttonHoverBg: '#2e2d39',
-  buttonActiveBg: '#3b3a49',
-  menuBg: 'rgba(35, 35, 41, 0.98)',
-  menuBorder: '#3a3947',
-  menuShadow: '0 22px 50px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(0, 0, 0, 0.24)',
-  menuItemHoverBg: '#2e2d39',
-  tabBg: '#1a1a20',
-  tabActiveBg: '#2e2d39',
-  tabActiveBorder: '#a8a5ff',
-  focusRing: 'rgba(168, 165, 255, 0.24)',
-  radiusSm: '0.5rem',
-  radiusMd: '0.625rem',
-  radiusLg: '0.875rem',
-}
+  accentStrong: '#c9c7ff',
+  hover: '#232329',
+  active: '#2c2c33',
+  grid: 'rgba(237, 237, 240, 0.045)',
+})
 
-const lightBlueprintTokens: AppearanceStyleTokens = {
-  uiFont: '"Aptos", "Segoe UI", system-ui, sans-serif',
-  bgCanvas: '#eef5fb',
-  bgShell: '#dfeaf5',
-  panelBg: 'rgba(248, 251, 255, 0.94)',
-  panelBorder: 'rgba(21, 63, 102, 0.18)',
-  panelShadow: '0 18px 36px rgba(24, 65, 105, 0.14)',
-  cardBg: 'rgba(255, 255, 255, 0.96)',
-  cardBorder: 'rgba(21, 63, 102, 0.16)',
-  inputBg: '#ffffff',
-  inputBorder: 'rgba(24, 73, 117, 0.2)',
-  gridColor: 'rgba(44, 110, 167, 0.12)',
-  textPrimary: '#16334d',
-  textMuted: '#4f6c87',
-  accent: '#1274c4',
-  accentStrong: '#0a5998',
-  buttonHoverBg: '#ddefff',
-  buttonActiveBg: '#cbe6ff',
-  menuBg: 'rgba(248, 251, 255, 0.98)',
-  menuBorder: 'rgba(21, 63, 102, 0.18)',
-  menuShadow: '0 24px 52px rgba(24, 65, 105, 0.16)',
-  menuItemHoverBg: '#ddefff',
-  tabBg: '#e2edf8',
-  tabActiveBg: '#ffffff',
-  tabActiveBorder: '#1274c4',
-  focusRing: 'rgba(18, 116, 196, 0.22)',
-  radiusSm: '0.75rem',
-  radiusMd: '1rem',
-  radiusLg: '1.25rem',
-}
+const lightBlueprintTokens = createStyleTokens({
+  mode: 'light',
+  canvas: '#f6f9fc',
+  shell: '#eef3f8',
+  surface: '#ffffff',
+  border: '#e1e8f0',
+  inputBorder: '#d5dfea',
+  text: '#0f2133',
+  muted: '#5b6b7d',
+  accent: '#2563eb',
+  accentStrong: '#1d4ed8',
+  hover: '#f0f5fb',
+  active: '#e5edf7',
+  grid: 'rgba(37, 99, 235, 0.07)',
+  shadowTint: '15, 33, 51',
+})
 
-const darkBlueprintTokens: AppearanceStyleTokens = {
-  uiFont: '"Aptos", "Segoe UI", system-ui, sans-serif',
-  bgCanvas: '#09131d',
-  bgShell: '#0f1c29',
-  panelBg: 'rgba(15, 28, 41, 0.94)',
-  panelBorder: 'rgba(127, 184, 235, 0.18)',
-  panelShadow: '0 24px 48px rgba(0, 0, 0, 0.42)',
-  cardBg: 'rgba(17, 33, 47, 0.96)',
-  cardBorder: 'rgba(127, 184, 235, 0.18)',
-  inputBg: '#11212f',
-  inputBorder: 'rgba(127, 184, 235, 0.18)',
-  gridColor: 'rgba(95, 169, 233, 0.12)',
-  textPrimary: '#e6f1fb',
-  textMuted: '#9cb6cf',
-  accent: '#7fc0ff',
-  accentStrong: '#b6dcff',
-  buttonHoverBg: '#193247',
-  buttonActiveBg: '#214562',
-  menuBg: 'rgba(15, 28, 41, 0.98)',
-  menuBorder: 'rgba(127, 184, 235, 0.18)',
-  menuShadow: '0 26px 54px rgba(0, 0, 0, 0.5)',
-  menuItemHoverBg: '#193247',
-  tabBg: '#102131',
-  tabActiveBg: '#193247',
-  tabActiveBorder: '#7fc0ff',
-  focusRing: 'rgba(127, 192, 255, 0.24)',
-  radiusSm: '0.75rem',
-  radiusMd: '1rem',
-  radiusLg: '1.25rem',
-}
+const darkBlueprintTokens = createStyleTokens({
+  mode: 'dark',
+  canvas: '#0a1018',
+  shell: '#0d1520',
+  surface: '#111b27',
+  border: '#1f2c3b',
+  inputBorder: '#273748',
+  text: '#e6eef7',
+  muted: '#8ea2b8',
+  accent: '#60a5fa',
+  accentStrong: '#93c5fd',
+  hover: '#172433',
+  active: '#1d2d3f',
+  grid: 'rgba(96, 165, 250, 0.07)',
+})
 
 export const APPEARANCE_STYLE_PRESETS: Record<
   StylePreset,
@@ -146,7 +180,7 @@ export const APPEARANCE_STYLE_PRESETS: Record<
 > = {
   excalidraw: {
     label: 'Excalidraw',
-    description: 'Soft island surfaces and the Excalidraw purple accent.',
+    description: 'Clean neutral surfaces with the Excalidraw violet accent.',
     modes: {
       light: lightExcalidrawTokens,
       dark: darkExcalidrawTokens,
@@ -154,7 +188,7 @@ export const APPEARANCE_STYLE_PRESETS: Record<
   },
   blueprint: {
     label: 'Blueprint',
-    description: 'Cooler drafting surfaces with brighter canvas contrast.',
+    description: 'Cool drafting tones with a crisp blue accent.',
     modes: {
       light: lightBlueprintTokens,
       dark: darkBlueprintTokens,

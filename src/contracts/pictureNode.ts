@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
+import { ChartNodeSchema, coerceChartNode, type ChartNode } from './chartNode'
 import { CardSizeSchema, coerceCardSize, DEFAULT_CARD_SIZE } from './linkCard'
 
-export const PictureNodeSchema = z.object({
+export const ImagePictureNodeSchema = z.object({
   id: z.string().min(1),
   type: z.literal('picture'),
   imageId: z.string().min(1),
@@ -13,14 +14,39 @@ export const PictureNodeSchema = z.object({
   updatedAt: z.string(),
 })
 
-export type PictureNode = z.infer<typeof PictureNodeSchema>
+export type ImagePictureNode = z.infer<typeof ImagePictureNodeSchema>
+
+/**
+ * Free-floating canvas nodes (no `groupId`; group membership follows their
+ * bounds). `picture` = image, `chart` = streamed time-series chart.
+ */
+export const PictureNodeSchema = z.discriminatedUnion('type', [
+  ImagePictureNodeSchema,
+  ChartNodeSchema,
+])
+
+export type PictureNode = ImagePictureNode | ChartNode
+
+export function isImagePictureNode(
+  node: PictureNode,
+): node is ImagePictureNode {
+  return node.type === 'picture'
+}
+
+export function isChartNode(node: PictureNode): node is ChartNode {
+  return node.type === 'chart'
+}
 
 export function coercePictureNode(value: unknown): PictureNode | null {
   if (typeof value !== 'object' || value === null) {
     return null
   }
 
-  const candidate = value as Partial<PictureNode> & {
+  if ((value as { type?: unknown }).type === 'chart') {
+    return coerceChartNode(value)
+  }
+
+  const candidate = value as Partial<ImagePictureNode> & {
     size?: unknown
     type?: unknown
   }

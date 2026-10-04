@@ -21,6 +21,7 @@ import {
   SURFACE_SHADOW_STYLE_LABELS,
   SURFACE_SHADOW_STYLE_OPTIONS,
 } from '../../features/appearance/surfaceEffects'
+import { CloseIcon } from '../taskbar/TaskbarIcons'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
 import { FormatPainterIcon } from '../ui/FormatPainterIcon'
 import { SelectMenu } from '../ui/SelectMenu'
@@ -126,11 +127,12 @@ export function GroupFrameEditOverlay({
           </button>
           <button
             aria-label={`Exit editor for group ${group.id}`}
-            className={styles.closeEditButton}
+            className={`${styles.secondaryActionButton} ${styles.iconHeaderButton}`}
+            title="Close editor"
             type="button"
             onClick={onClose}
           >
-            Exit
+            <CloseIcon className={styles.actionSvg} />
           </button>
         </div>
       </div>

@@ -20,6 +20,7 @@ import type {
 } from '../../contracts/surfaceEffects'
 import { SURFACE_TRANSPARENCY_LIMITS } from '../../contracts/surfaceEffects'
 import { getActiveThemeCardColorSettings } from '../../features/appearance/cardColorPalette'
+import { CloseIcon } from '../taskbar/TaskbarIcons'
 import { FormatPainterIcon } from '../ui/FormatPainterIcon'
 import { LinkCardColorEditor } from './LinkCardColorEditor'
 import { LinkCardShadowMenu } from './LinkCardShadowMenu'
@@ -139,11 +140,12 @@ export function LinkCardEditOverlay({
           </button>
           <button
             aria-label={`Exit editor for ${card.id}`}
-            className={styles.closeEditButton}
+            className={`${styles.secondaryActionButton} ${styles.iconHeaderButton}`}
+            title="Close editor"
             type="button"
             onClick={onClose}
           >
-            Exit
+            <CloseIcon className={styles.actionSvg} />
           </button>
         </div>
       </div>

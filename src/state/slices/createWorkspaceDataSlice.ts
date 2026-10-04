@@ -1,5 +1,7 @@
 import type { StateCreator } from 'zustand'
 
+import { CHART_SETTING_KEYS } from '../../contracts/chartNode'
+import type { PictureNode } from '../../contracts/pictureNode'
 import {
   createDefaultWorkspace,
   replaceAnalytics,
@@ -11,6 +13,11 @@ import {
   recordCanvasOpenInAnalytics,
   recordLinkOpenInAnalytics,
 } from '../../features/analytics/workspaceAnalytics'
+import {
+  applyGroupChartSetting,
+  resolveGroupChartSettings,
+  setChartOverride,
+} from '../../features/charts/chartInheritance'
 import { getPictureIdsWithinGroupBodies } from '../../features/groups/groupLayout'
 import {
   applyGroupCollapseState,
@@ -29,9 +36,30 @@ import {
 import type {
   CardUpdateFields,
   GroupUpdateFields,
+  PictureUpdateFields,
   WorkspaceDataState,
   WorkspaceState,
 } from '../workspaceStoreTypes'
+
+/** Geometry applies to every node kind; `imageId` only to image pictures. */
+function applyPictureUpdates(
+  picture: PictureNode,
+  updates: PictureUpdateFields,
+  now: string,
+): PictureNode {
+  const { imageId, ...geometry } = updates
+
+  if (picture.type === 'picture') {
+    return {
+      ...picture,
+      ...geometry,
+      ...(imageId ? { imageId } : {}),
+      updatedAt: now,
+    }
+  }
+
+  return { ...picture, ...geometry, updatedAt: now }
+}
 
 export const createWorkspaceDataSlice: StateCreator<
   WorkspaceState,
@@ -478,11 +506,7 @@ export const createWorkspaceDataSlice: StateCreator<
           state.workspace,
           state.workspace.pictures.map((picture) =>
             picture.id === pictureId
-              ? {
-                  ...picture,
-                  ...updates,
-                  updatedAt: new Date().toISOString(),
-                }
+              ? applyPictureUpdates(picture, updates, new Date().toISOString())
               : picture,
           ),
         ),
@@ -507,11 +531,11 @@ export const createWorkspaceDataSlice: StateCreator<
               const updates = updatesById.get(picture.id)
 
               return updates
-                ? {
-                    ...picture,
-                    ...updates,
-                    updatedAt: new Date().toISOString(),
-                  }
+                ? applyPictureUpdates(
+                    picture,
+                    updates,
+                    new Date().toISOString(),
+                  )
                 : picture
             }),
           ),
@@ -547,6 +571,92 @@ export const createWorkspaceDataSlice: StateCreator<
               (id) => !cardIdSet.has(id),
             ),
           },
+        ),
+      }
+    }),
+  updateChart: (chartId, updates) =>
+    set((state) => ({
+      ...commitWorkspaceChange(
+        state,
+        replacePictures(
+          state.workspace,
+          state.workspace.pictures.map((node) =>
+            node.id === chartId && node.type === 'chart'
+              ? { ...node, ...updates, updatedAt: new Date().toISOString() }
+              : node,
+          ),
+        ),
+      ),
+    })),
+  setChartSetting: (chartId, key, value) =>
+    set((state) => ({
+      ...commitWorkspaceChange(
+        state,
+        replacePictures(
+          state.workspace,
+          state.workspace.pictures.map((node) =>
+            node.id === chartId && node.type === 'chart'
+              ? setChartOverride(node, key, value, new Date().toISOString())
+              : node,
+          ),
+        ),
+      ),
+    })),
+  setGroupChartSetting: (groupId, key, value, options) =>
+    set((state) => {
+      const next = applyGroupChartSetting({
+        groupId,
+        key,
+        value,
+        force: options?.force,
+        groups: state.workspace.groups,
+        pictures: state.workspace.pictures,
+        gridSize: state.workspace.placementGuide.gridSize,
+        now: new Date().toISOString(),
+      })
+
+      return {
+        ...commitWorkspaceChange(
+          state,
+          replacePictures(
+            replaceGroups(state.workspace, next.groups),
+            next.pictures,
+          ),
+        ),
+      }
+    }),
+  resetGroupChartOverrides: (groupId) =>
+    set((state) => {
+      const now = new Date().toISOString()
+      const gridSize = state.workspace.placementGuide.gridSize
+      const groupValues = resolveGroupChartSettings(
+        state.workspace.groups,
+        groupId,
+      )
+      let groups = state.workspace.groups
+      let pictures = state.workspace.pictures
+
+      // One undo step: force every key to the group's current value.
+      for (const key of CHART_SETTING_KEYS) {
+        const next = applyGroupChartSetting({
+          groupId,
+          key,
+          value: groupValues[key],
+          force: true,
+          groups,
+          pictures,
+          gridSize,
+          now,
+        })
+
+        groups = next.groups
+        pictures = next.pictures
+      }
+
+      return {
+        ...commitWorkspaceChange(
+          state,
+          replacePictures(replaceGroups(state.workspace, groups), pictures),
         ),
       }
     }),

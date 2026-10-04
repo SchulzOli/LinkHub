@@ -131,9 +131,11 @@ export function useImageGalleryManager({
     }
 
     if (imageGalleryState?.mode === 'pick-picture-image') {
-      return pictures.find(
-        (picture) => picture.id === imageGalleryState.pictureId,
-      )?.imageId
+      const picture = pictures.find(
+        (candidate) => candidate.id === imageGalleryState.pictureId,
+      )
+
+      return picture?.type === 'picture' ? picture.imageId : undefined
     }
 
     return undefined

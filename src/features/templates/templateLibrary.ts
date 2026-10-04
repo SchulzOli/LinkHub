@@ -11,7 +11,7 @@ import {
 import type { StoredImageAssetRecord } from '../../storage/imageRepository'
 import { createId } from '../../utils/id'
 import { resolveCardColors } from '../appearance/cardColorPalette'
-import { mixHexColors, withAlpha } from '../appearance/colorMath'
+import { withAlpha } from '../appearance/colorMath'
 import { getAppearanceStyleTokens } from '../appearance/stylePresets'
 import { getCardPixelDimensions } from '../appearance/themeTokens'
 import {
@@ -266,6 +266,7 @@ function drawTemplateGroup(input: {
   const chrome = getGroupChromeMetrics(
     getGroupLayoutSize(input.group),
     TEMPLATE_PREVIEW_GRID_SIZE,
+    input.group.size,
   )
   const x = input.transform.x + input.group.positionX * input.transform.scale
   const y = input.transform.y + input.group.positionY * input.transform.scale
@@ -279,33 +280,20 @@ function drawTemplateGroup(input: {
   )
   const headerHeight = chrome.headerHeight * input.transform.scale
 
+  // Flat group: soft fill plus a thin outline in the group's border colour.
   input.context.save()
-  input.context.shadowColor = withAlpha(groupColors.borderColor, 0.22)
-  input.context.shadowBlur = 12
-  input.context.shadowOffsetY = 8
   roundRect(input.context, x, y, width, height, radius)
   input.context.fillStyle = withAlpha(groupColors.fillColor, 0.18)
   input.context.fill()
-  input.context.shadowColor = 'transparent'
-  input.context.lineWidth = Math.max(1.2, input.transform.scale * 1.4)
+  input.context.lineWidth = 1
   input.context.strokeStyle = withAlpha(groupColors.borderColor, 0.9)
   input.context.stroke()
-  input.context.restore()
-
-  input.context.save()
-  clipRoundedRect(input.context, x, y, width, height, radius)
-  input.context.fillStyle = mixHexColors(
-    groupColors.fillColor,
-    tokens.accent,
-    0.18,
-  )
-  input.context.fillRect(x, y, width, Math.min(height, headerHeight + 4))
   input.context.restore()
 
   if ((input.group.showTitle ?? true) && width >= 64 && height >= 24) {
     input.context.save()
     input.context.fillStyle = tokens.textPrimary
-    input.context.font = `700 ${Math.max(10, Math.min(13, headerHeight * 0.5))}px ${tokens.uiFont}`
+    input.context.font = `600 ${Math.max(10, Math.min(13, headerHeight * 0.5))}px ${tokens.uiFont}`
     input.context.textBaseline = 'middle'
     input.context.fillText(
       truncatePreviewText(
@@ -455,7 +443,11 @@ function drawTemplatePicture(input: {
   const width = size.width * input.transform.scale
   const height = size.height * input.transform.scale
   const radius = Math.max(8, Math.min(width, height) * 0.08)
-  const image = input.imageById.get(input.picture.imageId) ?? null
+  // Charts have no stored image; they render as the neutral placeholder.
+  const image =
+    input.picture.type === 'picture'
+      ? (input.imageById.get(input.picture.imageId) ?? null)
+      : null
 
   input.context.save()
   roundRect(input.context, x, y, width, height, radius)
@@ -602,7 +594,9 @@ export function collectBundleImageIds(bundle: CanvasEntityBundle) {
       ...bundle.cards.flatMap((card) =>
         card.faviconOverrideImageId ? [card.faviconOverrideImageId] : [],
       ),
-      ...bundle.pictures.map((picture) => picture.imageId),
+      ...bundle.pictures.flatMap((picture) =>
+        picture.type === 'picture' ? [picture.imageId] : [],
+      ),
     ]),
   ]
 }

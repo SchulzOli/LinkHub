@@ -83,4 +83,34 @@ describe('overlayPlacement', () => {
       placement: 'below',
     })
   })
+
+  it('opens beside the anchor when it fits neither above nor below', () => {
+    const anchor = { left: 400, top: 250, bottom: 430, width: 200 }
+    const base = {
+      anchorGap: 12,
+      anchorRect: anchor,
+      bottomBoundary: 692,
+      overlayRect: { width: 320, height: 600 },
+      topBoundary: 8,
+      viewportPadding: 8,
+    }
+
+    expect(
+      getAnchoredOverlayPosition({ ...base, viewportWidth: 1400 }),
+    ).toEqual({
+      left: 612,
+      // As close to the anchor top as the 600px panel allows.
+      top: 92,
+      maxHeight: 684,
+      placement: 'right',
+    })
+    // No room on the right: falls back to the left side.
+    expect(
+      getAnchoredOverlayPosition({
+        ...base,
+        anchorRect: { ...anchor, left: 1000 },
+        viewportWidth: 1400,
+      }),
+    ).toMatchObject({ left: 668, placement: 'left' })
+  })
 })

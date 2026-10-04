@@ -102,8 +102,8 @@ test('switches between edit and view behavior', async ({ page, context }) => {
     .toEqual({
       width: '96px',
       height: '144px',
-      fillColor: '#24364a',
-      borderColor: '#66c7b5',
+      fillColor: '#1c2738',
+      borderColor: '#5cc6a7',
       layout: 'single-content',
     })
   await expect(card.getByTestId('card-title')).toHaveCount(0)
@@ -237,7 +237,7 @@ test('scales the title down on very small cards instead of hiding it', async ({
     })
 
   await expect(
-    page.getByText('Enter a width and height between 2 and 12 cells.'),
+    page.getByText('Enter a width and height between 2 and 40 cells.'),
   ).toBeVisible()
 
   await page.getByLabel(/Edit width for/).fill('2')

@@ -5,18 +5,18 @@
   will-change: transform;
   grid-template-rows: var(--group-header-height, 2rem) minmax(0, 1fr);
   gap: var(--group-gap, 0.5rem);
-  padding: var(--group-padding, 0.5rem);
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--group-outline, var(--card-border)) 26%,
-      transparent
-    );
+  /* Top chrome only: no side/bottom inset, so members use the full area. */
+  padding: var(--group-padding, 0.5rem) 0 0;
+  /* Thin outline in the group's border colour; the body still spans the
+     full inner area (members may sit flush against it). */
+  /* The visible outline is drawn by .groupOutline (above members). */
+  border: 1px solid transparent;
   background: var(--group-shell-fill, var(--group-surface, var(--card-bg)));
   color: var(--text-primary);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--group-outline) 8%, transparent),
-    var(--group-shadow, var(--panel-shadow));
+  box-shadow: none;
+  transition:
+    border-color var(--motion-base) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard);
   border-radius: var(
       --group-shell-top-radius,
       var(--group-radius, var(--radius-md))
@@ -32,22 +32,42 @@
 }
 
 .group[data-collapsed='true'] {
-  grid-template-rows: minmax(0, 1fr);
+  /* Same header height as when expanded, centred so the gap above and
+     below the title is equal. */
+  grid-template-rows: var(--group-header-height, 2rem);
+  align-content: center;
+  padding-top: 0;
 }
 
-.groupSelected {
-  border-color: color-mix(
-    in srgb,
-    var(--accent) 82%,
-    var(--group-outline, var(--card-border))
-  );
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent),
-    var(--group-shadow, var(--panel-shadow));
+.groupOutline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--group-outline, var(--card-border));
+  border-radius: var(
+      --group-shell-top-radius,
+      var(--group-radius, var(--radius-md))
+    )
+    var(--group-shell-top-radius, var(--group-radius, var(--radius-md)))
+    var(--group-shell-bottom-radius, var(--group-radius, var(--radius-md)))
+    var(--group-shell-bottom-radius, var(--group-radius, var(--radius-md)));
+  pointer-events: none;
+  /* Above cards (1) and hovered cards (24), below card overlays/menus. */
+  z-index: 26;
+  transition:
+    border-color var(--motion-base) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.groupOutlineSelected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .header {
   min-width: 0;
+  margin-inline: var(--group-padding, 0.5rem);
   position: relative;
   z-index: 4;
   pointer-events: none;
@@ -62,17 +82,58 @@
   gap: 0.65rem;
   width: 100%;
   height: 100%;
-  padding: 0 0.5rem;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--group-outline, var(--card-border)) 42%,
-      transparent
-    );
-  border-radius: var(--group-header-top-radius, 0px);
-  background: var(--group-header-fill, var(--group-surface, var(--card-bg)));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  padding: 0 0.35rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  /* Flat header: the title reads as a label, not as a separate bar. */
+  background: transparent;
   cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-standard);
+}
+
+/* Right-aligned header tools (chart controls). */
+.headerTools {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.headerToolButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: calc(var(--group-header-height, 1.5rem) - 2px);
+  min-height: 1.2rem;
+  padding: 0 0.4rem;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.headerToolButton:hover,
+.headerToolButton[aria-expanded='true'] {
+  border-color: transparent;
+  background: var(--button-hover-bg);
+  color: var(--text-primary);
+}
+
+.headerToolButton svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.headerSurface:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
 }
 
 .headerSurface:focus-visible {
@@ -88,8 +149,8 @@
   cursor: grabbing;
 }
 
-.groupSelected .headerSurface {
-  border-color: color-mix(in srgb, var(--accent) 70%, var(--group-outline));
+.groupSelected .titleBadge {
+  color: var(--accent);
 }
 
 .headerMeta {
@@ -189,8 +250,10 @@
   padding: 0;
   border: none;
   background: transparent;
-  font-size: 0.72rem;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -200,23 +263,20 @@
 .body {
   min-height: 0;
   position: relative;
-  border: 1px dashed
-    color-mix(
-      in srgb,
-      var(--group-outline, var(--card-border)) 68%,
-      transparent
-    );
+  border: none;
   border-radius: var(--group-body-top-radius, 0px)
     var(--group-body-top-radius, 0px) var(--group-body-bottom-radius, 0px)
     var(--group-body-bottom-radius, 0px);
-  background: var(--group-body-fill, var(--group-surface, var(--card-bg)));
+  background: transparent;
   pointer-events: none;
 }
 
 .actionBar {
   position: absolute;
-  top: calc(var(--action-bar-offset, 0.7rem) * -1);
-  right: calc(var(--action-bar-offset, 0.7rem) * -1);
+  /* Shared placement: just above the top-right edge (2px overlap keeps
+     hover continuous), so corner controls inside the node stay usable. */
+  top: calc(var(--action-button-size, 2rem) * -1 + 2px);
+  right: 0.25rem;
   display: flex;
   gap: var(--action-bar-gap, 0.35rem);
   opacity: 0;
@@ -243,14 +303,20 @@
   height: var(--action-button-size, 2rem);
   padding: 0;
   line-height: 0;
+  border-color: var(--panel-border);
+  border-radius: 999px;
+  background: var(--panel-bg);
+  color: var(--text-muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.actionButtonEdit {
+.actionButton:hover {
   color: var(--text-primary);
 }
 
-.actionButtonDanger {
-  color: #ff9db9;
+.actionButtonDanger:hover {
+  border-color: color-mix(in srgb, #e5484d 60%, var(--panel-border));
+  color: #e5484d;
 }
 
 .actionIcon,
@@ -323,10 +389,11 @@
 .resizeHandleNW,
 .resizeHandleSE,
 .resizeHandleSW {
-  width: 1rem;
-  height: 1rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1.5px solid var(--accent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-bg) 82%, var(--accent) 18%);
+  background: var(--panel-bg);
 }
 
 .resizeHandleNE {
@@ -359,10 +426,10 @@
   width: min(26rem, calc(100vw - 1rem));
   max-width: calc(100vw - 1rem);
   max-height: calc(100vh - 1rem);
-  padding: 0.9rem;
-  border: 1px solid var(--menu-border);
-  border-radius: calc(var(--radius-lg) + 0.1rem);
-  background: var(--menu-bg);
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  background: var(--panel-bg);
   box-shadow: var(--menu-shadow);
   display: grid;
   gap: 0.8rem;
@@ -402,8 +469,9 @@
 }
 
 .editLabel {
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .editSizeGrid {
@@ -431,12 +499,6 @@
   place-items: center;
 }
 
-.closeEditButton {
-  min-height: 2rem;
-  padding-inline: 0.75rem;
-  font-size: 0.8rem;
-}
-
 .editEffectGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -462,8 +524,9 @@
   min-width: 3rem;
   text-align: right;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .editToggleField {
@@ -482,7 +545,7 @@
 
 .editError {
   margin: 0;
-  color: #ff9db9;
+  color: #e5484d;
   font-size: 0.78rem;
 }
 

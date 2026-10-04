@@ -1,8 +1,10 @@
-import type { MouseEventHandler, PointerEventHandler } from 'react'
+import type { MouseEventHandler, PointerEventHandler, ReactNode } from 'react'
 
 import styles from './GroupFrame.module.css'
 
 type GroupHeaderBarProps = {
+  /** Extra header tools (e.g. chart controls), right-aligned. */
+  tools?: ReactNode
   displayTitle: string
   groupId: string
   groupName: string
@@ -20,6 +22,7 @@ type GroupHeaderBarProps = {
 }
 
 export function GroupHeaderBar({
+  tools,
   displayTitle,
   groupId,
   groupName,
@@ -88,6 +91,7 @@ export function GroupHeaderBar({
           <span className={styles.titleBadge}>{displayTitle}</span>
         </span>
       </div>
+      {tools}
     </div>
   )
 }

@@ -1,16 +1,20 @@
 import { useCallback, useState } from 'react'
 
-import { getGroupLayoutSize, type CardGroup } from '../../../contracts/cardGroup'
+import {
+  getGroupLayoutSize,
+  type CardGroup,
+} from '../../../contracts/cardGroup'
 import type { LinkCard } from '../../../contracts/linkCard'
+import type { Viewport } from '../../../contracts/workspace'
+import { isCanvasBackgroundTarget } from '../../../engine/react/canvasBackground'
+import type { FormatPainterPayload } from '../../../features/appearance/formatPainter'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
 import {
   getRootSelectedGroupIds,
   getSelectedGroupSubtree,
 } from '../../../features/groups/groupLayout'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
-import type { Viewport } from '../../../contracts/workspace'
 import type { InteractionMode } from '../../../state/useWorkspaceStore'
-import type { FormatPainterPayload } from '../../../features/appearance/formatPainter'
 
 type CanvasInteractionState = 'idle' | 'panning' | 'selecting'
 
@@ -146,7 +150,7 @@ export function useMarqueeSelection({
       if (
         formatPainter &&
         event.button === 0 &&
-        event.target === event.currentTarget
+        isCanvasBackgroundTarget(event)
       ) {
         event.preventDefault()
         onClearSelection()
@@ -159,7 +163,7 @@ export function useMarqueeSelection({
       if (
         event.button !== 0 ||
         interactionMode !== 'edit' ||
-        event.target !== event.currentTarget
+        !isCanvasBackgroundTarget(event)
       ) {
         return
       }
@@ -214,10 +218,7 @@ export function useMarqueeSelection({
           getLocalPoint(upEvent.clientX, upEvent.clientY),
           viewport,
         )
-        const selectionRect = createCanvasRect(
-          startCanvasPoint,
-          endCanvasPoint,
-        )
+        const selectionRect = createCanvasRect(startCanvasPoint, endCanvasPoint)
         const enclosedGroupIds = getFullyEnclosedGroupIds(
           visibleGroups,
           selectionRect,

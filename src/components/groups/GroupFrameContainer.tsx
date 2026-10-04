@@ -45,6 +45,7 @@ import {
   useCanvasSelectionActions,
 } from '../canvas/CanvasActionsContext'
 import { isSelectMenuPortalTarget } from '../ui/SelectMenu'
+import { GroupChartControls } from './GroupChartControls'
 import { GroupFrameEditOverlay } from './GroupFrameEditOverlay'
 import { GroupFrameView } from './GroupFrameView'
 import { useGroupFrameViewModel } from './useGroupFrameViewModel'
@@ -600,6 +601,15 @@ export const GroupFrameContainer = memo(function GroupFrameContainer({
         group={group}
         isEditMode={isEditMode}
         isSelected={isSelected}
+        headerTools={
+          <GroupChartControls
+            anchorRef={articleRef}
+            gridSize={guide.gridSize}
+            group={group}
+            groups={groups}
+            pictures={pictures}
+          />
+        }
         resolvedShadowStyle={resolvedShadowStyle}
         resolvedSurfaceTransparency={resolvedSurfaceTransparency}
         viewModel={viewModel}
