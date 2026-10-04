@@ -13,7 +13,11 @@ import type { PictureNode as PictureNodeContract } from '../../contracts/picture
 import type { PlacementGuide } from '../../contracts/placementGuide'
 import type { Viewport } from '../../contracts/workspace'
 import { OptionalCardEffects } from '../../effects'
-import { CanvasEngineSurface, type GridOptions } from '../../engine'
+import {
+  CanvasEngineSurface,
+  shouldScrollInsideNode,
+  type GridOptions,
+} from '../../engine'
 import {
   getCardUpdatesFromFormatPainter,
   getGroupUpdatesFromFormatPainter,
@@ -34,6 +38,7 @@ import {
 } from '../../state/useWorkspaceStore'
 import { LinkCardContainer as LinkCard } from '../cards/LinkCardContainer'
 import { ChartNode } from '../charts/ChartNode'
+import { FeedNode } from '../feeds/FeedNode'
 import { GroupFrameContainer as GroupFrame } from '../groups/GroupFrameContainer'
 import { PictureNode } from '../pictures/PictureNode'
 import {
@@ -227,7 +232,13 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       return
     }
 
-    const listener = (event: WheelEvent) => handleWheelRef.current(event)
+    const listener = (event: WheelEvent) => {
+      if (shouldScrollInsideNode(event)) {
+        return
+      }
+
+      handleWheelRef.current(event)
+    }
     element.addEventListener('wheel', listener, { passive: false })
 
     return () => element.removeEventListener('wheel', listener)
@@ -332,6 +343,15 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
             <ChartNode
               key={picture.id}
               chart={picture}
+              guide={placementGuide}
+              isSelected={selectedPictureIdSet.has(picture.id)}
+              interactionMode={interactionMode}
+              viewport={viewport}
+            />
+          ) : picture.type === 'feed' ? (
+            <FeedNode
+              key={picture.id}
+              feed={picture}
               guide={placementGuide}
               isSelected={selectedPictureIdSet.has(picture.id)}
               interactionMode={interactionMode}

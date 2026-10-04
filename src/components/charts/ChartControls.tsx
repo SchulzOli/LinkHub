@@ -27,7 +27,7 @@ import {
   type Option,
 } from './chartControlOptions'
 
-function Segmented<T extends string>(props: {
+export function Segmented<T extends string>(props: {
   label: string
   value: T
   options: Option<T>[]

@@ -59,6 +59,18 @@ export function ImageGalleryIcon({ className }: IconProps) {
   )
 }
 
+/** Add news feed: RSS waves with a plus. */
+export function AddFeedIcon({ className }: IconProps) {
+  return (
+    <StrokeIcon className={className}>
+      <path d="M4.5 11a8.5 8.5 0 0 1 8.5 8.5" />
+      <path d="M4.5 4.5a15 15 0 0 1 14.6 11.5" />
+      <circle cx="5.5" cy="18.5" r="1.25" />
+      <path d="M18 15.5v5M15.5 18h5" />
+    </StrokeIcon>
+  )
+}
+
 /** Add chart: trend line on axes with a plus. */
 export function AddChartIcon({ className }: IconProps) {
   return (

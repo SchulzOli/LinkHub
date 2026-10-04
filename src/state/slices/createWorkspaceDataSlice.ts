@@ -588,6 +588,25 @@ export const createWorkspaceDataSlice: StateCreator<
         ),
       ),
     })),
+  updateFeed: (feedId, updates) =>
+    set((state) => ({
+      ...commitWorkspaceChange(
+        state,
+        replacePictures(
+          state.workspace,
+          state.workspace.pictures.map((node) =>
+            node.id === feedId && node.type === 'feed'
+              ? {
+                  ...node,
+                  ...updates,
+                  settings: { ...node.settings, ...updates.settings },
+                  updatedAt: new Date().toISOString(),
+                }
+              : node,
+          ),
+        ),
+      ),
+    })),
   setChartSetting: (chartId, key, value) =>
     set((state) => ({
       ...commitWorkspaceChange(

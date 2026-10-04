@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "preview": "vite preview",
     "feed:charts": "node server/chart-feed/chart-feed-server.mjs",
+    "feed:news": "node server/news-feed/news-feed-server.mjs",
     "build:extension": "node extension/build.mjs",
     "deploy": "node extension/deploy.mjs",
     "deploy:chrome": "node extension/deploy.mjs --publish-only chrome",

@@ -128,6 +128,7 @@ export function useCanvasActions(args: UseCanvasActionsArgs) {
     handleUpdateGroup: groupActions.handleUpdateGroup,
     handleUpdatePicture: pictureActions.handleUpdatePicture,
     placeChartAtViewportCenter: pictureActions.placeChartAtViewportCenter,
+    placeFeedAtViewportCenter: pictureActions.placeFeedAtViewportCenter,
     placePictureAssetAtViewportCenter:
       pictureActions.placePictureAssetAtViewportCenter,
     placePictureAssetsAtCanvasPoint:
