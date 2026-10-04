@@ -1,9 +1,19 @@
 import type { RefObject } from 'react'
+import panelStyles from '../ui/panel/Panel.module.css'
 
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
 import type { LinkCheckStatus } from './options/useLinkCheck'
 
 import { DeleteIcon } from '../ui/DeleteIcon'
+import { EditIcon } from '../ui/EditIcon'
+import {
+  IconButton,
+  PanelSection,
+  SettingRow,
+  StatusMessage,
+} from '../ui/panel/Panel'
+import { ChevronLeftIcon, ChevronRightIcon } from '../ui/panel/PanelIcons'
+import dataStyles from './OptionsDataSection.module.css'
 import styles from './OptionsMenu.module.css'
 
 type DataStatus = {
@@ -71,6 +81,19 @@ export function OptionsDataSection({
   workspaceStatus,
   workspaceSummaries,
 }: OptionsDataSectionProps) {
+  const isBusy = dataStatus.kind === 'busy'
+  const workspaceBusy = workspaceStatus.kind === 'busy'
+  const linkCheckMeta =
+    linkCheckStatus.kind === 'checking'
+      ? 'Checking…'
+      : linkCheckStatus.kind === 'done'
+        ? `${linkCheckStatus.ok} ok, ${linkCheckStatus.broken} broken`
+        : linkCheckStatus.kind === 'error'
+          ? 'Error'
+          : workspaceEntityCounts.cards === 0
+            ? 'No cards'
+            : `${workspaceEntityCounts.cards} card${workspaceEntityCounts.cards === 1 ? '' : 's'}`
+
   return (
     <div
       aria-labelledby={`${tabListId}-data`}
@@ -78,55 +101,206 @@ export function OptionsDataSection({
       id={`${menuId}-data`}
       role="tabpanel"
     >
-      <div className={styles.dataGrid} data-testid="data-panel">
-        <section className={`${styles.dataCard} ${styles.dataTransportCard}`}>
-          <div
-            className={`${styles.sectionHeader} ${styles.dataTransportHeader}`}
-          >
-            <h4 className={styles.sectionTitle}>Export current canvas</h4>
-            <span className={styles.sectionMeta}>
-              {referencedImageCount} referenced image
-              {referencedImageCount === 1 ? '' : 's'}
-            </span>
-          </div>
-          <p className={`${styles.fieldHint} ${styles.dataTransportHint}`}>
-            Creates a ZIP bundle with the current workspace JSON, the whole
-            local image gallery, and all saved templates with their copied image
-            files, plus every saved custom theme.
-          </p>
-          <div
-            className={`${styles.dataMetrics} ${styles.dataTransportMetrics}`}
-          >
-            <div className={styles.dataMetricRow}>
-              <span className={styles.dataMetric}>
-                Cards: {workspaceEntityCounts.cards}
-              </span>
-              <span className={styles.dataMetric}>
-                Groups: {workspaceEntityCounts.groups}
-              </span>
-              <span className={styles.dataMetric}>
-                Pictures: {workspaceEntityCounts.pictures}
-              </span>
+      <div className={panelStyles.stack} data-testid="data-panel">
+        <PanelSection
+          meta={`${workspaceSummaries.length} workspace${workspaceSummaries.length === 1 ? '' : 's'}`}
+          testId="workspace-management-panel"
+          title="Manage workspaces"
+        >
+          {interactionMode === 'edit' ? (
+            <div
+              className={dataStyles.workspaceList}
+              data-testid="workspace-management-list"
+            >
+              {workspaceSummaries.map((workspaceSummary, index) => {
+                const isEditing =
+                  workspaceEditor?.workspaceId === workspaceSummary.id
+                const isCurrentWorkspace =
+                  workspaceSummary.id === activeWorkspaceId
+
+                return (
+                  <article
+                    className={dataStyles.workspaceRow}
+                    data-current={isCurrentWorkspace}
+                    data-testid={`workspace-management-row-${workspaceSummary.id}`}
+                    key={workspaceSummary.id}
+                  >
+                    {isEditing ? (
+                      <>
+                        <input
+                          aria-label="Workspace name"
+                          autoFocus
+                          className={dataStyles.workspaceNameInput}
+                          data-testid="workspace-editor-name"
+                          type="text"
+                          value={workspaceEditor.name}
+                          onChange={(event) => {
+                            onUpdateWorkspaceEditorName(
+                              event.currentTarget.value,
+                            )
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault()
+                              onSubmitWorkspaceEditor()
+                            }
+
+                            if (event.key === 'Escape') {
+                              event.preventDefault()
+                              onCancelWorkspaceEditor()
+                            }
+                          }}
+                        />
+                        <div className={panelStyles.actions}>
+                          <button
+                            className={`${panelStyles.button} ${panelStyles.buttonPrimary}`}
+                            data-testid="workspace-editor-save"
+                            disabled={workspaceBusy}
+                            onClick={onSubmitWorkspaceEditor}
+                            type="button"
+                          >
+                            Save workspace
+                          </button>
+                          <button
+                            className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
+                            data-testid="workspace-editor-cancel"
+                            disabled={workspaceBusy}
+                            onClick={onCancelWorkspaceEditor}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className={dataStyles.workspaceIndex}>
+                          {index + 1}
+                        </span>
+                        <div className={panelStyles.rowText}>
+                          <strong className={panelStyles.rowLabel}>
+                            {workspaceSummary.name}
+                          </strong>
+                          <span className={panelStyles.rowHint}>
+                            {isCurrentWorkspace
+                              ? 'Current workspace'
+                              : 'Workspace'}
+                            {' • '}Position {index + 1} of{' '}
+                            {workspaceSummaries.length}
+                          </span>
+                        </div>
+                        <div className={panelStyles.iconActions}>
+                          <IconButton
+                            data-testid={`workspace-move-left-${workspaceSummary.id}`}
+                            disabled={index === 0 || workspaceBusy}
+                            label="Move left"
+                            title="Move workspace earlier"
+                            onClick={() =>
+                              onMoveWorkspace(workspaceSummary.id, -1)
+                            }
+                          >
+                            <ChevronLeftIcon className={panelStyles.icon} />
+                          </IconButton>
+                          <IconButton
+                            data-testid={`workspace-move-right-${workspaceSummary.id}`}
+                            disabled={
+                              index === workspaceSummaries.length - 1 ||
+                              workspaceBusy
+                            }
+                            label="Move right"
+                            title="Move workspace later"
+                            onClick={() =>
+                              onMoveWorkspace(workspaceSummary.id, 1)
+                            }
+                          >
+                            <ChevronRightIcon className={panelStyles.icon} />
+                          </IconButton>
+                          <IconButton
+                            data-testid={`workspace-edit-${workspaceSummary.id}`}
+                            disabled={workspaceBusy}
+                            label="Edit"
+                            title="Edit workspace name"
+                            onClick={() =>
+                              onStartWorkspaceEdit(workspaceSummary)
+                            }
+                          >
+                            <EditIcon className={panelStyles.icon} />
+                          </IconButton>
+                          <IconButton
+                            data-testid={`workspace-delete-${workspaceSummary.id}`}
+                            disabled={
+                              workspaceSummaries.length === 1 || workspaceBusy
+                            }
+                            label="Delete"
+                            title="Delete workspace"
+                            tone="danger"
+                            onClick={() => onDeleteWorkspace(workspaceSummary)}
+                          >
+                            <DeleteIcon className={panelStyles.icon} />
+                          </IconButton>
+                        </div>
+                      </>
+                    )}
+                  </article>
+                )
+              })}
             </div>
-            <div className={styles.dataMetricRow}>
-              <span className={styles.dataMetric}>
-                Referenced images: {referencedImageCount}
-              </span>
-              <span className={styles.dataMetric}>
-                Saved templates: {savedTemplateCount}
-              </span>
-              <span className={styles.dataMetric}>
-                Saved themes: {savedThemeCount}
-              </span>
-            </div>
-          </div>
-          <div
-            className={`${styles.dataActions} ${styles.dataTransportActions}`}
+          ) : (
+            <SettingRow
+              hint="Renaming, ordering and deleting workspaces needs edit mode."
+              label="Workspace management is available in edit mode only."
+            >
+              <button
+                className={`${panelStyles.button} ${panelStyles.buttonPrimary}`}
+                data-testid="workspace-enable-edit-mode"
+                onClick={onRequestEditMode}
+                type="button"
+              >
+                Switch to edit mode
+              </button>
+            </SettingRow>
+          )}
+        </PanelSection>
+        {workspaceStatus.message ? (
+          <StatusMessage kind={workspaceStatus.kind} testId="workspace-status">
+            {workspaceStatus.message}
+          </StatusMessage>
+        ) : null}
+
+        <PanelSection title="Backup">
+          <SettingRow
+            hint={
+              <>
+                ZIP with this workspace, the image gallery, all templates and
+                custom themes.
+                <span className={`${panelStyles.chips} ${dataStyles.chips}`}>
+                  <span className={panelStyles.chip}>
+                    Cards: {workspaceEntityCounts.cards}
+                  </span>
+                  <span className={panelStyles.chip}>
+                    Groups: {workspaceEntityCounts.groups}
+                  </span>
+                  <span className={panelStyles.chip}>
+                    Pictures: {workspaceEntityCounts.pictures}
+                  </span>
+                  <span className={panelStyles.chip}>
+                    Referenced images: {referencedImageCount}
+                  </span>
+                  <span className={panelStyles.chip}>
+                    Saved templates: {savedTemplateCount}
+                  </span>
+                  <span className={panelStyles.chip}>
+                    Saved themes: {savedThemeCount}
+                  </span>
+                </span>
+              </>
+            }
+            label="Export current canvas"
           >
             <button
-              className={`${styles.dataPrimaryButton} ${styles.dataTransportPrimaryButton}`}
+              className={`${panelStyles.button} ${panelStyles.buttonPrimary}`}
               data-testid="export-canvas-bundle"
-              disabled={dataStatus.kind === 'busy'}
+              disabled={isBusy}
               onClick={() => {
                 void handleExportCanvas()
               }}
@@ -134,37 +308,48 @@ export function OptionsDataSection({
             >
               Export canvas bundle
             </button>
-          </div>
-        </section>
-
-        <section className={`${styles.dataCard} ${styles.dataTransportCard}`}>
-          <div
-            className={`${styles.sectionHeader} ${styles.dataTransportHeader}`}
+          </SettingRow>
+          <SettingRow
+            hint="Create a new workspace from a bundle or replace the current one. Images, templates and themes are merged; nothing else in the libraries is removed."
+            label="Import canvas bundle"
           >
-            <h4 className={styles.sectionTitle}>Check Links</h4>
-            <span className={styles.sectionMeta}>
-              {linkCheckStatus.kind === 'checking'
-                ? 'Checking…'
-                : linkCheckStatus.kind === 'done'
-                  ? `${linkCheckStatus.ok} ok, ${linkCheckStatus.broken} broken`
-                  : linkCheckStatus.kind === 'error'
-                    ? 'Error'
-                    : workspaceEntityCounts.cards === 0
-                      ? 'No cards'
-                      : `${workspaceEntityCounts.cards} card${workspaceEntityCounts.cards === 1 ? '' : 's'}`}
-            </span>
-          </div>
-          <p className={`${styles.fieldHint} ${styles.dataTransportHint}`}>
-            Checks every link card in the current workspace by sending a HEAD
-            request. Cards whose server does not respond within 5 seconds are
-            marked with a yellow warning badge. Results are transient and
-            cleared when the browser tab is closed.
-          </p>
-          <div
-            className={`${styles.dataActions} ${styles.dataTransportActions}`}
+            <input
+              ref={importFileInputRef}
+              accept=".zip,.linkhub.zip,application/zip"
+              className={panelStyles.hiddenInput}
+              data-testid="canvas-import-input"
+              type="file"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0]
+
+                event.currentTarget.value = ''
+
+                if (!file) {
+                  return
+                }
+
+                void handleImportCanvasFile(file)
+              }}
+            />
+            <button
+              className={panelStyles.button}
+              data-testid="import-canvas-bundle"
+              disabled={isBusy}
+              onClick={() => importFileInputRef.current?.click()}
+              type="button"
+            >
+              Import canvas bundle
+            </button>
+          </SettingRow>
+        </PanelSection>
+
+        <PanelSection meta={linkCheckMeta} title="Maintenance">
+          <SettingRow
+            hint="Sends a HEAD request to every link card. Cards that don't answer within 5 seconds get a yellow badge until the tab is closed."
+            label="Check Links"
           >
             <button
-              className={`${styles.dataPrimaryButton} ${styles.dataTransportPrimaryButton}`}
+              className={panelStyles.button}
               data-testid="check-links"
               disabled={
                 linkCheckStatus.kind === 'checking' ||
@@ -177,331 +362,13 @@ export function OptionsDataSection({
                 ? `Checking ${linkCheckStatus.current}/${linkCheckStatus.total}…`
                 : 'Check Links'}
             </button>
-          </div>
-        </section>
-
-        <section className={`${styles.dataCard} ${styles.dataTransportCard}`}>
-          <div
-            className={`${styles.sectionHeader} ${styles.dataTransportHeader}`}
-          >
-            <h4 className={styles.sectionTitle}>Import canvas bundle</h4>
-            <span className={styles.sectionMeta}>New or replace</span>
-          </div>
-          <p className={`${styles.fieldHint} ${styles.dataTransportHint}`}>
-            Imports a previously exported ZIP bundle and lets you either create
-            a new workspace from it or replace the current canvas while
-            restoring bundled images into the local image library and merging
-            bundled templates and custom themes back into the local libraries.
-          </p>
-          <input
-            ref={importFileInputRef}
-            accept=".zip,.linkhub.zip,application/zip"
-            className={styles.hiddenInput}
-            data-testid="canvas-import-input"
-            type="file"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0]
-
-              event.currentTarget.value = ''
-
-              if (!file) {
-                return
-              }
-
-              void handleImportCanvasFile(file)
-            }}
-          />
-          <div
-            className={`${styles.dataActions} ${styles.dataTransportActions}`}
-          >
-            <button
-              className={`${styles.dataPrimaryButton} ${styles.dataTransportPrimaryButton}`}
-              data-testid="import-canvas-bundle"
-              disabled={dataStatus.kind === 'busy'}
-              onClick={() => importFileInputRef.current?.click()}
-              type="button"
-            >
-              Import canvas bundle
-            </button>
-          </div>
-          <p className={`${styles.dataWarning} ${styles.dataTransportWarning}`}>
-            Replacing overwrites only the current workspace. Importing as a new
-            workspace keeps the current workspace unchanged. Existing app-wide
-            gallery images, templates, and themes that are not part of the
-            imported bundle are kept in both modes.
-          </p>
-        </section>
-
-        <section
-          className={styles.dataCard}
-          data-testid="workspace-management-panel"
-        >
-          <div className={styles.sectionHeader}>
-            <h4 className={styles.sectionTitle}>Manage workspaces</h4>
-            <span className={styles.sectionMeta}>
-              {workspaceSummaries.length} workspace
-              {workspaceSummaries.length === 1 ? '' : 's'}
-            </span>
-          </div>
-          {interactionMode === 'edit' ? (
-            <>
-              <p className={styles.fieldHint}>
-                Rename workspaces, remove unused ones, or move them earlier and
-                later in the rail.
-              </p>
-              <div
-                className={styles.templateList}
-                data-testid="workspace-management-list"
-              >
-                {workspaceSummaries.map((workspaceSummary, index) => {
-                  const isEditing =
-                    workspaceEditor?.workspaceId === workspaceSummary.id
-                  const isCurrentWorkspace =
-                    workspaceSummary.id === activeWorkspaceId
-
-                  return (
-                    <article
-                      key={workspaceSummary.id}
-                      className={styles.templateListItem}
-                      data-testid={`workspace-management-row-${workspaceSummary.id}`}
-                    >
-                      <div className={styles.templateContent}>
-                        {isEditing ? (
-                          <>
-                            <div className={styles.templateHeader}>
-                              <div className={styles.field}>
-                                <span className={styles.fieldLabel}>
-                                  Workspace name
-                                </span>
-                                <input
-                                  autoFocus
-                                  data-testid="workspace-editor-name"
-                                  type="text"
-                                  value={workspaceEditor.name}
-                                  onChange={(event) => {
-                                    onUpdateWorkspaceEditorName(
-                                      event.currentTarget.value,
-                                    )
-                                  }}
-                                  onKeyDown={(event) => {
-                                    if (event.key === 'Enter') {
-                                      event.preventDefault()
-                                      onSubmitWorkspaceEditor()
-                                    }
-
-                                    if (event.key === 'Escape') {
-                                      event.preventDefault()
-                                      onCancelWorkspaceEditor()
-                                    }
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className={styles.dataActions}>
-                              <button
-                                className={styles.dataPrimaryButton}
-                                data-testid="workspace-editor-save"
-                                disabled={workspaceStatus.kind === 'busy'}
-                                onClick={onSubmitWorkspaceEditor}
-                                type="button"
-                              >
-                                Save workspace
-                              </button>
-                              <button
-                                data-testid="workspace-editor-cancel"
-                                disabled={workspaceStatus.kind === 'busy'}
-                                onClick={onCancelWorkspaceEditor}
-                                type="button"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className={styles.templateHeader}>
-                              <div className={styles.templateText}>
-                                <strong className={styles.sectionTitle}>
-                                  {workspaceSummary.name}
-                                </strong>
-                                <p className={styles.templateMeta}>
-                                  {isCurrentWorkspace
-                                    ? 'Current workspace'
-                                    : 'Workspace'}
-                                  {' • '}Position {index + 1} of{' '}
-                                  {workspaceSummaries.length}
-                                </p>
-                              </div>
-                            </div>
-                            <div className={styles.templateActions}>
-                              <button
-                                aria-label="Move left"
-                                className={styles.templateActionButton}
-                                data-testid={`workspace-move-left-${workspaceSummary.id}`}
-                                disabled={
-                                  index === 0 || workspaceStatus.kind === 'busy'
-                                }
-                                onClick={() =>
-                                  onMoveWorkspace(workspaceSummary.id, -1)
-                                }
-                                title="Move workspace earlier"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M14.28 6.47a.75.75 0 0 1 .06 1.06L10.47 12l3.87 4.47a.75.75 0 0 1-1.14.98l-4.29-4.96a.75.75 0 0 1 0-.98l4.31-4.98a.75.75 0 0 1 1.06-.06Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Move right"
-                                className={styles.templateActionButton}
-                                data-testid={`workspace-move-right-${workspaceSummary.id}`}
-                                disabled={
-                                  index === workspaceSummaries.length - 1 ||
-                                  workspaceStatus.kind === 'busy'
-                                }
-                                onClick={() =>
-                                  onMoveWorkspace(workspaceSummary.id, 1)
-                                }
-                                title="Move workspace later"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M9.72 6.47a.75.75 0 0 0-.06 1.06L13.53 12l-3.87 4.47a.75.75 0 1 0 1.14.98l4.29-4.96a.75.75 0 0 0 0-.98L10.78 6.53a.75.75 0 0 0-1.06-.06Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Edit"
-                                className={styles.templateActionButton}
-                                data-testid={`workspace-edit-${workspaceSummary.id}`}
-                                disabled={workspaceStatus.kind === 'busy'}
-                                onClick={() =>
-                                  onStartWorkspaceEdit(workspaceSummary)
-                                }
-                                title="Edit workspace name"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    focusable="false"
-                                    className={styles.templateActionSvg}
-                                  >
-                                    <path
-                                      d="M4 17.25V20h2.75L16.1 10.65l-2.75-2.75L4 17.25Zm10.98-10.92 1.94 1.94 1.06-1.06a1.5 1.5 0 0 0 0-2.12l-.82-.82a1.5 1.5 0 0 0-2.12 0l-1.06 1.06Z"
-                                      fill="currentColor"
-                                    />
-                                  </svg>
-                                </span>
-                              </button>
-                              <button
-                                aria-label="Delete"
-                                className={`${styles.templateActionButton} ${styles.templateActionButtonDanger}`}
-                                data-testid={`workspace-delete-${workspaceSummary.id}`}
-                                disabled={
-                                  workspaceSummaries.length === 1 ||
-                                  workspaceStatus.kind === 'busy'
-                                }
-                                onClick={() =>
-                                  onDeleteWorkspace(workspaceSummary)
-                                }
-                                title="Delete workspace"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className={styles.templateActionIcon}
-                                >
-                                  <DeleteIcon
-                                    className={styles.templateActionSvg}
-                                  />
-                                </span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-              {workspaceStatus.message ? (
-                <section
-                  className={`${styles.dataStatus} ${
-                    workspaceStatus.kind === 'error'
-                      ? styles.dataStatusError
-                      : workspaceStatus.kind === 'success'
-                        ? styles.dataStatusSuccess
-                        : workspaceStatus.kind === 'busy'
-                          ? styles.dataStatusBusy
-                          : ''
-                  }`}
-                  data-testid="workspace-status"
-                >
-                  {workspaceStatus.message}
-                </section>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <p className={styles.fieldHint}>
-                Workspace management is available in edit mode only.
-              </p>
-              <div className={styles.dataActions}>
-                <button
-                  className={styles.dataPrimaryButton}
-                  data-testid="workspace-enable-edit-mode"
-                  onClick={onRequestEditMode}
-                  type="button"
-                >
-                  Switch to edit mode
-                </button>
-              </div>
-            </>
-          )}
-        </section>
+          </SettingRow>
+        </PanelSection>
 
         {dataStatus.message ? (
-          <section
-            className={`${styles.dataStatus} ${
-              dataStatus.kind === 'error'
-                ? styles.dataStatusError
-                : dataStatus.kind === 'success'
-                  ? styles.dataStatusSuccess
-                  : dataStatus.kind === 'busy'
-                    ? styles.dataStatusBusy
-                    : ''
-            }`}
-            data-testid="data-status"
-          >
+          <StatusMessage kind={dataStatus.kind} testId="data-status">
             {dataStatus.message}
-          </section>
+          </StatusMessage>
         ) : null}
       </div>
     </div>

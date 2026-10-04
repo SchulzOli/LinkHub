@@ -1,5 +1,9 @@
 import { useWorkspaceStore } from '../../state/useWorkspaceStore'
-import { getGroupPlacementFrames, getVisibleCards } from '../groups/groupLayout'
+import {
+  getGroupPlacementFrames,
+  getVisibleCards,
+  getVisiblePictures,
+} from '../groups/groupLayout'
 import type { PlaceableItem } from './placementTypes'
 
 /**
@@ -15,5 +19,12 @@ export function getPlaceableItemsSnapshot(): PlaceableItem[] {
   const visibleCards = getVisibleCards(workspace.cards, workspace.groups)
   const groupFrames = getGroupPlacementFrames(workspace.groups)
 
-  return [...visibleCards, ...workspace.pictures, ...groupFrames]
+  // Hidden nodes of collapsed groups must not block placement.
+  const visiblePictures = getVisiblePictures(
+    workspace.pictures,
+    workspace.groups,
+    workspace.placementGuide.gridSize,
+  )
+
+  return [...visibleCards, ...visiblePictures, ...groupFrames]
 }

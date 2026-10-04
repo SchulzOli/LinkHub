@@ -1,6 +1,7 @@
 import styles from '../OptionsMenu.module.css'
 
 import { LinkHubMark } from '../../ui/LinkHubMark'
+import { CloseIcon } from '../TaskbarIcons'
 import type { MenuTab } from './optionsMenuTabs'
 import { OPTIONS_MENU_TABS } from './optionsMenuTabs'
 
@@ -44,18 +45,7 @@ export function OptionsMenuHeader({
           onClick={onRequestClose}
           type="button"
         >
-          <span aria-hidden="true" className={styles.closeIcon}>
-            <svg
-              viewBox="0 0 24 24"
-              focusable="false"
-              className={styles.closeSvg}
-            >
-              <path
-                d="M6.7 5.3 12 10.6l5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3 1.4-1.4Z"
-                fill="currentColor"
-              />
-            </svg>
-          </span>
+          <CloseIcon className={styles.closeIcon} />
         </button>
       </div>
       <div
@@ -71,7 +61,7 @@ export function OptionsMenuHeader({
             <button
               aria-controls={`${menuId}-${tab.id}`}
               aria-selected={selected}
-              className={selected ? styles.tabActive : styles.tab}
+              className={styles.tab}
               id={`${tabListId}-${tab.id}`}
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}

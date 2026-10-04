@@ -1,16 +1,17 @@
 .galleryGrid {
   display: grid;
-  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 0.6rem;
 }
 
 .themeCard {
+  position: relative;
   display: grid;
-  gap: 0.35rem;
-  padding: 0.75rem 0.875rem;
+  min-width: 0;
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
-  background: var(--panel-bg);
-  cursor: pointer;
+  background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
+  overflow: hidden;
   transition:
     border-color var(--motion-fast) var(--ease-standard),
     box-shadow var(--motion-fast) var(--ease-standard);
@@ -20,215 +21,213 @@
   border-color: color-mix(in srgb, var(--panel-border) 40%, var(--text-muted));
 }
 
-.themeCardActive {
-  composes: themeCard;
+.themeCard[data-active='true'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-.themeHeader {
+.themeApply {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0 0 0.7rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.themeApply:hover,
+.themeApply:active {
+  border: 0;
+  background: transparent;
+}
+
+.themeApply:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.themeInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.15rem 4.5rem 0 0.75rem;
+}
+
+.themeName {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.themeDescription {
+  display: -webkit-box;
+  padding-inline: 0.75rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.themeActions {
+  position: absolute;
+  top: 5.45rem;
+  right: 0.35rem;
+  display: flex;
+  gap: 0.1rem;
+}
+
+/* ── Preview ─────────────────────────────────────────────── */
+
+.preview {
+  position: relative;
+  display: block;
+  height: 5.25rem;
+  border-bottom: 1px solid var(--p-panel-border);
+  background-color: var(--p-canvas);
+  background-image: radial-gradient(var(--p-grid) 1px, transparent 1.2px);
+  background-size: 10px 10px;
+}
+
+.previewCard,
+.previewCardSmall {
+  position: absolute;
+  border: 1px solid var(--p-card-border);
+  border-radius: 6px;
+  background: var(--p-card);
+}
+
+.previewCard {
+  top: 0.8rem;
+  left: 0.8rem;
+  display: grid;
+  align-content: center;
+  gap: 0.3rem;
+  width: 4.5rem;
+  height: 2.6rem;
+  padding: 0 0.5rem;
+}
+
+.previewCardSmall {
+  top: 0.8rem;
+  left: 6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.previewLine,
+.previewLineMuted {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.previewLine {
+  width: 80%;
+  background: var(--p-text);
+}
+
+.previewLineMuted {
+  width: 55%;
+  background: var(--p-muted);
+}
+
+.previewBar {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.55rem;
+  left: 0.8rem;
+  display: flex;
+  align-items: center;
+  height: 0.9rem;
+  padding-inline: 0.35rem;
+  border: 1px solid var(--p-panel-border);
+  border-radius: 999px;
+  background: var(--p-panel);
+}
+
+.previewAccent {
+  display: block;
+  width: 1.5rem;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--p-accent);
+}
+
+/* ── Token editor ────────────────────────────────────────── */
+
+.tokenEditor {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.75rem 0.85rem 0.85rem;
+}
+
+.tokenToolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.themeName {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.themeBadge {
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  background: var(--button-hover-bg);
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.themeDescription {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-
-.swatchRow {
-  display: flex;
-  gap: 0.3rem;
-  margin-top: 0.2rem;
-}
-
-.swatch {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-}
-
-.themeActions {
-  display: flex;
-  gap: 0.35rem;
-  margin-top: 0.15rem;
-}
-
-.themeActionButton {
-  padding: 0.25rem 0.55rem;
-  font-size: 0.7rem;
-  border-radius: var(--radius-sm);
-}
-
-.galleryActions {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.galleryActionButton {
-  padding: 0.4rem 0.7rem;
-  font-size: 0.78rem;
-}
-
-.galleryHiddenInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-}
-
-.statusMessage {
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-
-.statusError {
-  composes: statusMessage;
-  color: #e05555;
-}
-
-.statusSuccess {
-  composes: statusMessage;
-  color: var(--accent);
-}
-
-/* ── Token Editor ───────────────────────────────── */
-
-.tokenSection {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--panel-border) 50%, transparent);
-}
-
-.tokenSectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-}
-
-.tokenSectionTitle {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.tokenSectionChevron {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-  transition: transform 160ms ease;
-}
-
-.tokenSectionChevronOpen {
-  composes: tokenSectionChevron;
-  transform: rotate(90deg);
-}
-
-.tokenGroupList {
-  display: grid;
-  gap: 0.55rem;
-  margin-top: 0.55rem;
-}
-
 .tokenGroup {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .tokenGroupLabel {
-  font-size: 0.68rem;
-  font-weight: 600;
   color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .tokenRow {
   display: grid;
-  grid-template-columns: 1fr 1.8rem auto;
-  gap: 0.35rem;
+  grid-template-columns: minmax(0, 1fr) 1.75rem 8.5rem;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .tokenLabel {
-  font-size: 0.72rem;
-  color: var(--text-primary);
   overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.78rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tokenColorInput {
-  width: 1.8rem;
-  height: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   border: 1px solid var(--input-border);
-  border-radius: 0.25rem;
-  cursor: pointer;
+  border-radius: 999px;
   background: none;
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .tokenColorInput::-webkit-color-swatch-wrapper {
-  padding: 1px;
+  padding: 0;
 }
 
 .tokenColorInput::-webkit-color-swatch {
   border: none;
-  border-radius: 0.15rem;
+  border-radius: 999px;
 }
 
 .tokenTextInput {
   width: 100%;
   min-width: 0;
-  padding: 0.25rem 0.4rem;
-  font-size: 0.7rem;
-  font-family: monospace;
-}
-
-.tokenModeToggle {
-  display: flex;
-  gap: 0.3rem;
-  margin-bottom: 0.35rem;
-}
-
-.tokenModeButton {
-  padding: 0.25rem 0.55rem;
-  font-size: 0.7rem;
-  border-radius: var(--radius-sm);
-}
-
-.tokenModeButtonActive {
-  composes: tokenModeButton;
-  border-color: var(--accent);
-  background: var(--button-active-bg);
-}
-
-.tokenResetRow {
-  display: flex;
-  gap: 0.35rem;
-  margin-top: 0.35rem;
+  padding: 0.3rem 0.5rem;
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.72rem;
 }

@@ -417,3 +417,33 @@ test('updates preset-based card colors and favicon treatment after a theme switc
         'drop-shadow(0 1px 1px rgba(255, 255, 255, 0.22)) saturate(0.98)',
     })
 })
+
+test('a group with a stored preset hex follows the light/dark switch', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.evaluate(async () => {
+    window.localStorage.clear()
+    await window.indexedDB.deleteDatabase('linkhub')
+  })
+  await page.reload()
+  await page.getByRole('button', { name: 'Add group' }).click()
+  await openGroupEditor(page)
+  // Custom colour equal to dark fill preset 2: stored as hex, not as index.
+  await page.getByRole('button', { name: 'Fill color editor' }).click()
+  await page.getByLabel('Fill color custom color').fill('#25233a')
+  await dismissVisibleEditPanels(page)
+
+  const group = page.getByTestId(/card-group-/).first()
+  const background = () =>
+    group.evaluate((element) => getComputedStyle(element).backgroundColor)
+
+  await expect.poll(background).toBe('rgb(37, 35, 58)')
+
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await selectMenuOption(page, 'Color mode', 'Light')
+  await page.keyboard.press('Escape')
+
+  // Light fill preset 2 of the default theme.
+  await expect.poll(background).toBe('rgb(243, 242, 255)')
+})

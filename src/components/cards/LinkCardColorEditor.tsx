@@ -1,7 +1,6 @@
-import styles from './LinkCard.module.css'
-
 import { getActiveThemeCardColorSettings } from '../../features/appearance/cardColorPalette'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
+import panelStyles from '../ui/panel/Panel.module.css'
 
 type LinkCardColorEditorProps = {
   activeColorSettings: ReturnType<typeof getActiveThemeCardColorSettings>
@@ -35,33 +34,37 @@ export function LinkCardColorEditor({
   onSelectFillPreset,
 }: LinkCardColorEditorProps) {
   return (
-    <div className={styles.editColorSection}>
-      <ColorPresetPicker
-        allowCustomColor
-        colors={activeColorSettings.fillPresets}
-        hint="Use one of your five saved fill presets or pick a free color for this card."
-        kind="fill"
-        label="Fill color"
-        onCustomColorChange={onCustomFillColorChange}
-        onResetPresets={onResetFillPresets}
-        onSavePresets={onSaveFillPresets}
-        onSelectPreset={onSelectFillPreset}
-        selectedColor={selectedFillColor}
-        selectedIndex={fillPresetIndexDraft ?? undefined}
-      />
-      <ColorPresetPicker
-        allowCustomColor
-        colors={activeColorSettings.borderPresets}
-        hint="Use one of your five saved border presets or pick a free color for this card."
-        kind="border"
-        label="Border color"
-        onCustomColorChange={onCustomBorderColorChange}
-        onResetPresets={onResetBorderPresets}
-        onSavePresets={onSaveBorderPresets}
-        onSelectPreset={onSelectBorderPreset}
-        selectedColor={selectedBorderColor}
-        selectedIndex={borderPresetIndexDraft ?? undefined}
-      />
-    </div>
+    <>
+      <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+        <ColorPresetPicker
+          allowCustomColor
+          colors={activeColorSettings.fillPresets}
+          hint="Pick a saved preset or a free color."
+          kind="fill"
+          label="Fill color"
+          onCustomColorChange={onCustomFillColorChange}
+          onResetPresets={onResetFillPresets}
+          onSavePresets={onSaveFillPresets}
+          onSelectPreset={onSelectFillPreset}
+          selectedColor={selectedFillColor}
+          selectedIndex={fillPresetIndexDraft ?? undefined}
+        />
+      </div>
+      <div className={`${panelStyles.row} ${panelStyles.rowStacked}`}>
+        <ColorPresetPicker
+          allowCustomColor
+          colors={activeColorSettings.borderPresets}
+          hint="Pick a saved preset or a free color."
+          kind="border"
+          label="Border color"
+          onCustomColorChange={onCustomBorderColorChange}
+          onResetPresets={onResetBorderPresets}
+          onSavePresets={onSaveBorderPresets}
+          onSelectPreset={onSelectBorderPreset}
+          selectedColor={selectedBorderColor}
+          selectedIndex={borderPresetIndexDraft ?? undefined}
+        />
+      </div>
+    </>
   )
 }

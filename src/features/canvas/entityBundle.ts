@@ -209,6 +209,9 @@ export function duplicateCanvasEntityBundle(input: {
     input.bundle.groups.map((group) => [group.id, createId()]),
   )
   const offset = input.offset ?? { x: 0, y: 0 }
+  const pictureIdMap = new Map(
+    input.bundle.pictures.map((picture) => [picture.id, createId()]),
+  )
 
   return {
     cards: input.bundle.cards.map((card) => ({
@@ -232,6 +235,15 @@ export function duplicateCanvasEntityBundle(input: {
       parentGroupId: group.parentGroupId
         ? (groupIdMap.get(group.parentGroupId) ?? group.parentGroupId)
         : undefined,
+      ...(group.collapsedPictureIds
+        ? {
+            collapsedPictureIds: group.collapsedPictureIds.flatMap((id) => {
+              const nextId = pictureIdMap.get(id)
+
+              return nextId ? [nextId] : []
+            }),
+          }
+        : {}),
       positionX: group.positionX + offset.x,
       positionY: group.positionY + offset.y,
       createdAt: now,
@@ -239,7 +251,7 @@ export function duplicateCanvasEntityBundle(input: {
     })),
     pictures: input.bundle.pictures.map((picture) => ({
       ...picture,
-      id: createId(),
+      id: pictureIdMap.get(picture.id) ?? createId(),
       ...(picture.type === 'picture'
         ? {
             imageId: input.imageIdMap?.get(picture.imageId) ?? picture.imageId,

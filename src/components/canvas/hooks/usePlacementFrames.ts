@@ -7,6 +7,7 @@ import type { PlacementGuide } from '../../../contracts/placementGuide'
 import {
   getGroupPlacementFrames,
   getVisibleCards,
+  getVisiblePictures,
   isGroupPlacementBlockedByVisibleGroup,
   isPlacementBlockedByOccupiedItem,
 } from '../../../features/groups/groupLayout'
@@ -46,9 +47,19 @@ export function usePlacementFrames({
     () => getVisibleCards(workspaceCards, workspaceGroups),
     [workspaceCards, workspaceGroups],
   )
+  // Nodes hidden in collapsed groups must not block placement.
+  const visiblePictures = useMemo(
+    () =>
+      getVisiblePictures(
+        workspacePictures,
+        workspaceGroups,
+        placementGuide.gridSize,
+      ),
+    [placementGuide.gridSize, workspaceGroups, workspacePictures],
+  )
   const visiblePlaceableNodes = useMemo(
-    () => [...visibleCards, ...workspacePictures],
-    [visibleCards, workspacePictures],
+    () => [...visibleCards, ...visiblePictures],
+    [visibleCards, visiblePictures],
   )
   const groupPlacementFrames = useMemo(
     () => getGroupPlacementFrames(workspaceGroups),

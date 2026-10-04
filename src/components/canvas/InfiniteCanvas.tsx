@@ -27,6 +27,7 @@ import { getCardPixelDimensions } from '../../features/appearance/themeTokens'
 import {
   getVisibleCards,
   getVisibleGroups,
+  getVisiblePictures,
 } from '../../features/groups/groupLayout'
 import {
   getVisibleCanvasBounds,
@@ -103,7 +104,12 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
     [cards, groups],
   )
   const visibleGroups = useMemo(() => getVisibleGroups(groups), [groups])
-  const visiblePictures = pictures
+  // Charts, feeds and images inside a collapsed group are hidden like its
+  // cards (they have no groupId, membership follows their bounds).
+  const visiblePictures = useMemo(
+    () => getVisiblePictures(pictures, groups, placementGuide.gridSize),
+    [groups, pictures, placementGuide.gridSize],
+  )
 
   const selectedCardIdSet = useMemo(
     () => new Set(selectedCardIds),

@@ -15,32 +15,15 @@ import {
   createPlaceholderDataUrl,
   getFaviconPlaceholderLetter,
 } from '../../features/favicon/faviconCache'
-import { type ResizeDirection } from '../../features/placement/useResizePlacement'
+import type { ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
-import { DeleteIcon } from '../ui/DeleteIcon'
+import {
+  NodeActionBar,
+  NodeActionButton,
+  NodeResizeHandles,
+} from '../nodes/NodeChrome'
+import { NODE_CHROME_HOST } from '../nodes/nodeClasses'
 import type { LinkCardViewModel } from './useLinkCardViewModel'
-
-const RESIZE_HANDLES: ResizeDirection[] = [
-  'n',
-  's',
-  'e',
-  'w',
-  'ne',
-  'nw',
-  'se',
-  'sw',
-]
-
-const resizeHandleClassNameByDirection: Record<ResizeDirection, string> = {
-  n: styles.resizeHandleN,
-  s: styles.resizeHandleS,
-  e: styles.resizeHandleE,
-  w: styles.resizeHandleW,
-  ne: styles.resizeHandleNE,
-  nw: styles.resizeHandleNW,
-  se: styles.resizeHandleSE,
-  sw: styles.resizeHandleSW,
-}
 
 type LinkCardViewProps = {
   articleRef: RefObject<HTMLElement | null>
@@ -202,8 +185,8 @@ export const LinkCardView = memo(function LinkCardView({
       ref={articleRef}
       className={
         isEditMode
-          ? `${styles.card} ${styles.cardEdit} ${isSelected ? styles.cardSelected : ''}`
-          : `${styles.card} ${styles.cardView}`
+          ? `${styles.card} ${NODE_CHROME_HOST} ${styles.cardEdit} ${isSelected ? styles.cardSelected : ''}`
+          : `${styles.card} ${NODE_CHROME_HOST} ${styles.cardView}`
       }
       data-circular-shape={String(viewModel.isCircularShape)}
       data-card-image-layout={viewModel.cardImageLayout}
@@ -226,53 +209,21 @@ export const LinkCardView = memo(function LinkCardView({
     >
       {isEditMode ? (
         <>
-          {RESIZE_HANDLES.map((direction) => (
-            <button
-              aria-label={`Resize ${direction}`}
-              className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
-              data-role="resize-handle"
-              key={direction}
-              onPointerDown={createResizePointerDown(direction)}
-              tabIndex={-1}
-              type="button"
-            />
-          ))}
+          <NodeResizeHandles
+            label={(direction) => `Resize ${direction}`}
+            onPointerDown={createResizePointerDown}
+          />
           <div className={linkClassName} data-layout={viewModel.cardLayout}>
             {content}
           </div>
-          <div className={styles.actionBar} data-role="action-bar">
-            <button
-              aria-label="Update"
-              className={styles.actionButton}
-              title="Update"
-              type="button"
+          <NodeActionBar>
+            <NodeActionButton
+              kind="edit"
+              label="Update"
               onClick={onOpenEditor}
-            >
-              <span aria-hidden="true" className={styles.actionIcon}>
-                <svg
-                  viewBox="0 0 24 24"
-                  focusable="false"
-                  className={styles.actionSvg}
-                >
-                  <path
-                    d="M5 19.02h3.75L19.81 7.96l-3.75-3.75L5 15.27v3.75Zm2.92-1.5H6.5V16.1l9.56-9.56 1.42 1.42-9.56 9.56ZM20.71 7.06a1 1 0 0 0 0-1.41l-2.36-2.36a1 1 0 1 0-1.41 1.41l2.36 2.36a1 1 0 0 0 1.41 0Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-            </button>
-            <button
-              aria-label="Delete"
-              className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-              title="Delete"
-              type="button"
-              onClick={onDelete}
-            >
-              <span aria-hidden="true" className={styles.actionIcon}>
-                <DeleteIcon className={styles.actionSvg} />
-              </span>
-            </button>
-          </div>
+            />
+            <NodeActionButton kind="delete" label="Delete" onClick={onDelete} />
+          </NodeActionBar>
         </>
       ) : (
         <a

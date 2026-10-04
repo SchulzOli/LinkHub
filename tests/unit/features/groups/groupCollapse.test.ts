@@ -8,7 +8,10 @@ import {
 import type { LinkCard } from '../../../../src/contracts/linkCard'
 import type { PictureNode } from '../../../../src/contracts/pictureNode'
 import { createDefaultWorkspace } from '../../../../src/contracts/workspace'
-import { isPlacementBlockedByOccupiedItem } from '../../../../src/features/groups/groupLayout'
+import {
+  getVisiblePictures,
+  isPlacementBlockedByOccupiedItem,
+} from '../../../../src/features/groups/groupLayout'
 import { useWorkspaceStore } from '../../../../src/state/useWorkspaceStore'
 
 function createCard(overrides: Partial<LinkCard> = {}): LinkCard {
@@ -546,5 +549,108 @@ describe('group collapse', () => {
         .getState()
         .workspace.cards.find((card) => card.id === childCard.id)?.groupId,
     ).toBe(childGroup.id)
+  })
+
+  it('hides pictures, charts and feeds inside collapsed groups', () => {
+    const gridSize = 24
+    const outer = createGroup({
+      id: 'outer',
+      size: { columns: 20, rows: 20 },
+    })
+    const inner = createGroup({
+      id: 'inner',
+      parentGroupId: 'outer',
+      positionX: 48,
+      positionY: 96,
+      size: { columns: 10, rows: 10 },
+    })
+    const inOuter = createPicture({
+      id: 'in-outer',
+      positionX: 300,
+      positionY: 72,
+      size: { columns: 3, rows: 3 },
+    })
+    const inInner = createPicture({
+      id: 'in-inner',
+      positionX: 72,
+      positionY: 144,
+      size: { columns: 3, rows: 3 },
+    })
+    const outside = createPicture({ id: 'outside', positionX: 1000 })
+    const pictures = [inOuter, inInner, outside]
+    const ids = (groups: CardGroup[]) =>
+      getVisiblePictures(pictures, groups, gridSize).map((node) => node.id)
+
+    expect(ids([outer, inner])).toEqual(['in-outer', 'in-inner', 'outside'])
+    // Collapsed inner group: only its own members disappear.
+    expect(ids([outer, { ...inner, collapsed: true }])).toEqual([
+      'in-outer',
+      'outside',
+    ])
+    // Collapsed outer group: everything below it disappears, also nested.
+    expect(ids([{ ...outer, collapsed: true }, inner])).toEqual(['outside'])
+  })
+
+  it('drops hidden pictures, charts and feeds from the selection on collapse', () => {
+    const group = createGroup({ size: { columns: 10, rows: 10 } })
+    const inside = createPicture({ id: 'inside', positionX: 24, positionY: 48 })
+    const outside = createPicture({ id: 'outside', positionX: 600 })
+    const workspace = createDefaultWorkspace()
+
+    useWorkspaceStore.getState().hydrateWorkspace({
+      ...workspace,
+      groups: [group],
+      pictures: [inside, outside],
+    })
+    useWorkspaceStore.setState({ selectedPictureIds: ['inside', 'outside'] })
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    expect(useWorkspaceStore.getState().selectedPictureIds).toEqual(['outside'])
+  })
+
+  it('keeps a standalone node below a collapsed group visible and selected', () => {
+    // 8-row group; picture 2 cells below its bottom. Collapsing reflows the
+    // picture upward into the group's expanded body area.
+    const grid = createDefaultWorkspace().placementGuide.gridSize
+    const group = createGroup({ size: { columns: 10, rows: 8 } })
+    const inside = createPicture({
+      id: 'inside',
+      positionX: grid,
+      positionY: grid * 2,
+    })
+    const below = createPicture({
+      id: 'below',
+      positionX: grid,
+      positionY: grid * 10,
+      size: { columns: 2, rows: 2 },
+    })
+
+    useWorkspaceStore.getState().hydrateWorkspace({
+      ...createDefaultWorkspace(),
+      groups: [group],
+      pictures: [inside, below],
+    })
+    useWorkspaceStore.setState({ selectedPictureIds: ['below'] })
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    const collapsed = useWorkspaceStore.getState().workspace
+    expect(
+      getVisiblePictures(collapsed.pictures, collapsed.groups, grid).map(
+        (picture) => picture.id,
+      ),
+    ).toEqual(['below'])
+    expect(useWorkspaceStore.getState().selectedPictureIds).toEqual(['below'])
+
+    useWorkspaceStore.getState().toggleGroupCollapsed(group.id)
+
+    const expanded = useWorkspaceStore.getState().workspace
+    expect(
+      expanded.pictures.find((picture) => picture.id === 'below')?.positionY,
+    ).toBe(grid * 10)
+    expect(
+      expanded.pictures.find((picture) => picture.id === 'inside')?.positionY,
+    ).toBe(grid * 2)
   })
 })

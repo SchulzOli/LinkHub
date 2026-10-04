@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
+import panelStyles from '../ui/panel/Panel.module.css'
 
 import menuStyles from './OptionsMenu.module.css'
 import styles from './ThemeGallery.module.css'
@@ -25,6 +32,14 @@ import {
   listThemes,
   putTheme,
 } from '../../storage/themeRepository'
+import { DeleteIcon } from '../ui/DeleteIcon'
+import {
+  ChevronDownIcon,
+  IconButton,
+  PanelSection,
+  StatusMessage,
+} from '../ui/panel/Panel'
+import { DownloadIcon } from '../ui/panel/PanelIcons'
 
 type ThemeGalleryProps = {
   appearance: AppearanceProfile
@@ -52,18 +67,6 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
   anchor.download = fileName
   anchor.click()
   window.setTimeout(() => URL.revokeObjectURL(url), 0)
-}
-
-// ── Swatch preview colors ──────────────────────────────
-
-function getSwatchColors(tokens: AppearanceStyleTokens) {
-  return [
-    tokens.bgCanvas,
-    tokens.cardBg,
-    tokens.accent,
-    tokens.panelBorder,
-    tokens.textPrimary,
-  ]
 }
 
 // ── Token editor groups ────────────────────────────────
@@ -233,6 +236,8 @@ export function ThemeGallery({
 
   const activeTokens = appearance.styleTokens[tokenMode]
 
+  const statusKind = status.kind === 'idle' ? null : status.kind
+
   return (
     <div
       aria-labelledby={`${tabListId}-themes`}
@@ -240,213 +245,214 @@ export function ThemeGallery({
       id={`${menuId}-themes`}
       role="tabpanel"
     >
-      {/* ── Gallery actions ────────────────────────────── */}
-      <div className={styles.galleryActions}>
-        <button
-          className={styles.galleryActionButton}
-          onClick={() => void handleSaveAsCurrent()}
-          type="button"
-        >
-          Save current as theme
-        </button>
-        <button
-          className={styles.galleryActionButton}
-          onClick={() => importInputRef.current?.click()}
-          type="button"
-        >
-          Import theme
-        </button>
-        <input
-          accept=".json,.linkhub-theme.json"
-          className={styles.galleryHiddenInput}
-          onChange={(event) => void handleImport(event)}
-          ref={importInputRef}
-          type="file"
-        />
-      </div>
-
-      {status.kind !== 'idle' ? (
-        <p
-          className={
-            status.kind === 'error' ? styles.statusError : styles.statusSuccess
+      <div className={panelStyles.stack}>
+        <PanelSection
+          actions={
+            <>
+              <button
+                aria-label="Save current as theme"
+                className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
+                onClick={() => void handleSaveAsCurrent()}
+                type="button"
+              >
+                Save current
+              </button>
+              <button
+                aria-label="Import theme"
+                className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
+                onClick={() => importInputRef.current?.click()}
+                type="button"
+              >
+                Import
+              </button>
+              <input
+                accept=".json,.linkhub-theme.json"
+                className={panelStyles.hiddenInput}
+                onChange={(event) => void handleImport(event)}
+                ref={importInputRef}
+                type="file"
+              />
+            </>
           }
+          grouped={false}
+          meta={`${allThemes.length}`}
+          title="Themes"
         >
-          {status.message}
-        </p>
-      ) : null}
+          <div className={styles.galleryGrid}>
+            {allThemes.map((theme) => {
+              const isActive = appearance.activeThemeId === theme.id
+              const isBuiltin = isBuiltinThemeId(theme.id)
+              const tokens = theme.content.tokens[appearance.themeMode]
 
-      {/* ── Theme cards grid ───────────────────────────── */}
-      <div className={styles.galleryGrid}>
-        {allThemes.map((theme) => {
-          const isActive = appearance.activeThemeId === theme.id
-          const isBuiltin = isBuiltinThemeId(theme.id)
-          const previewTokens = theme.content.tokens[appearance.themeMode]
-
-          return (
-            <div
-              aria-label={`Apply ${theme.name} theme`}
-              aria-pressed={isActive}
-              className={isActive ? styles.themeCardActive : styles.themeCard}
-              key={theme.id}
-              onClick={() => handleApply(theme)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleApply(theme)
-                }
-              }}
-            >
-              <div className={styles.themeHeader}>
-                <h4 className={styles.themeName}>
-                  {theme.name}
-                  {isActive ? ' ✓' : ''}
-                </h4>
-                {isBuiltin ? (
-                  <span className={styles.themeBadge}>Built-in</span>
-                ) : null}
-              </div>
-              {theme.description ? (
-                <p className={styles.themeDescription}>{theme.description}</p>
-              ) : null}
-              <div className={styles.swatchRow}>
-                {getSwatchColors(previewTokens).map((color, index) => (
-                  <div
-                    className={styles.swatch}
-                    key={index}
-                    style={{ background: color }}
-                  />
-                ))}
-              </div>
-              {!isBuiltin ? (
-                <div className={styles.themeActions}>
+              return (
+                <article
+                  className={styles.themeCard}
+                  data-active={isActive}
+                  key={theme.id}
+                >
                   <button
-                    className={styles.themeActionButton}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleExport(theme)
-                    }}
+                    aria-label={`Apply ${theme.name} theme`}
+                    aria-pressed={isActive}
+                    className={styles.themeApply}
+                    onClick={() => handleApply(theme)}
                     type="button"
                   >
-                    Export
+                    <ThemePreview tokens={tokens} />
+                    <span className={styles.themeInfo}>
+                      <span className={styles.themeName}>{theme.name}</span>
+                      {isActive ? (
+                        <span
+                          className={`${panelStyles.chip} ${panelStyles.chipAccent}`}
+                        >
+                          Active
+                        </span>
+                      ) : isBuiltin ? null : (
+                        <span className={panelStyles.chip}>Custom</span>
+                      )}
+                    </span>
+                    {theme.description ? (
+                      <span className={styles.themeDescription}>
+                        {theme.description}
+                      </span>
+                    ) : null}
                   </button>
-                  <button
-                    className={styles.themeActionButton}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      void handleDelete(theme)
-                    }}
-                    type="button"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          )
-        })}
-      </div>
+                  {!isBuiltin ? (
+                    <div className={styles.themeActions}>
+                      <IconButton
+                        label={`Export ${theme.name}`}
+                        title="Export"
+                        onClick={() => handleExport(theme)}
+                      >
+                        <DownloadIcon className={panelStyles.icon} />
+                      </IconButton>
+                      <IconButton
+                        label={`Delete ${theme.name}`}
+                        title="Delete"
+                        tone="danger"
+                        onClick={() => void handleDelete(theme)}
+                      >
+                        <DeleteIcon className={panelStyles.icon} />
+                      </IconButton>
+                    </div>
+                  ) : null}
+                </article>
+              )
+            })}
+          </div>
+        </PanelSection>
 
-      {/* ── Token Editor ───────────────────────────────── */}
-      <div className={styles.tokenSection}>
-        <div
-          className={styles.tokenSectionHeader}
-          onClick={() => setTokenEditorOpen(!tokenEditorOpen)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              setTokenEditorOpen(!tokenEditorOpen)
-            }
-          }}
-        >
-          <h4 className={styles.tokenSectionTitle}>Customize tokens</h4>
-          <span
-            className={
-              tokenEditorOpen
-                ? styles.tokenSectionChevronOpen
-                : styles.tokenSectionChevron
-            }
+        {statusKind ? (
+          <StatusMessage kind={statusKind}>{status.message}</StatusMessage>
+        ) : null}
+
+        <PanelSection title="Customize">
+          <button
+            aria-expanded={tokenEditorOpen}
+            className={panelStyles.disclosure}
+            onClick={() => setTokenEditorOpen(!tokenEditorOpen)}
+            type="button"
           >
-            ▶
-          </span>
-        </div>
-
-        {tokenEditorOpen ? (
-          <div className={styles.tokenGroupList}>
-            <div className={styles.tokenModeToggle}>
-              <button
-                className={
-                  tokenMode === 'light'
-                    ? styles.tokenModeButtonActive
-                    : styles.tokenModeButton
-                }
-                onClick={() => setTokenMode('light')}
-                type="button"
-              >
-                Light
-              </button>
-              <button
-                className={
-                  tokenMode === 'dark'
-                    ? styles.tokenModeButtonActive
-                    : styles.tokenModeButton
-                }
-                onClick={() => setTokenMode('dark')}
-                type="button"
-              >
-                Dark
-              </button>
-            </div>
-
-            {TOKEN_GROUPS.map((group) => (
-              <div className={styles.tokenGroup} key={group.label}>
-                <span className={styles.tokenGroupLabel}>{group.label}</span>
-                {group.tokens.map((token) => (
-                  <div className={styles.tokenRow} key={token.key}>
-                    <span className={styles.tokenLabel}>{token.label}</span>
-                    {token.kind === 'color' ? (
+            <span>Edit colors and radii of the active theme</span>
+            <ChevronDownIcon className={panelStyles.disclosureChevron} />
+          </button>
+          {tokenEditorOpen ? (
+            <div className={styles.tokenEditor}>
+              <div className={styles.tokenToolbar}>
+                <div
+                  className={panelStyles.segmented}
+                  role="group"
+                  aria-label="Token mode"
+                >
+                  {(['light', 'dark'] as const).map((mode) => (
+                    <button
+                      aria-pressed={tokenMode === mode}
+                      className={panelStyles.segment}
+                      key={mode}
+                      onClick={() => setTokenMode(mode)}
+                      type="button"
+                    >
+                      {mode === 'light' ? 'Light' : 'Dark'}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
+                  onClick={resetStyleTokens}
+                  type="button"
+                >
+                  Reset to preset defaults
+                </button>
+              </div>
+              {TOKEN_GROUPS.map((group) => (
+                <div className={styles.tokenGroup} key={group.label}>
+                  <span className={styles.tokenGroupLabel}>{group.label}</span>
+                  {group.tokens.map((token) => (
+                    <label className={styles.tokenRow} key={token.key}>
+                      <span className={styles.tokenLabel}>{token.label}</span>
+                      {token.kind === 'color' ? (
+                        <input
+                          aria-label={`${group.label} ${token.label} color`}
+                          className={styles.tokenColorInput}
+                          type="color"
+                          value={
+                            activeTokens[token.key].startsWith('#')
+                              ? activeTokens[token.key].slice(0, 7)
+                              : '#888888'
+                          }
+                          onChange={(e) =>
+                            setStyleToken(tokenMode, token.key, e.target.value)
+                          }
+                        />
+                      ) : (
+                        <span />
+                      )}
                       <input
-                        className={styles.tokenColorInput}
-                        type="color"
-                        value={
-                          activeTokens[token.key].startsWith('#')
-                            ? activeTokens[token.key].slice(0, 7)
-                            : '#888888'
-                        }
+                        className={styles.tokenTextInput}
+                        value={activeTokens[token.key]}
                         onChange={(e) =>
                           setStyleToken(tokenMode, token.key, e.target.value)
                         }
                       />
-                    ) : (
-                      <span />
-                    )}
-                    <input
-                      className={styles.tokenTextInput}
-                      value={activeTokens[token.key]}
-                      onChange={(e) =>
-                        setStyleToken(tokenMode, token.key, e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            <div className={styles.tokenResetRow}>
-              <button
-                className={styles.themeActionButton}
-                onClick={resetStyleTokens}
-                type="button"
-              >
-                Reset to preset defaults
-              </button>
+                    </label>
+                  ))}
+                </div>
+              ))}
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </PanelSection>
       </div>
     </div>
+  )
+}
+
+/** A miniature canvas: background, a card, a panel strip and the accent. */
+function ThemePreview({ tokens }: { tokens: AppearanceStyleTokens }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={styles.preview}
+      style={
+        {
+          '--p-canvas': tokens.bgCanvas,
+          '--p-grid': tokens.gridColor,
+          '--p-card': tokens.cardBg,
+          '--p-card-border': tokens.cardBorder,
+          '--p-panel': tokens.panelBg,
+          '--p-panel-border': tokens.panelBorder,
+          '--p-text': tokens.textPrimary,
+          '--p-muted': tokens.textMuted,
+          '--p-accent': tokens.accent,
+        } as CSSProperties
+      }
+    >
+      <span className={styles.previewCard}>
+        <span className={styles.previewLine} />
+        <span className={styles.previewLineMuted} />
+      </span>
+      <span className={styles.previewCardSmall} />
+      <span className={styles.previewBar}>
+        <span className={styles.previewAccent} />
+      </span>
+    </span>
   )
 }

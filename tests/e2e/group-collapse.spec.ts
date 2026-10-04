@@ -207,3 +207,40 @@ test('collapsing a parent group hides nested child groups and restores them on e
   await expect(nestedChildGroup).toBeVisible()
   await expect(parentGroup).toBeVisible()
 })
+
+test('collapsing a group hides chart and feed nodes inside it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.getByRole('button', { name: 'Add group' }).click()
+  await openGroupEditor(page)
+  await page.getByLabel(/Edit group width for/).fill('30')
+  await page.getByLabel(/Edit group height for/).fill('22')
+  await dismissVisibleEditPanels(page)
+
+  const group = page.getByTestId(/card-group-/).first()
+  const groupBody = page.getByTestId(/card-group-body-/).first()
+  const toggle = page.getByTestId(/group-collapse-toggle-/).first()
+
+  await page.getByRole('button', { name: 'Add chart' }).click()
+  const chart = page.getByTestId(/chart-node-/).first()
+  const body = await groupBody.boundingBox()
+
+  if (!body) {
+    throw new Error('missing group body geometry')
+  }
+
+  await moveElementToPoint(page, chart.locator('header'), {
+    x: body.x + 220,
+    y: body.y + 40,
+  })
+  await page.mouse.click(10, 10)
+
+  await toggle.click()
+  await expect(group).toHaveAttribute('data-collapsed', 'true')
+  await expect(chart).toHaveCount(0)
+
+  await toggle.click()
+  await expect(group).toHaveAttribute('data-collapsed', 'false')
+  await expect(chart).toBeVisible()
+})

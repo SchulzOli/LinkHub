@@ -133,17 +133,22 @@ export function useCanvasClipboard({
         const groupIdMap = new Map(
           payload.groups.map((group) => [group.id, createId()]),
         )
-        const candidateGroups = payload.groups.map((group) => ({
-          ...group,
-          id: groupIdMap.get(group.id) ?? createId(),
-          parentGroupId: group.parentGroupId
-            ? (groupIdMap.get(group.parentGroupId) ?? group.parentGroupId)
-            : undefined,
-          positionX: group.positionX + offset,
-          positionY: group.positionY + offset,
-          createdAt: now,
-          updatedAt: now,
-        }))
+        // Pictures are not copied, so the recorded collapsed members are
+        // dropped; the copy falls back to bounds.
+        const candidateGroups = payload.groups.map(
+          (group): CardGroup => ({
+            ...group,
+            collapsedPictureIds: undefined,
+            id: groupIdMap.get(group.id) ?? createId(),
+            parentGroupId: group.parentGroupId
+              ? (groupIdMap.get(group.parentGroupId) ?? group.parentGroupId)
+              : undefined,
+            positionX: group.positionX + offset,
+            positionY: group.positionY + offset,
+            createdAt: now,
+            updatedAt: now,
+          }),
+        )
         const candidateCards = payload.cards.map((card) => ({
           ...card,
           id: createId(),

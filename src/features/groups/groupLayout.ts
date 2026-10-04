@@ -178,6 +178,47 @@ export function getVisibleCards(cards: LinkCard[], groups: CardGroup[]) {
   })
 }
 
+/**
+ * Groups whose members are hidden: collapsed groups and every group below a
+ * collapsed one.
+ */
+function getHiddenBodyGroups(groups: CardGroup[]) {
+  const groupsById = getGroupsById(groups)
+
+  return groups.filter(
+    (group) =>
+      group.collapsed === true ||
+      hasCollapsedGroupInChain(group.parentGroupId, groupsById),
+  )
+}
+
+/**
+ * Pictures, charts and feeds have no `groupId`; membership follows their
+ * bounds. A node inside the expanded body of a collapsed group (or of a
+ * group nested in one) is hidden, like the cards of that group.
+ */
+export function getVisiblePictures(
+  pictures: PictureNode[],
+  groups: CardGroup[],
+  gridSize: number,
+) {
+  const hiddenBodies = getHiddenBodyGroups(groups)
+
+  if (pictures.length === 0 || hiddenBodies.length === 0) {
+    return pictures
+  }
+
+  const hiddenIds = new Set(
+    getPictureIdsWithinGroupBodies(pictures, hiddenBodies, gridSize, {
+      useExpandedBody: true,
+    }),
+  )
+
+  return hiddenIds.size === 0
+    ? pictures
+    : pictures.filter((picture) => !hiddenIds.has(picture.id))
+}
+
 export function getGroupPlacementFrames(groups: CardGroup[]) {
   return getVisibleGroups(groups).map((group) => ({
     ...group,
@@ -209,17 +250,31 @@ export function getPictureIdsWithinGroupBodies(
   }
 
   const useExpandedBody = options?.useExpandedBody === true
+  // A collapsed group knows its members; its body area may hold nodes that
+  // the collapse reflow moved up from below.
+  const recordedIds = new Set(
+    groups.flatMap((group) =>
+      group.collapsed && group.collapsedPictureIds
+        ? group.collapsedPictureIds
+        : [],
+    ),
+  )
+  const boundsGroups = groups.filter(
+    (group) => !(group.collapsed && group.collapsedPictureIds),
+  )
 
   return pictures
-    .filter((picture) =>
-      groups.some((group) =>
-        isWithinGroupBodyBounds(
-          getEntityPixelBounds(picture, gridSize),
-          group,
-          gridSize,
-          useExpandedBody,
+    .filter(
+      (picture) =>
+        recordedIds.has(picture.id) ||
+        boundsGroups.some((group) =>
+          isWithinGroupBodyBounds(
+            getEntityPixelBounds(picture, gridSize),
+            group,
+            gridSize,
+            useExpandedBody,
+          ),
         ),
-      ),
     )
     .map((picture) => picture.id)
 }
@@ -261,15 +316,35 @@ export function applyGroupCollapseLayout(input: {
   }
 
   const now = new Date().toISOString()
-  const nextGroups = groups.map((group) =>
-    group.id === groupId
-      ? {
-          ...group,
-          collapsed: nextCollapsed,
-          updatedAt: now,
-        }
-      : group,
+  // Members are read before the reflow moves anything.
+  const memberPictureIds = getPictureIdsWithinGroupBodies(
+    pictures,
+    [
+      targetGroup,
+      ...groups.filter((group) =>
+        getGroupDescendantIds(groups, groupId).includes(group.id),
+      ),
+    ],
+    gridSize,
+    { useExpandedBody: true },
   )
+  const nextGroups = groups.map((group) => {
+    if (group.id !== groupId) {
+      return group
+    }
+
+    const rest = { ...group }
+
+    delete rest.collapsedPictureIds
+
+    return {
+      ...rest,
+      collapsed: nextCollapsed,
+      ...(collapsed ? { collapsedPictureIds: memberPictureIds } : {}),
+      updatedAt: now,
+    }
+  })
+  const memberPictureIdSet = new Set(memberPictureIds)
   const nextTargetGroup = nextGroups.find((group) => group.id === groupId)
 
   if (!nextTargetGroup) {
@@ -316,16 +391,18 @@ export function applyGroupCollapseLayout(input: {
   const candidateCards = getVisibleCards(cards, groups).filter(
     (card) => !card.groupId && !childCardIdSet.has(card.id),
   )
+  const groupMemberPictureIds = new Set(
+    getPictureIdsWithinGroupBodies(
+      pictures,
+      groups.filter((group) => group.id !== groupId),
+      gridSize,
+      { useExpandedBody: true },
+    ),
+  )
   const candidatePictures = pictures.filter(
     (picture) =>
-      !groups.some((group) =>
-        isWithinGroupBodyBounds(
-          getEntityPixelBounds(picture, gridSize),
-          group,
-          gridSize,
-          true,
-        ),
-      ),
+      !memberPictureIdSet.has(picture.id) &&
+      !groupMemberPictureIds.has(picture.id),
   )
 
   for (const group of candidateGroups) {

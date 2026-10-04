@@ -300,6 +300,12 @@ export const CardGroupSchema = z.object({
   size: GroupSizeSchema,
   parentGroupId: z.string().min(1).optional(),
   collapsed: z.boolean().optional(),
+  /**
+   * Pictures, charts and feeds that were inside the body when the group was
+   * collapsed. They have no groupId, and the collapse reflow can move other
+   * nodes into the body area, so bounds alone can't tell members apart.
+   */
+  collapsedPictureIds: z.array(z.string().min(1)).optional(),
   cornerRadius: CardCornerRadiusSchema.optional(),
   showTitle: z.boolean().optional(),
   fillPresetIndex: CardColorPresetIndexSchema.optional(),
@@ -331,6 +337,7 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
     size?: unknown
     parentGroupId?: unknown
     collapsed?: unknown
+    collapsedPictureIds?: unknown
     cornerRadius?: unknown
     showTitle?: unknown
     fillPresetIndex?: unknown
@@ -367,6 +374,14 @@ export function coerceCardGroup(value: unknown): CardGroup | null {
         ? candidate.parentGroupId
         : undefined,
     collapsed: candidate.collapsed === true ? true : undefined,
+    ...(candidate.collapsed === true &&
+    Array.isArray(candidate.collapsedPictureIds)
+      ? {
+          collapsedPictureIds: candidate.collapsedPictureIds.filter(
+            (id): id is string => typeof id === 'string' && id.length > 0,
+          ),
+        }
+      : {}),
     cornerRadius:
       typeof candidate.cornerRadius === 'number'
         ? clampCardCornerRadius(candidate.cornerRadius)

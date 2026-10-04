@@ -1,0 +1,51 @@
+.workspaceList {
+  display: grid;
+}
+
+.workspaceRow {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.5rem 0.55rem 0.85rem;
+}
+
+.workspaceRow + .workspaceRow {
+  border-top: 1px solid var(--panel-border);
+}
+
+.workspaceRow[data-current='true'] {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+/* Editing: name input + actions fill the row. */
+.workspaceRow:has(.workspaceNameInput) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.workspaceIndex {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--button-hover-bg);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.workspaceRow[data-current='true'] .workspaceIndex {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.workspaceNameInput {
+  width: 100%;
+  min-width: 0;
+}
+
+.chips {
+  margin-top: 0.4rem;
+}

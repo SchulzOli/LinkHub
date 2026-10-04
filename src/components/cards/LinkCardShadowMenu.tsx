@@ -1,4 +1,5 @@
-import styles from './LinkCard.module.css'
+import editPanelStyles from '../ui/panel/EditPanel.module.css'
+import { SettingRow } from '../ui/panel/Panel'
 
 import type { SurfaceShadowStyle } from '../../contracts/surfaceEffects'
 import {
@@ -19,11 +20,10 @@ export function LinkCardShadowMenu({
   onChange,
 }: LinkCardShadowMenuProps) {
   return (
-    <label className={styles.editField}>
-      <span className={styles.editLabel}>Shadow</span>
+    <SettingRow label="Shadow">
       <SelectMenu
         ariaLabel={`Edit shadow for ${cardId}`}
-        className={styles.editSelect}
+        className={editPanelStyles.select}
         options={SURFACE_SHADOW_STYLE_OPTIONS.map((value) => ({
           value,
           label: SURFACE_SHADOW_STYLE_LABELS[value],
@@ -33,6 +33,6 @@ export function LinkCardShadowMenu({
           onChange(nextValue as SurfaceShadowStyle)
         }}
       />
-    </label>
+    </SettingRow>
   )
 }

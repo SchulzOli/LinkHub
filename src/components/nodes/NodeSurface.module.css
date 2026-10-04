@@ -1,0 +1,51 @@
+/*
+ * Shell of free-floating content nodes: pictures, charts and feeds.
+ * Link cards and groups keep their own shells (colour presets,
+ * transparency, collapse) but match these values.
+ */
+.surface {
+  position: absolute;
+  contain: layout style;
+  will-change: transform;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--panel-shadow);
+  color: var(--text-primary);
+  overflow: visible;
+  user-select: none;
+  touch-action: none;
+  z-index: 0;
+  transform-origin: top left;
+  transition:
+    border-color var(--motion-base) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.surface[data-mode='edit'] {
+  cursor: grab;
+}
+
+.surface[data-mode='edit']:active {
+  cursor: grabbing;
+}
+
+/* Same raise as link cards while interacting. */
+.surface[data-mode='edit']:hover,
+.surface[data-mode='edit']:focus-within,
+.surface[data-selected='true'] {
+  z-index: 24;
+}
+
+.surface[data-selected='true'] {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+    var(--panel-shadow);
+}
+
+/* View mode: same quiet accent edge as link cards on hover. */
+.surface[data-mode='view']:hover,
+.surface[data-mode='view']:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--card-border));
+}

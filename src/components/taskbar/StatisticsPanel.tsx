@@ -1,6 +1,9 @@
 import { useState } from 'react'
+import panelStyles from '../ui/panel/Panel.module.css'
 
-import styles from './OptionsMenu.module.css'
+import styles from './StatisticsPanel.module.css'
+
+import { PanelSection, Stat, StatGrid } from '../ui/panel/Panel'
 
 import {
   STATISTICS_PERIOD_SHORT_LABELS,
@@ -133,9 +136,9 @@ function TimelineChart(props: {
   return (
     <section className={styles.timelineCard} data-testid={props.testId}>
       <div className={styles.timelineHeader}>
-        <h4 className={styles.timelineTitle}>{props.title}</h4>
+        <h5 className={styles.timelineTitle}>{props.title}</h5>
         <span
-          className={styles.timelineMeta}
+          className={panelStyles.sectionMeta}
           data-testid={`${props.testId}-meta`}
         >
           {props.meta}
@@ -175,6 +178,20 @@ function TimelineChart(props: {
   )
 }
 
+function StorageMeter({ ratio }: { ratio: number }) {
+  const clamped = Math.min(Math.max(ratio, 0), 1)
+
+  return (
+    <span aria-hidden="true" className={styles.meter}>
+      <span
+        className={styles.meterFill}
+        data-level={clamped > 0.85 ? 'high' : clamped > 0.6 ? 'mid' : 'low'}
+        style={{ width: `${Math.max(clamped * 100, clamped > 0 ? 2 : 0)}%` }}
+      />
+    </span>
+  )
+}
+
 export function StatisticsPanel({
   cardCount,
   statistics,
@@ -203,375 +220,315 @@ export function StatisticsPanel({
     ? storageSnapshot.localStorageSnapshotBytes /
       storageSnapshot.localStoragePracticalLimitBytes
     : 0
+  const originUsageRatio =
+    storageSnapshot?.originUsageBytes != null &&
+    storageSnapshot.originQuotaBytes
+      ? storageSnapshot.originUsageBytes / storageSnapshot.originQuotaBytes
+      : null
 
   return (
-    <div className={styles.statisticsGrid} data-testid="statistics-panel">
-      <div className={styles.summaryGrid}>
-        <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Cards</span>
-          <strong
-            className={styles.summaryValue}
-            data-testid="statistics-card-count"
+    <div
+      className={`${panelStyles.stack} ${styles.statistics}`}
+      data-testid="statistics-panel"
+    >
+      <PanelSection grouped={false} title="Overview">
+        <StatGrid columns={4}>
+          <Stat
+            label="Cards"
+            value={formatCount(cardCount)}
+            valueTestId="statistics-card-count"
+          />
+          <Stat
+            label="Groups"
+            value={formatCount(statistics.groupCount)}
+            valueTestId="statistics-group-count"
+          />
+          <Stat
+            label="Link opens"
+            value={formatCount(statistics.linkOpens.total)}
+            valueTestId="statistics-link-opens-total"
+          />
+          <Stat
+            label="Canvas opens"
+            value={formatCount(statistics.canvasOpens.total)}
+            valueTestId="statistics-canvas-opens-total"
+          />
+        </StatGrid>
+      </PanelSection>
+
+      <PanelSection
+        actions={
+          <div
+            aria-label="Timeline range"
+            className={panelStyles.segmented}
+            role="group"
           >
-            {formatCount(cardCount)}
-          </strong>
-        </div>
-        <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Groups</span>
-          <strong
-            className={styles.summaryValue}
-            data-testid="statistics-group-count"
-          >
-            {formatCount(statistics.groupCount)}
-          </strong>
-        </div>
-        <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Link opens</span>
-          <strong
-            className={styles.summaryValue}
-            data-testid="statistics-link-opens-total"
-          >
-            {formatCount(statistics.linkOpens.total)}
-          </strong>
-        </div>
-        <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>Canvas opens</span>
-          <strong
-            className={styles.summaryValue}
-            data-testid="statistics-canvas-opens-total"
-          >
-            {formatCount(statistics.canvasOpens.total)}
-          </strong>
-        </div>
-      </div>
+            {STATISTICS_TIMELINE_RANGES.map((range) => (
+              <button
+                aria-pressed={selectedTimelineRange === range}
+                className={panelStyles.segment}
+                data-testid={`statistics-timeline-range-${range}`}
+                key={range}
+                onClick={() => setSelectedTimelineRange(range)}
+                type="button"
+              >
+                {STATISTICS_TIMELINE_RANGE_LABELS[range]}
+              </button>
+            ))}
+          </div>
+        }
+        title="Timeline"
+      >
+        <TimelineChart
+          barTestId="statistics-link-timeline-bar"
+          meta={`${selectedTimeline.description} · ${formatCount(selectedLinkTimelineTotal)} opens`}
+          metric="linkOpens"
+          points={selectedTimeline.points}
+          testId="statistics-link-timeline"
+          title="Link opens"
+        />
+        <TimelineChart
+          barTestId="statistics-canvas-timeline-bar"
+          meta={`${selectedTimeline.description} · ${formatCount(selectedCanvasTimelineTotal)} opens`}
+          metric="canvasOpens"
+          points={selectedTimeline.points}
+          testId="statistics-canvas-timeline"
+          title="Canvas opens"
+        />
+      </PanelSection>
+
+      <PanelSection
+        meta={`${formatCount(shownCardCount)} of ${formatCount(cardCount)} shown`}
+        title="Top 20 cards"
+      >
+        {statistics.cardRows.length === 0 ? (
+          <p className={panelStyles.empty}>No cards yet.</p>
+        ) : (
+          <div className={styles.cardTable}>
+            <div aria-hidden="true" className={styles.cardTableHead}>
+              <span>Card</span>
+              {STATISTICS_PERIODS.map((period) => (
+                <span key={period}>
+                  {STATISTICS_PERIOD_SHORT_LABELS[period]}
+                </span>
+              ))}
+            </div>
+            <div className={styles.cardList}>
+              {statistics.cardRows.map((row) => (
+                <article
+                  className={styles.cardRow}
+                  data-testid={`statistics-card-row-${row.cardId}`}
+                  key={row.cardId}
+                >
+                  <div className={styles.cardText}>
+                    <strong className={styles.cardTitle}>{row.title}</strong>
+                    {row.subtitle ? (
+                      <span className={styles.cardSubtitle}>
+                        {row.subtitle}
+                      </span>
+                    ) : null}
+                  </div>
+                  {STATISTICS_PERIODS.map((period) => (
+                    <strong
+                      aria-label={`${STATISTICS_PERIOD_SHORT_LABELS[period]}: ${formatCount(row.counts[period])}`}
+                      className={styles.cardMetricValue}
+                      data-empty={row.counts[period] === 0}
+                      data-testid={`statistics-card-value-${row.cardId}-${period}`}
+                      key={`${row.cardId}-${period}`}
+                    >
+                      {formatCount(row.counts[period])}
+                    </strong>
+                  ))}
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+      </PanelSection>
 
       <section
-        className={styles.storageSection}
+        className={panelStyles.stack}
         data-testid="statistics-storage-section"
       >
-        <div className={styles.sectionHeader}>
-          <h4 className={styles.sectionTitle}>Storage</h4>
-          <span className={styles.sectionMeta}>
-            Current board breakdown + live quota
-          </span>
-        </div>
-
         {storageSnapshot ? (
           <>
-            <section className={styles.storageCluster}>
-              <div className={styles.storageSubheader}>
-                <h5 className={styles.storageSubtitle}>Current board</h5>
-                <span className={styles.storageSubmeta}>
-                  {`${formatByteSize(storageSnapshot.currentBoardBytes)} total`}
-                </span>
-              </div>
-              <div className={styles.storageGrid}>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Groups</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-groups"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.groups.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.groups,
-                      'groups',
-                    )}
-                  </span>
-                </article>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Cards</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-cards"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.cards.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.cards,
-                      'cards',
-                    )}
-                  </span>
-                </article>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Pictures</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-pictures"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.pictures.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.pictures,
-                      'pictures',
-                    )}
-                  </span>
-                </article>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageTotalCard}`}
-                >
-                  <span className={styles.summaryLabel}>
-                    Current board total
-                  </span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-current-board"
-                  >
-                    {formatByteSize(storageSnapshot.currentBoardBytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    Groups + cards + pictures
-                  </span>
-                </article>
-              </div>
-            </section>
+            <PanelSection
+              meta={`${formatByteSize(storageSnapshot.currentBoardBytes)} total`}
+              title="Current board"
+            >
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.groups,
+                  'groups',
+                )}
+                label="Groups"
+                testId="statistics-storage-value-groups"
+                value={formatByteSize(storageSnapshot.buckets.groups.bytes)}
+              />
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.cards,
+                  'cards',
+                )}
+                label="Cards"
+                testId="statistics-storage-value-cards"
+                value={formatByteSize(storageSnapshot.buckets.cards.bytes)}
+              />
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.pictures,
+                  'pictures',
+                )}
+                label="Pictures"
+                testId="statistics-storage-value-pictures"
+                value={formatByteSize(storageSnapshot.buckets.pictures.bytes)}
+              />
+              <StorageRow
+                caption="Groups + cards + pictures"
+                emphasis
+                label="Current board total"
+                testId="statistics-storage-value-current-board"
+                value={formatByteSize(storageSnapshot.currentBoardBytes)}
+              />
+            </PanelSection>
 
-            <section className={styles.storageCluster}>
-              <div className={styles.storageSubheader}>
-                <h5 className={styles.storageSubtitle}>Local library</h5>
-                <span className={styles.storageSubmeta}>
-                  {`${formatByteSize(libraryBytes)} outside the active board`}
-                </span>
-              </div>
-              <div className={styles.storageLibraryGrid}>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Templates</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-templates"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.templates.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.templates,
-                      'templates',
-                    )}
-                  </span>
-                </article>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Gallery only</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-gallery"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.gallery.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.gallery,
-                      'gallery',
-                    )}
-                  </span>
-                </article>
-                <article
-                  className={`${styles.summaryCard} ${styles.storageBucketCard}`}
-                >
-                  <span className={styles.summaryLabel}>Themes</span>
-                  <strong
-                    className={styles.summaryValue}
-                    data-testid="statistics-storage-value-themes"
-                  >
-                    {formatByteSize(storageSnapshot.buckets.themes.bytes)}
-                  </strong>
-                  <span className={styles.summaryCaption}>
-                    {formatStorageBucketCaption(
-                      storageSnapshot.buckets.themes,
-                      'themes',
-                    )}
-                  </span>
-                </article>
-              </div>
-            </section>
+            <PanelSection
+              meta={`${formatByteSize(libraryBytes)} outside the active board`}
+              title="Local library"
+            >
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.templates,
+                  'templates',
+                )}
+                label="Templates"
+                testId="statistics-storage-value-templates"
+                value={formatByteSize(storageSnapshot.buckets.templates.bytes)}
+              />
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.gallery,
+                  'gallery',
+                )}
+                label="Gallery only"
+                testId="statistics-storage-value-gallery"
+                value={formatByteSize(storageSnapshot.buckets.gallery.bytes)}
+              />
+              <StorageRow
+                caption={formatStorageBucketCaption(
+                  storageSnapshot.buckets.themes,
+                  'themes',
+                )}
+                label="Themes"
+                testId="statistics-storage-value-themes"
+                value={formatByteSize(storageSnapshot.buckets.themes.bytes)}
+              />
+            </PanelSection>
 
-            <section className={styles.storageCluster}>
-              <div className={styles.storageSubheader}>
-                <h5 className={styles.storageSubtitle}>Capacity</h5>
-                <span className={styles.storageSubmeta}>
-                  Browser-managed quota + fallback snapshot
-                </span>
-              </div>
-              <div className={styles.storageDetailGrid}>
-                <article
-                  className={`${styles.timelineCard} ${styles.storageDetailCard}`}
-                >
-                  <span className={styles.summaryLabel}>
+            <PanelSection
+              meta="Browser-managed quota + fallback snapshot"
+              title="Capacity"
+            >
+              <div className={styles.capacityRow}>
+                <div className={styles.capacityText}>
+                  <span className={panelStyles.rowLabel}>
                     localStorage snapshot
                   </span>
-                  <strong
-                    className={styles.storageValue}
-                    data-testid="statistics-storage-value-local-snapshot"
-                  >
-                    {formatByteSize(storageSnapshot.localStorageSnapshotBytes)}
-                  </strong>
                   <span
-                    className={styles.storageDetail}
+                    className={panelStyles.rowHint}
                     data-testid="statistics-storage-local-snapshot-detail"
                   >
                     {`${formatByteSize(storageSnapshot.localStorageSnapshotBytes)} of ${formatByteSize(storageSnapshot.localStoragePracticalLimitBytes)} (${PERCENT_FORMATTER.format(localStorageUsageRatio)})`}
                   </span>
-                </article>
-                <article
-                  className={`${styles.timelineCard} ${styles.storageDetailCard}`}
+                </div>
+                <strong
+                  className={styles.storageValue}
+                  data-testid="statistics-storage-value-local-snapshot"
                 >
-                  <span className={styles.summaryLabel}>Browser quota</span>
-                  <strong
-                    className={styles.storageValue}
-                    data-testid="statistics-storage-value-origin-usage"
-                  >
-                    {storageSnapshot.originUsageBytes === null
-                      ? 'Unavailable'
-                      : formatByteSize(storageSnapshot.originUsageBytes)}
-                  </strong>
+                  {formatByteSize(storageSnapshot.localStorageSnapshotBytes)}
+                </strong>
+                <StorageMeter ratio={localStorageUsageRatio} />
+              </div>
+              <div className={styles.capacityRow}>
+                <div className={styles.capacityText}>
+                  <span className={panelStyles.rowLabel}>Browser quota</span>
                   <span
-                    className={styles.storageDetail}
+                    className={panelStyles.rowHint}
                     data-testid="statistics-storage-origin-detail"
                   >
                     {formatOriginQuotaDetail(storageSnapshot)}
                   </span>
-                </article>
-              </div>
-
-              <p
-                className={styles.storageNote}
-                data-testid="statistics-storage-origin-copy"
-              >
-                Browser-dependent: localStorage keeps a small fallback copy of
-                the workspace, while IndexedDB quota comes from the browser and
-                device. Live usage can still sit above the buckets shown here
-                because the browser counts storage overhead in addition to the
-                tracked records.
-              </p>
-            </section>
-          </>
-        ) : storageStatus === 'error' ? (
-          <p
-            className={styles.emptyState}
-            data-testid="statistics-storage-error"
-          >
-            {storageMessage}
-          </p>
-        ) : (
-          <p
-            className={styles.emptyState}
-            data-testid="statistics-storage-loading"
-          >
-            Calculating storage…
-          </p>
-        )}
-      </section>
-
-      <section className={styles.timelineSection}>
-        <div className={styles.sectionHeader}>
-          <h4 className={styles.sectionTitle}>Timeline</h4>
-          <div
-            className={styles.timelineRangeList}
-            role="group"
-            aria-label="Timeline range"
-          >
-            {STATISTICS_TIMELINE_RANGES.map((range) => {
-              const selected = selectedTimelineRange === range
-
-              return (
-                <button
-                  aria-pressed={selected}
-                  className={
-                    selected
-                      ? styles.timelineRangeButtonActive
-                      : styles.timelineRangeButton
-                  }
-                  data-testid={`statistics-timeline-range-${range}`}
-                  key={range}
-                  onClick={() => setSelectedTimelineRange(range)}
-                  type="button"
+                </div>
+                <strong
+                  className={styles.storageValue}
+                  data-testid="statistics-storage-value-origin-usage"
                 >
-                  {STATISTICS_TIMELINE_RANGE_LABELS[range]}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className={styles.timelineGrid}>
-          <TimelineChart
-            barTestId="statistics-link-timeline-bar"
-            meta={`${selectedTimeline.description} · ${formatCount(selectedLinkTimelineTotal)} opens`}
-            metric="linkOpens"
-            points={selectedTimeline.points}
-            testId="statistics-link-timeline"
-            title="Link opens"
-          />
-          <TimelineChart
-            barTestId="statistics-canvas-timeline-bar"
-            meta={`${selectedTimeline.description} · ${formatCount(selectedCanvasTimelineTotal)} opens`}
-            metric="canvasOpens"
-            points={selectedTimeline.points}
-            testId="statistics-canvas-timeline"
-            title="Canvas opens"
-          />
-        </div>
-      </section>
-
-      <section className={styles.cardListSection}>
-        <div className={styles.sectionHeader}>
-          <h4 className={styles.sectionTitle}>Top 20 cards</h4>
-          <span className={styles.sectionMeta}>
-            {formatCount(shownCardCount)} of {formatCount(cardCount)} shown
-          </span>
-        </div>
-        {statistics.cardRows.length === 0 ? (
-          <p className={styles.emptyState}>No cards yet.</p>
+                  {storageSnapshot.originUsageBytes === null
+                    ? 'Unavailable'
+                    : formatByteSize(storageSnapshot.originUsageBytes)}
+                </strong>
+                {originUsageRatio !== null ? (
+                  <StorageMeter ratio={originUsageRatio} />
+                ) : null}
+              </div>
+            </PanelSection>
+            <p
+              className={panelStyles.sectionDescription}
+              data-testid="statistics-storage-origin-copy"
+            >
+              Browser-dependent: localStorage keeps a small fallback copy of the
+              workspace, while IndexedDB quota comes from the browser and
+              device. Live usage can still sit above the buckets shown here
+              because the browser counts storage overhead in addition to the
+              tracked records.
+            </p>
+          </>
         ) : (
-          <div className={styles.cardList}>
-            {statistics.cardRows.map((row) => (
-              <article
-                className={styles.cardRow}
-                data-testid={`statistics-card-row-${row.cardId}`}
-                key={row.cardId}
+          <PanelSection title="Storage">
+            {storageStatus === 'error' ? (
+              <p
+                className={panelStyles.empty}
+                data-testid="statistics-storage-error"
               >
-                <div className={styles.cardText}>
-                  <strong className={styles.cardTitle}>{row.title}</strong>
-                  {row.subtitle ? (
-                    <span className={styles.cardSubtitle}>{row.subtitle}</span>
-                  ) : null}
-                </div>
-                <div className={styles.cardMetrics}>
-                  {STATISTICS_PERIODS.map((period) => (
-                    <div
-                      className={styles.cardMetric}
-                      key={`${row.cardId}-${period}`}
-                    >
-                      <span className={styles.cardMetricLabel}>
-                        {STATISTICS_PERIOD_SHORT_LABELS[period]}
-                      </span>
-                      <strong
-                        className={styles.cardMetricValue}
-                        data-testid={`statistics-card-value-${row.cardId}-${period}`}
-                      >
-                        {formatCount(row.counts[period])}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
+                {storageMessage}
+              </p>
+            ) : (
+              <p
+                className={panelStyles.empty}
+                data-testid="statistics-storage-loading"
+              >
+                Calculating storage…
+              </p>
+            )}
+          </PanelSection>
         )}
       </section>
+    </div>
+  )
+}
+
+function StorageRow({
+  label,
+  caption,
+  value,
+  testId,
+  emphasis = false,
+}: {
+  label: string
+  caption: string
+  value: string
+  testId: string
+  emphasis?: boolean
+}) {
+  return (
+    <div className={styles.storageRow} data-emphasis={emphasis}>
+      <div className={styles.capacityText}>
+        <span className={panelStyles.rowLabel}>{label}</span>
+        <span className={panelStyles.rowHint}>{caption}</span>
+      </div>
+      <strong className={styles.storageValue} data-testid={testId}>
+        {value}
+      </strong>
     </div>
   )
 }
