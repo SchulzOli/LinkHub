@@ -17,6 +17,8 @@ import {
   type ChartSettingKey,
   type ChartSettings,
 } from '../../contracts/chartNode'
+import type { ChartSymbolSuggestion } from '../../features/charts/chartFeedProtocol'
+import { getAnchoredOverlayPosition } from '../../features/placement/overlayPlacement'
 
 import {
   CHART_SETTING_LABELS,
@@ -139,6 +141,40 @@ export function ChartSettingsFields(props: {
   )
 }
 
+/** Pickable listings, e.g. "7CD.F · CD Projekt · Frankfurt". */
+export function ChartSymbolSuggestions(props: {
+  suggestions: ChartSymbolSuggestion[]
+  onPick: (symbol: string) => void
+  testId?: string
+}) {
+  if (props.suggestions.length === 0) {
+    return null
+  }
+
+  return (
+    <ul className={styles.suggestions} data-testid={props.testId}>
+      {props.suggestions.map((suggestion) => (
+        <li key={suggestion.symbol}>
+          <button
+            className={styles.suggestion}
+            onClick={() => props.onPick(suggestion.symbol)}
+            onPointerDown={stopCanvasPointer}
+            title={`Use ${suggestion.symbol}`}
+            type="button"
+          >
+            <span className={styles.suggestionSymbol}>{suggestion.symbol}</span>
+            <span className={styles.suggestionMeta}>
+              {[suggestion.name, suggestion.exchange]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function ChartPopoverSection(props: {
   title: string
   children: ReactNode
@@ -170,27 +206,34 @@ export function ChartActionButton(props: {
   )
 }
 
-const POPOVER_GAP = 6
+const POPOVER_GAP = 12
 const VIEWPORT_PADDING = 8
 
 /**
  * Popover rendered into <body> so it is not scaled with the canvas and is
- * never clipped by the node. Closes on outside pointer-down and Escape.
+ * never clipped by the node. Placed like the card/group edit panels (below,
+ * above, else beside the anchor element). Closes on outside pointer-down
+ * and Escape.
  */
 export function ChartPopover(props: {
+  /** Element the popover belongs to (the chart node or group). */
   anchorRef: RefObject<HTMLElement | null>
+  /** Toggle button; clicks on it are not treated as "outside". */
+  triggerRef?: RefObject<HTMLElement | null>
   open: boolean
   onClose: () => void
   children: ReactNode
   label: string
   testId?: string
 }) {
-  const { anchorRef, open, onClose, children, label, testId } = props
+  const { anchorRef, triggerRef, open, onClose, children, label, testId } =
+    props
   const panelRef = useRef<HTMLDivElement | null>(null)
-  const [position, setPosition] = useState<{ left: number; top: number }>({
-    left: -9999,
-    top: -9999,
-  })
+  const [position, setPosition] = useState<{
+    left: number
+    top: number
+    maxHeight?: number
+  }>({ left: -9999, top: -9999 })
 
   useLayoutEffect(() => {
     if (!open) {
@@ -199,48 +242,36 @@ export function ChartPopover(props: {
 
     const update = () => {
       const anchor = anchorRef.current?.getBoundingClientRect()
-      const panel = panelRef.current?.getBoundingClientRect()
+      const panel = panelRef.current
 
       if (!anchor || !panel) {
         return
       }
 
-      const fitsBelow =
-        anchor.bottom + POPOVER_GAP + panel.height <=
-        window.innerHeight - VIEWPORT_PADDING
-      const fitsAbove =
-        anchor.top - POPOVER_GAP - panel.height >= VIEWPORT_PADDING
-
-      if (!fitsBelow && !fitsAbove) {
-        // Too tall for either side: open beside the anchor so the chart it
-        // controls stays visible.
-        const fitsRight =
-          anchor.right + POPOVER_GAP + panel.width <=
-          window.innerWidth - VIEWPORT_PADDING
-        const left = fitsRight
-          ? anchor.right + POPOVER_GAP
-          : Math.max(VIEWPORT_PADDING, anchor.left - POPOVER_GAP - panel.width)
-        const top = Math.min(
-          Math.max(VIEWPORT_PADDING, anchor.top),
-          Math.max(
-            VIEWPORT_PADDING,
-            window.innerHeight - panel.height - VIEWPORT_PADDING,
-          ),
-        )
-
-        setPosition({ left, top })
-        return
-      }
-
-      const top = fitsBelow
-        ? anchor.bottom + POPOVER_GAP
-        : anchor.top - POPOVER_GAP - panel.height
-      const left = Math.min(
-        Math.max(VIEWPORT_PADDING, anchor.right - panel.width),
-        window.innerWidth - panel.width - VIEWPORT_PADDING,
+      const taskbarRect = document
+        .querySelector<HTMLElement>('[data-testid="bottom-taskbar"]')
+        ?.getBoundingClientRect()
+      const bottomBoundary = Math.min(
+        window.innerHeight - VIEWPORT_PADDING,
+        (taskbarRect?.top ?? window.innerHeight) - VIEWPORT_PADDING,
       )
+      const { left, top, maxHeight } = getAnchoredOverlayPosition({
+        anchorGap: POPOVER_GAP,
+        anchorRect: {
+          left: anchor.left,
+          top: anchor.top,
+          bottom: anchor.bottom,
+          width: anchor.width,
+        },
+        bottomBoundary,
+        // Natural size, not the previously constrained one.
+        overlayRect: { width: panel.offsetWidth, height: panel.scrollHeight },
+        topBoundary: VIEWPORT_PADDING,
+        viewportPadding: VIEWPORT_PADDING,
+        viewportWidth: window.innerWidth,
+      })
 
-      setPosition({ left, top })
+      setPosition({ left, top, maxHeight })
     }
 
     update()
@@ -259,7 +290,7 @@ export function ChartPopover(props: {
 
       if (
         panelRef.current?.contains(target) ||
-        anchorRef.current?.contains(target)
+        (triggerRef ?? anchorRef).current?.contains(target)
       ) {
         return
       }
@@ -279,7 +310,7 @@ export function ChartPopover(props: {
       window.removeEventListener('pointerdown', handlePointerDown, true)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [anchorRef, onClose, open])
+  }, [anchorRef, onClose, open, triggerRef])
 
   if (!open) {
     return null
@@ -294,7 +325,11 @@ export function ChartPopover(props: {
       onWheel={(event) => event.stopPropagation()}
       ref={panelRef}
       role="dialog"
-      style={{ left: position.left, top: position.top }}
+      style={{
+        left: position.left,
+        top: position.top,
+        maxHeight: position.maxHeight,
+      }}
     >
       {children}
     </div>,

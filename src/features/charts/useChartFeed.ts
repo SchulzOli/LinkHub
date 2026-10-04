@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import type { ChartRange } from '../../contracts/chartNode'
 
 import { subscribeChartFeed, type ChartFeedStatus } from './chartFeedClient'
-import { appendTick, type ChartPoint } from './chartFeedProtocol'
+import {
+  appendTick,
+  type ChartPoint,
+  type ChartSymbolSuggestion,
+} from './chartFeedProtocol'
 
 export type ChartFeedState = {
   status: ChartFeedStatus
@@ -11,11 +15,18 @@ export type ChartFeedState = {
   currency?: string
   name?: string
   error?: string
+  /** Listings offered by the feed when the symbol is unknown. */
+  suggestions?: ChartSymbolSuggestion[]
   /** Time of the last snapshot/tick, for the "updated" hint. */
   updatedAt?: number
 }
 
-const INITIAL_STATE: ChartFeedState = { status: 'connecting', points: [] }
+type KeyedState = ChartFeedState & {
+  /** Source (url + symbol) the data belongs to. */
+  sourceKey?: string
+}
+
+const INITIAL_STATE: KeyedState = { status: 'connecting', points: [] }
 
 /**
  * Streams one chart series. Re-subscribes whenever the source, range, live
@@ -30,7 +41,8 @@ export function useChartFeed(input: {
   reloadToken: number
 }): ChartFeedState {
   const { url, symbol, range, live, reloadToken } = input
-  const [state, setState] = useState<ChartFeedState>(INITIAL_STATE)
+  const [state, setState] = useState<KeyedState>(INITIAL_STATE)
+  const sourceKey = `${url}|${symbol}`
 
   useEffect(() => {
     let active = true
@@ -59,10 +71,12 @@ export function useChartFeed(input: {
 
             setState((previous) => ({
               ...previous,
+              sourceKey,
               points: message.points,
               currency: message.currency ?? previous.currency,
               name: message.name ?? previous.name,
               error: undefined,
+              suggestions: undefined,
               updatedAt: Date.now(),
             }))
             return
@@ -73,15 +87,27 @@ export function useChartFeed(input: {
               return
             }
 
-            setState((previous) => ({
-              ...previous,
-              points: appendTick(previous.points, message.point),
-              updatedAt: Date.now(),
-            }))
+            setState((previous) =>
+              previous.sourceKey !== sourceKey
+                ? previous
+                : {
+                    ...previous,
+                    points: appendTick(previous.points, message.point),
+                    updatedAt: Date.now(),
+                  },
+            )
             return
           }
 
-          setState((previous) => ({ ...previous, error: message.message }))
+          setState((previous) => ({
+            ...previous,
+            // An error for a new source drops the previous source's data.
+            ...(previous.sourceKey !== sourceKey
+              ? { sourceKey, points: [], currency: undefined, name: undefined }
+              : {}),
+            error: message.message,
+            suggestions: message.suggestions,
+          }))
         },
       },
     )
@@ -90,7 +116,12 @@ export function useChartFeed(input: {
       active = false
       unsubscribe()
     }
-  }, [url, symbol, range, live, reloadToken])
+  }, [url, symbol, range, live, reloadToken, sourceKey])
+
+  // Until the new source answers, never show the previous source's series.
+  if (state.sourceKey !== undefined && state.sourceKey !== sourceKey) {
+    return { status: state.status, points: [] }
+  }
 
   return state
 }

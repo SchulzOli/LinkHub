@@ -91,15 +91,7 @@
   transition: background-color var(--motion-fast) var(--ease-standard);
 }
 
-/* Right-aligned header tools (chart controls). In edit mode they move left
-   of the group's action bar, which overlaps the top-right corner. */
-.groupEdit .headerTools {
-  right: calc(
-    var(--action-button-size, 2rem) * 2 + var(--action-bar-gap, 0.35rem) -
-      var(--action-bar-offset, 0.7rem) + 0.25rem
-  );
-}
-
+/* Right-aligned header tools (chart controls). */
 .headerTools {
   position: absolute;
   top: 50%;
@@ -281,8 +273,10 @@
 
 .actionBar {
   position: absolute;
-  top: calc(var(--action-bar-offset, 0.7rem) * -1);
-  right: calc(var(--action-bar-offset, 0.7rem) * -1);
+  /* Shared placement: just above the top-right edge (2px overlap keeps
+     hover continuous), so corner controls inside the node stay usable. */
+  top: calc(var(--action-button-size, 2rem) * -1 + 2px);
+  right: 0.25rem;
   display: flex;
   gap: var(--action-bar-gap, 0.35rem);
   opacity: 0;

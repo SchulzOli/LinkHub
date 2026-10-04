@@ -1,31 +1,4 @@
-import type { ReactNode } from 'react'
-
-/**
- * Taskbar icon set: one 24px grid, 1.75px round strokes, no fills, so all
- * dock actions read as a single family.
- */
-function StrokeIcon({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      focusable="false"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.75"
-    >
-      {children}
-    </svg>
-  )
-}
+import { StrokeIcon } from '../ui/StrokeIcon'
 
 type IconProps = { className?: string }
 

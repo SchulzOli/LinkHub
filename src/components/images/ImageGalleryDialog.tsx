@@ -5,6 +5,7 @@ import styles from './ImageGalleryDialog.module.css'
 import type { ImageAsset } from '../../contracts/imageAsset'
 import type { ImageUsageSummary } from '../../features/images/imageUsage'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
+import { DeleteIcon } from '../ui/DeleteIcon'
 import { DialogFrame } from '../ui/DialogFrame'
 import { EditIcon } from '../ui/EditIcon'
 
@@ -80,14 +81,7 @@ function SaveIcon(props: { className?: string }) {
 }
 
 function CloseIcon(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" focusable="false" className={props.className}>
-      <path
-        d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-        fill="currentColor"
-      />
-    </svg>
-  )
+  return <DeleteIcon className={props.className} />
 }
 
 function ImageGalleryTile(props: {

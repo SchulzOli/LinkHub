@@ -17,6 +17,7 @@ import {
 } from '../../features/favicon/faviconCache'
 import { type ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
+import { DeleteIcon } from '../ui/DeleteIcon'
 import type { LinkCardViewModel } from './useLinkCardViewModel'
 
 const RESIZE_HANDLES: ResizeDirection[] = [
@@ -268,16 +269,7 @@ export const LinkCardView = memo(function LinkCardView({
               onClick={onDelete}
             >
               <span aria-hidden="true" className={styles.actionIcon}>
-                <svg
-                  viewBox="0 0 24 24"
-                  focusable="false"
-                  className={styles.actionSvg}
-                >
-                  <path
-                    d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.4 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12l-3.9 3.9a1 1 0 0 1-1.4-1.42l3.88-3.88-3.9-3.9a1 1 0 0 1 0-1.4Z"
-                    fill="currentColor"
-                  />
-                </svg>
+                <DeleteIcon className={styles.actionSvg} />
               </span>
             </button>
           </div>

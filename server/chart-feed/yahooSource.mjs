@@ -4,6 +4,7 @@
  */
 
 const YAHOO_CHART_URL = 'https://query1.finance.yahoo.com/v8/finance/chart/'
+const YAHOO_SEARCH_URL = 'https://query2.finance.yahoo.com/v1/finance/search'
 const USER_AGENT = 'Mozilla/5.0 (LinkHub chart feed)'
 const DAY_SECONDS = 86400
 
@@ -107,4 +108,58 @@ export async function fetchSeries(symbol, range, fetchImpl = fetch) {
   }
 
   return parseYahooChart(payload)
+}
+
+const SEARCHABLE_TYPES = new Set([
+  'EQUITY',
+  'ETF',
+  'INDEX',
+  'MUTUALFUND',
+  'CURRENCY',
+  'CRYPTOCURRENCY',
+  'FUTURE',
+])
+
+/**
+ * Converts a Yahoo search payload into symbol suggestions. Local exchange
+ * codes like "7CD" need an exchange suffix on Yahoo ("7CD.F" = Frankfurt),
+ * which is exactly what these suggestions provide.
+ */
+export function parseYahooSearch(payload) {
+  const quotes = Array.isArray(payload?.quotes) ? payload.quotes : []
+
+  return quotes
+    .filter(
+      (quote) =>
+        typeof quote?.symbol === 'string' &&
+        SEARCHABLE_TYPES.has(quote.quoteType),
+    )
+    .map((quote) => ({
+      symbol: quote.symbol,
+      // Yahoo pads some names ("S.A.           I"); collapse whitespace.
+      name:
+        (quote.longname || quote.shortname || '').replace(/\s+/g, ' ').trim() ||
+        undefined,
+      exchange: quote.exchDisp || quote.exchange || undefined,
+      type: quote.quoteType,
+    }))
+}
+
+export async function searchSymbols(query, fetchImpl = fetch) {
+  const url = new URL(YAHOO_SEARCH_URL)
+
+  url.searchParams.set('q', query)
+  url.searchParams.set('quotesCount', '8')
+  url.searchParams.set('newsCount', '0')
+
+  const response = await fetchImpl(url, {
+    headers: { 'user-agent': USER_AGENT, accept: 'application/json' },
+  })
+  const payload = await response.json().catch(() => null)
+
+  if (!payload) {
+    throw new Error(`Search responded with ${response.status}`)
+  }
+
+  return parseYahooSearch(payload)
 }

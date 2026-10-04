@@ -237,7 +237,7 @@ test('scales the title down on very small cards instead of hiding it', async ({
     })
 
   await expect(
-    page.getByText('Enter a width and height between 2 and 12 cells.'),
+    page.getByText('Enter a width and height between 2 and 40 cells.'),
   ).toBeVisible()
 
   await page.getByLabel(/Edit width for/).fill('2')

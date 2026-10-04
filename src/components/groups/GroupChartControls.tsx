@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from 'react'
+import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 
 import controlStyles from '../charts/ChartControls.module.css'
 import styles from './GroupFrame.module.css'
@@ -19,8 +19,11 @@ import {
   ChartSettingsFields,
 } from '../charts/ChartControls'
 import { stopCanvasPointer } from '../charts/chartControlOptions'
+import { StrokeIcon } from '../ui/StrokeIcon'
 
 type GroupChartControlsProps = {
+  /** The group element; the panel is placed relative to it. */
+  anchorRef: RefObject<HTMLElement | null>
   group: CardGroup
   groups: CardGroup[]
   pictures: PictureNode[]
@@ -33,6 +36,7 @@ type GroupChartControlsProps = {
  * their own keep it; the per-key badge shows how many and can force them.
  */
 export const GroupChartControls = memo(function GroupChartControls({
+  anchorRef,
   group,
   groups,
   pictures,
@@ -71,20 +75,14 @@ export const GroupChartControls = memo(function GroupChartControls({
         title={`Control ${label} in this group`}
         type="button"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-          <path
-            d="M4 4v14a2 2 0 0 0 2 2h14M8 14l3.5-3.5 2.5 2.5L20 7"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.75"
-          />
-        </svg>
+        <StrokeIcon>
+          <path d="M4 4v14a2 2 0 0 0 2 2h14M8 14l3.5-3.5 2.5 2.5L20 7" />
+        </StrokeIcon>
         <span>{members.length}</span>
       </button>
       <ChartPopover
-        anchorRef={buttonRef}
+        anchorRef={anchorRef}
+        triggerRef={buttonRef}
         label={`Chart controls for ${group.name}`}
         onClose={() => setOpen(false)}
         open={open}

@@ -452,11 +452,9 @@ test.describe('Store listing screenshots', () => {
     await moveCardToPoint(page, cards.nth(2), { x: 120, y: 360 })
     await moveCardToPoint(page, cards.nth(3), { x: 280, y: 360 })
 
-    // Click Update button on the first card — force to bypass overlay
-    await cards
-      .nth(0)
-      .getByRole('button', { name: 'Update' })
-      .click({ force: true })
+    // Hover the card first: its action bar sits just above the top edge.
+    await cards.nth(0).hover()
+    await cards.nth(0).getByRole('button', { name: 'Update' }).click()
     await expect(page.getByTestId('card-edit-panel')).toBeVisible()
 
     await page.waitForTimeout(300)

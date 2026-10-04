@@ -6,6 +6,7 @@
  * feed protocol (doc/CHART_FEED.md) over both transports:
  *   WebSocket  ws://127.0.0.1:8787/feed
  *   SSE        http://127.0.0.1:8787/sse?symbol=AAPL&range=1Y&live=1
+ *   Search     http://127.0.0.1:8787/search?q=7CD
  *
  *   npm run feed:charts            (PORT / HOST env vars override defaults)
  */
@@ -13,7 +14,12 @@ import { createServer } from 'node:http'
 
 import { WebSocketServer } from 'ws'
 
-import { fetchSeries, isValidSymbol, SUPPORTED_RANGES } from './yahooSource.mjs'
+import {
+  fetchSeries,
+  isValidSymbol,
+  searchSymbols,
+  SUPPORTED_RANGES,
+} from './yahooSource.mjs'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const HOST = process.env.HOST ?? '127.0.0.1'
@@ -127,9 +133,18 @@ function startStream({ symbol, range, live, send }) {
         })
       }
     })
-    .catch((error) => {
+    .catch(async (error) => {
+      // Unknown symbol: offer matches (e.g. "7CD" → "7CD.F" Frankfurt).
+      const suggestions = await searchSymbols(symbol).catch(() => [])
+
       if (!stopped) {
-        send({ type: 'error', message: `${symbol}: ${error.message}` })
+        send({
+          type: 'error',
+          message: suggestions.length
+            ? `No data for ${symbol}. Pick a listing below.`
+            : `${symbol}: ${error.message}`,
+          suggestions: suggestions.slice(0, 6),
+        })
       }
     })
 
@@ -147,6 +162,27 @@ const server = createServer((request, response) => {
   if (url.pathname === '/health') {
     response.writeHead(200, { 'content-type': 'application/json' })
     response.end(JSON.stringify({ ok: true, ranges: SUPPORTED_RANGES }))
+    return
+  }
+
+  if (url.pathname === '/search') {
+    const query = url.searchParams.get('q')?.trim() ?? ''
+
+    if (query.length === 0 || query.length > 64) {
+      response.writeHead(400, { 'content-type': 'application/json' })
+      response.end(JSON.stringify({ results: [], error: 'Missing query' }))
+      return
+    }
+
+    searchSymbols(query)
+      .then((results) => {
+        response.writeHead(200, { 'content-type': 'application/json' })
+        response.end(JSON.stringify({ results }))
+      })
+      .catch((error) => {
+        response.writeHead(502, { 'content-type': 'application/json' })
+        response.end(JSON.stringify({ results: [], error: error.message }))
+      })
     return
   }
 

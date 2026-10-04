@@ -15,6 +15,27 @@ In the taskbar, select **Add chart**. A new chart uses the symbol `AAPL` and
 the URL `ws://127.0.0.1:8787/feed`. To change them, open the chart options
 (slider icon) and go to **Data source**.
 
+## Symbols
+
+The reference server uses Yahoo Finance symbols. A listing on a non-US
+exchange needs the exchange suffix. A local exchange code alone, such as
+`7CD`, has no data.
+
+| Example  | Listing               |
+| -------- | --------------------- |
+| `AAPL`   | Apple, Nasdaq         |
+| `SAP.DE` | SAP, Xetra            |
+| `7CD.F`  | CD Projekt, Frankfurt |
+| `7CD.MU` | CD Projekt, Munich    |
+| `^GDAXI` | DAX index             |
+
+You do not need to know the suffix:
+
+- In **Data source**, type a code or a name. The chart lists the matching
+  listings. Select one to apply it.
+- If a chart uses an unknown symbol, the chart shows the matching listings
+  instead of data. Select one to apply it.
+
 ## Interactions
 
 | Kind    | Options                                                  |
@@ -78,7 +99,8 @@ Server to client:
 { "type": "snapshot", "id": "c1", "symbol": "AAPL", "range": "1Y",
   "currency": "USD", "name": "Apple Inc.", "points": [[1696291200000, 173.75]] }
 { "type": "tick", "id": "c1", "symbol": "AAPL", "point": [1790971201000, 333.69] }
-{ "type": "error", "id": "c1", "message": "AAPL: No data for this symbol" }
+{ "type": "error", "id": "c1", "message": "No data for 7CD. Pick a listing below.",
+  "suggestions": [{ "symbol": "7CD.F", "name": "CD Projekt Red S.A.", "exchange": "Frankfurt" }] }
 ```
 
 The client behaves as follows:
@@ -100,6 +122,14 @@ its own stream. The `id` field is optional. A snapshot replaces the series, and
 a tick appends a point to it. A tick with the same timestamp replaces the last
 point.
 
+### Symbol search (optional)
+
+A feed server can offer `GET /search?q=<code or name>` on the same host as
+the feed. The client derives the URL from the feed URL: `ws` becomes `http`
+and `wss` becomes `https`. The response is
+`{ "results": [{ "symbol", "name", "exchange", "type" }] }`. When a server
+has no search endpoint, the chart does not show suggestions.
+
 ## Reference server
 
 The reference server is `server/chart-feed/`. It uses Node and the `ws`
@@ -110,6 +140,8 @@ package.
 - **Snapshots:** cached for 60 s per symbol and range.
 - **Live updates:** the server checks the latest price of each watched symbol
   every 15 s (`LIVE_POLL_MS`). It sends a tick when the price changes.
+- **Search:** `/search` uses Yahoo's symbol search. When a symbol has no
+  data, the error message includes up to 6 matching listings.
 - **Ranges:** Yahoo has no `3y` keyword, so 3Y uses `period1` and `period2`.
 - **Configuration:** set `PORT` and `HOST` to change the address. The default
   is `127.0.0.1:8787`.

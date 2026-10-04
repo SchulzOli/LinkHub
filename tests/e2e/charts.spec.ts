@@ -37,6 +37,25 @@ async function mockChartFeed(page: Page) {
       }
 
       subscribes.push(message)
+
+      // Local exchange codes need a suffix on the feed ("7CD" → "7CD.F").
+      if (message.symbol === '7CD') {
+        send({
+          type: 'error',
+          id: message.id,
+          message: 'No data for 7CD. Pick a listing below.',
+          suggestions: [
+            {
+              symbol: '7CD.F',
+              name: 'CD Projekt Red S.A.',
+              exchange: 'Frankfurt',
+            },
+            { symbol: '7CD.MU', name: 'CD Projekt SA', exchange: 'Munich' },
+          ],
+        })
+        return
+      }
+
       send({
         type: 'snapshot',
         id: message.id,
@@ -131,8 +150,8 @@ test('a group drives its charts but keeps values set on a single chart', async (
 
   const editor = page.getByTestId('group-edit-panel')
 
-  await editor.getByLabel(/Edit group width/).fill('27')
-  await editor.getByLabel(/Edit group height/).fill('11')
+  await editor.getByLabel(/Edit group width/).fill('35')
+  await editor.getByLabel(/Edit group height/).fill('13')
   await editor.getByLabel(/Edit group name/).fill('Stocks')
   await page.keyboard.press('Enter')
   await dismissVisibleEditPanels(page)
@@ -155,7 +174,7 @@ test('a group drives its charts but keeps values set on a single chart', async (
   await moveElementToPoint(
     page,
     chartB,
-    { x: bodyBox.x + bodyBox.width - 300, y: bodyBox.y + 10 },
+    { x: bodyBox.x + bodyBox.width - 400, y: bodyBox.y + 10 },
     { settleMs: 150 },
   )
   await setChartSymbol(page, chartB, 'MSFT')
@@ -233,4 +252,56 @@ test('a group drives its charts but keeps values set on a single chart', async (
       .getByRole('radiogroup', { name: 'Average' })
       .getByRole('radio', { name: 'SMA 50' }),
   ).toHaveAttribute('aria-checked', 'true')
+})
+
+test('resolves a local exchange code like 7CD via suggestions and search', async ({
+  page,
+}) => {
+  const feed = await mockChartFeed(page)
+
+  await page.route('http://127.0.0.1:8787/search?**', (route) =>
+    route.fulfill({
+      json: {
+        results: [
+          {
+            symbol: '7CD.F',
+            name: 'CD Projekt Red S.A.',
+            exchange: 'Frankfurt',
+          },
+          { symbol: '7CD.MU', name: 'CD Projekt SA', exchange: 'Munich' },
+        ],
+      },
+    }),
+  )
+  await page.reload()
+  await page.getByRole('button', { name: 'Add chart' }).click()
+
+  const chart = page.getByTestId(/chart-node-/).first()
+
+  await expect(chart.getByTestId('chart-canvas')).toBeVisible()
+
+  // Unknown code: the chart drops the old data and offers listings.
+  await setChartSymbol(page, chart, '7CD')
+  await expect(chart.getByTestId('chart-canvas')).toHaveCount(0)
+  await expect(chart.getByTestId('chart-placeholder')).toContainText(
+    'No data for 7CD',
+  )
+  await chart
+    .getByTestId('chart-error-suggestions')
+    .getByRole('button', { name: /7CD\.F/ })
+    .click()
+  await expect(chart.getByTestId('chart-canvas')).toBeVisible()
+  await expect.poll(() => feed.subscribes.at(-1)?.symbol).toBe('7CD.F')
+
+  // Typing in the source form searches as well.
+  await chart.getByRole('button', { name: 'Chart options' }).click()
+
+  const options = page.getByTestId('chart-options')
+
+  await options.getByLabel('Chart symbol').fill('7cd')
+  await options
+    .getByTestId('chart-symbol-suggestions')
+    .getByRole('button', { name: /7CD\.MU/ })
+    .click()
+  await expect.poll(() => feed.subscribes.at(-1)?.symbol).toBe('7CD.MU')
 })

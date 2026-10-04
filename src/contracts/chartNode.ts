@@ -92,7 +92,7 @@ export type ChartSource = z.infer<typeof ChartSourceSchema>
 
 export const DEFAULT_CHART_FEED_URL = 'ws://127.0.0.1:8787/feed'
 
-export const DEFAULT_CHART_SIZE: CardSize = { columns: 12, rows: 8 }
+export const DEFAULT_CHART_SIZE: CardSize = { columns: 16, rows: 10 }
 
 export const ChartNodeSchema = z.object({
   id: z.string().min(1),

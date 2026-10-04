@@ -25,6 +25,7 @@ import {
   getCardPixelDimensions,
   getOverlayActionMetrics,
 } from '../../features/appearance/themeTokens'
+import type { ChartSymbolSuggestion } from '../../features/charts/chartFeedProtocol'
 import { resolveChartSettings } from '../../features/charts/chartInheritance'
 import { onChartReload } from '../../features/charts/chartReloadBus'
 import {
@@ -32,6 +33,7 @@ import {
   getRangeChange,
   pointsToCsv,
 } from '../../features/charts/chartSeries'
+import { searchChartSymbols } from '../../features/charts/chartSymbolSearch'
 import { useChartFeed } from '../../features/charts/useChartFeed'
 import {
   useWorkspaceStore,
@@ -45,6 +47,8 @@ import {
   NODE_RESIZE_HANDLES,
   useNodePlacement,
 } from '../pictures/useNodePlacement'
+import { DeleteIcon } from '../ui/DeleteIcon'
+import { StrokeIcon } from '../ui/StrokeIcon'
 
 import {
   ChartActionButton,
@@ -52,6 +56,7 @@ import {
   ChartPopoverSection,
   ChartRangeBar,
   ChartSettingsFields,
+  ChartSymbolSuggestions,
 } from './ChartControls'
 import { stopCanvasPointer } from './chartControlOptions'
 
@@ -71,6 +76,16 @@ const STATUS_LABEL = {
   closed: 'Disconnected',
   error: 'Connection error',
 } as const
+
+function SlidersIcon() {
+  return (
+    <StrokeIcon>
+      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="10" cy="17" r="2" />
+    </StrokeIcon>
+  )
+}
 
 function downloadCsv(filename: string, content: string) {
   const url = URL.createObjectURL(new Blob([content], { type: 'text/csv' }))
@@ -104,6 +119,7 @@ export const ChartNode = memo(function ChartNode({
   const [reloadToken, setReloadToken] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
+  const nodeRef = useRef<HTMLElement | null>(null)
 
   const resolved = useMemo(
     () => resolveChartSettings(chart, groups, guide.gridSize),
@@ -158,6 +174,7 @@ export const ChartNode = memo(function ChartNode({
 
   return (
     <article
+      ref={nodeRef}
       className={`${styles.node} ${isEditMode ? styles.nodeEdit : ''} ${isSelected ? styles.nodeSelected : ''}`}
       data-entity-id={chart.id}
       data-entity-kind="picture"
@@ -228,31 +245,7 @@ export const ChartNode = memo(function ChartNode({
             title="Chart options"
             type="button"
           >
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <path
-                d="M4 7h10M18 7h2M4 17h4M12 17h8"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.75"
-              />
-              <circle
-                cx="16"
-                cy="7"
-                r="2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-              />
-              <circle
-                cx="10"
-                cy="17"
-                r="2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-              />
-            </svg>
+            <SlidersIcon />
           </button>
         </header>
 
@@ -266,12 +259,21 @@ export const ChartNode = memo(function ChartNode({
               />
             </Suspense>
           ) : (
-            <p className={styles.placeholder} data-testid="chart-placeholder">
-              {feed.error ??
-                (feed.status === 'open' || feed.status === 'connecting'
-                  ? 'Loading data…'
-                  : `No connection to ${chart.source.url}`)}
-            </p>
+            <div className={styles.placeholder} data-testid="chart-placeholder">
+              <p className={styles.placeholderText}>
+                {feed.error ??
+                  (feed.status === 'open' || feed.status === 'connecting'
+                    ? 'Loading data…'
+                    : `No connection to ${chart.source.url}`)}
+              </p>
+              <ChartSymbolSuggestions
+                onPick={(symbol) =>
+                  updateChart(chart.id, { source: { ...chart.source, symbol } })
+                }
+                suggestions={feed.suggestions?.slice(0, 4) ?? []}
+                testId="chart-error-suggestions"
+              />
+            </div>
           )}
         </div>
 
@@ -285,7 +287,8 @@ export const ChartNode = memo(function ChartNode({
       </div>
 
       <ChartPopover
-        anchorRef={menuButtonRef}
+        anchorRef={nodeRef}
+        triggerRef={menuButtonRef}
         label={`Options for ${chart.source.symbol}`}
         onClose={() => setMenuOpen(false)}
         open={menuOpen}
@@ -359,20 +362,7 @@ export const ChartNode = memo(function ChartNode({
             title="Delete chart"
             type="button"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              focusable="false"
-              className={styles.actionSvg}
-            >
-              <path
-                d="M6.5 6.5l11 11M17.5 6.5l-11 11"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.75"
-              />
-            </svg>
+            <DeleteIcon className={styles.actionSvg} />
           </button>
         </div>
       ) : null}
@@ -403,6 +393,34 @@ function ChartSourceForm(props: {
   const changed =
     trimmedSymbol !== props.chart.source.symbol ||
     trimmedUrl !== props.chart.source.url
+  const [results, setResults] = useState<ChartSymbolSuggestion[]>([])
+  const searchQuery =
+    trimmedSymbol && trimmedSymbol !== props.chart.source.symbol
+      ? trimmedSymbol
+      : ''
+
+  // Look up listings while typing ("7CD" → 7CD.F, 7CD.MU, …).
+  useEffect(() => {
+    if (!searchQuery || !transport) {
+      return
+    }
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      searchChartSymbols(trimmedUrl, searchQuery, controller.signal)
+        .then(setResults)
+        .catch(() => setResults([]))
+    }, 300)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [searchQuery, transport, trimmedUrl])
+
+  const visibleResults = searchQuery
+    ? results.filter((result) => result.symbol !== trimmedSymbol).slice(0, 6)
+    : []
 
   return (
     <ChartPopoverSection title="Data source">
@@ -424,6 +442,22 @@ function ChartSourceForm(props: {
             value={symbol}
           />
         </label>
+        <ChartSymbolSuggestions
+          onPick={(picked) => {
+            setSymbol(picked)
+            setResults([])
+
+            if (transport) {
+              props.onSave({ symbol: picked, url: trimmedUrl })
+            }
+          }}
+          suggestions={visibleResults}
+          testId="chart-symbol-suggestions"
+        />
+        <p className={controlStyles.hint}>
+          Exchange listings need a suffix, e.g. 7CD.F (Frankfurt), SAP.DE
+          (Xetra), ^GDAXI (DAX). Type a name or code to search.
+        </p>
         <label className={controlStyles.field}>
           <span className={controlStyles.fieldLabel}>Feed URL</span>
           <input

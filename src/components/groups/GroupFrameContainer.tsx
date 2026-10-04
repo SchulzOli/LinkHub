@@ -603,6 +603,7 @@ export const GroupFrameContainer = memo(function GroupFrameContainer({
         isSelected={isSelected}
         headerTools={
           <GroupChartControls
+            anchorRef={articleRef}
             gridSize={guide.gridSize}
             group={group}
             groups={groups}

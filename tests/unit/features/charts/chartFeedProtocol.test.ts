@@ -11,6 +11,7 @@ import {
   simpleMovingAverage,
   toDisplayPoints,
 } from '../../../../src/features/charts/chartSeries'
+import { getChartSearchUrl } from '../../../../src/features/charts/chartSymbolSearch'
 
 describe('chart feed protocol', () => {
   it('parses and sorts snapshots, dropping malformed points', () => {
@@ -128,5 +129,45 @@ describe('chart series helpers', () => {
     expect(pointsToCsv([[0, 1.5]], 'AAPL')).toBe(
       'time,AAPL\n1970-01-01T00:00:00.000Z,1.5',
     )
+  })
+})
+
+describe('chart symbol lookup', () => {
+  it('parses error suggestions and ignores malformed entries', () => {
+    expect(
+      parseChartServerMessage({
+        type: 'error',
+        message: 'No data for 7CD',
+        suggestions: [
+          { symbol: '7CD.F', name: 'CD Projekt', exchange: 'Frankfurt' },
+          { name: 'no symbol' },
+          'junk',
+        ],
+      }),
+    ).toEqual({
+      type: 'error',
+      message: 'No data for 7CD',
+      suggestions: [
+        {
+          symbol: '7CD.F',
+          name: 'CD Projekt',
+          exchange: 'Frankfurt',
+          type: undefined,
+        },
+      ],
+    })
+  })
+
+  it('derives the search endpoint from the feed URL', () => {
+    expect(getChartSearchUrl('ws://127.0.0.1:8787/feed', '7CD')).toBe(
+      'http://127.0.0.1:8787/search?q=7CD',
+    )
+    expect(getChartSearchUrl('wss://feed.example/live?token=x', 'SAP')).toBe(
+      'https://feed.example/search?q=SAP',
+    )
+    expect(getChartSearchUrl('http://127.0.0.1:8787/sse', 'a b')).toBe(
+      'http://127.0.0.1:8787/search?q=a+b',
+    )
+    expect(getChartSearchUrl('ftp://x', 'A')).toBeNull()
   })
 })

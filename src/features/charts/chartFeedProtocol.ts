@@ -34,10 +34,20 @@ export type ChartTickMessage = {
   point: ChartPoint
 }
 
+/** A listing the feed can serve, e.g. `7CD.F` (CD Projekt, Frankfurt). */
+export type ChartSymbolSuggestion = {
+  symbol: string
+  name?: string
+  exchange?: string
+  type?: string
+}
+
 export type ChartErrorMessage = {
   type: 'error'
   id?: string
   message: string
+  /** Offered when the requested symbol is unknown. */
+  suggestions?: ChartSymbolSuggestion[]
 }
 
 export type ChartServerMessage =
@@ -128,14 +138,46 @@ export function parseChartServerMessage(
   }
 
   if (message.type === 'error') {
+    const suggestions = parseChartSymbolSuggestions(message.suggestions)
+
     return {
       type: 'error',
       ...(id ? { id } : {}),
       message: optionalString(message.message) ?? 'Feed error',
+      ...(suggestions.length > 0 ? { suggestions } : {}),
     }
   }
 
   return null
+}
+
+export function parseChartSymbolSuggestions(
+  value: unknown,
+): ChartSymbolSuggestion[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((entry) => {
+    if (typeof entry !== 'object' || entry === null) {
+      return []
+    }
+
+    const candidate = entry as Record<string, unknown>
+
+    if (typeof candidate.symbol !== 'string' || !candidate.symbol) {
+      return []
+    }
+
+    return [
+      {
+        symbol: candidate.symbol,
+        name: optionalString(candidate.name),
+        exchange: optionalString(candidate.exchange),
+        type: optionalString(candidate.type),
+      },
+    ]
+  })
 }
 
 /** Appends a live tick; a tick with the same timestamp replaces the last. */

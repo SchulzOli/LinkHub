@@ -578,8 +578,10 @@
 
 .actionBar {
   position: absolute;
-  top: calc(var(--action-bar-offset, 0.7rem) * -1);
-  right: calc(var(--action-bar-offset, 0.7rem) * -1);
+  /* Shared placement: just above the top-right edge (2px overlap keeps
+     hover continuous), so corner controls inside the node stay usable. */
+  top: calc(var(--action-button-size, 2rem) * -1 + 2px);
+  right: 0.25rem;
   display: flex;
   gap: var(--action-bar-gap, 0.35rem);
   opacity: 0;

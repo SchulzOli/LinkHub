@@ -5,6 +5,7 @@ import {
   buildYahooUrl,
   isValidSymbol,
   parseYahooChart,
+  parseYahooSearch,
 } from '../../../server/chart-feed/yahooSource.mjs'
 
 describe('chart feed server: Yahoo source', () => {
@@ -66,5 +67,30 @@ describe('chart feed server: Yahoo source', () => {
         chart: { result: null, error: { description: 'No data found' } },
       }),
     ).toThrow('No data found')
+  })
+
+  it('turns search results into listings with exchange suffixes', () => {
+    expect(
+      parseYahooSearch({
+        quotes: [
+          {
+            symbol: '7CD.F',
+            quoteType: 'EQUITY',
+            exchDisp: 'Frankfurt',
+            shortname: 'CD Projekt Red S.A.           I',
+          },
+          { symbol: 'NEWS1', quoteType: 'NEWS' },
+          { quoteType: 'EQUITY' },
+        ],
+      }),
+    ).toEqual([
+      {
+        symbol: '7CD.F',
+        name: 'CD Projekt Red S.A. I',
+        exchange: 'Frankfurt',
+        type: 'EQUITY',
+      },
+    ])
+    expect(parseYahooSearch(null)).toEqual([])
   })
 })
