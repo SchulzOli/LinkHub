@@ -1,7 +1,7 @@
 # LinkHub
 
 [![CI](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml)
-[![Publish](https://github.com/SchulzOli/LinkHub/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/publish.yml)
+[![Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml/badge.svg)](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml)
 [![Docs](https://github.com/SchulzOli/LinkHub/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/LinkHub/)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/linkhub/dpbgplhiaobnegcbfedihimnoamlpgmd)
 [![Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0A7FEA?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/linkhub/gkcpbfphinbaoplepknkinjfkdhljghp)
@@ -166,7 +166,7 @@ Firefox:
 2. Click Load Temporary Add-on
 3. Select `dist-extension/manifest.json`
 
-For release workflow details, see [extension/EXTENSION.md](extension/EXTENSION.md).
+To release, run **Actions → Release** with the new version and the stores to publish to; details in [extension/EXTENSION.md](extension/EXTENSION.md#releasing).
 
 ## Storage and Privacy
 

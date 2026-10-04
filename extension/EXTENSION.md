@@ -79,6 +79,38 @@ Current bundle imports can:
 
 ---
 
+## Releasing
+
+Releases run in one manual GitHub Actions workflow,
+[Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml):
+
+1. Open **Actions → Release → Run workflow**.
+2. Enter the new version (`X.Y.Z`, higher than the current one) and pick the
+   stores.
+3. The workflow sets the version in `package.json`, `package-lock.json` and
+   `extension/manifest.json`, builds the app and the extension, commits and
+   tags `vX.Y.Z` on `main`, and creates the GitHub Release with both ZIPs.
+4. Then one job per selected store publishes that same build in parallel. If a
+   store fails, use **Re-run failed jobs**; the other stores are not touched.
+
+The workflow refuses to start when the latest `main` commit has no green CI
+run, and checks the version format the stores accept (numbers 0–65535, no
+leading zeros). If a run stops after the tag was pushed, start it again with
+the same version: it resumes from the tag instead of bumping again.
+
+Required repository secrets (each store job receives only its own):
+
+| Store   | Secrets                                                                 |
+| ------- | ----------------------------------------------------------------------- |
+| Chrome  | `CHROME_EXT_ID`, `CHROME_PUBLISHER_ID`, `CHROME_SERVICE_ACCOUNT_JSON`   |
+| Edge    | `EDGE_CLIENT_ID`, `EDGE_API_KEY`, `EDGE_PRODUCT_ID`                     |
+| Firefox | `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`, `FIREFOX_EXT_ID` (optional) |
+
+Do not bump versions by hand: the stores reject a version that is not higher
+than the published one.
+
+---
+
 ## Firefox Release Workflow
 
 ### 1. Prepare the release
@@ -86,7 +118,7 @@ Current bundle imports can:
 Before each AMO submission:
 
 1. Ensure `extension/icons/` contains the final committed PNG set
-2. Bump `"version"` in `extension/manifest.json`
+2. Run the Release workflow with the new version (it sets `"version"` in `extension/manifest.json`)
 3. Keep `browser_specific_settings.gecko.id` unchanged
 
 Current Gecko ID:
@@ -215,7 +247,7 @@ For automated publishing in this repository, Chrome uses a Google service accoun
 Before each Chrome Web Store submission:
 
 1. Ensure `extension/icons/` contains the final committed PNG set
-2. Bump `"version"` in `extension/manifest.json`
+2. Run the Release workflow with the new version (it sets `"version"` in `extension/manifest.json`)
 3. Confirm the extension still has a single clear purpose: LinkHub as the browser new tab page
 4. Re-check that no unnecessary permissions were added to the manifest
 
@@ -340,7 +372,7 @@ This uses `extension/deploy.mjs`, builds `dist-extension.zip`, authenticates wit
 
 #### 8. GitHub Actions / CD setup for Chrome
 
-The repository CD workflow supports Chrome publishing through the `deploy_chrome` flag.
+The [Release workflow](#releasing) publishes to Chrome when **chrome** is checked. Its `publish (chrome)` job calls `node extension/deploy.mjs --publish-only chrome`.
 
 Required GitHub repository secrets:
 
@@ -349,11 +381,6 @@ Required GitHub repository secrets:
 - `CHROME_SERVICE_ACCOUNT_JSON`
 
 For `CHROME_SERVICE_ACCOUNT_JSON`, paste the full JSON key content of the Google service account.
-
-Workflow behavior:
-
-- `sync-version` updates `package.json`, `package-lock.json`, and `extension/manifest.json`
-- `deploy-extension` builds the extension and calls `node extension/deploy.mjs --publish-only chrome`
 
 #### 9. What still stays manual in the dashboard
 
@@ -453,18 +480,13 @@ This uses `extension/deploy.mjs`, builds `dist-extension.zip`, and sends the upd
 
 ### GitHub Actions / CD setup for Edge
 
-The repository CD workflow already supports Edge publishing through the `deploy_edge` flag.
+The [Release workflow](#releasing) publishes to Edge when **edge** is checked. Its `publish (edge)` job calls `node extension/deploy.mjs --publish-only edge`.
 
 Required GitHub repository secrets:
 
 - `EDGE_CLIENT_ID`
 - `EDGE_API_KEY`
 - `EDGE_PRODUCT_ID`
-
-Workflow behavior:
-
-- `sync-version` updates `package.json`, `package-lock.json`, and `extension/manifest.json`
-- `deploy-extension` builds the extension and calls `node extension/deploy.mjs --publish-only edge`
 
 ### Edge release notes
 
