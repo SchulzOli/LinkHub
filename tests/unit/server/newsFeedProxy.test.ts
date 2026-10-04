@@ -114,7 +114,6 @@ describe('news feed proxy', () => {
       fetchFeed('https://a.example/old', {
         lookup: publicLookup,
         skipCache: true,
-        skipCache: true,
         fetch: async () =>
           response(302, '', { location: 'http://127.0.0.1:8080/admin' }),
       }),
@@ -152,7 +151,6 @@ describe('news feed proxy', () => {
     await expect(
       fetchFeed('https://a.example/rss', {
         lookup: publicLookup,
-        skipCache: true,
         skipCache: true,
         fetch: async () => response(404),
       }),
