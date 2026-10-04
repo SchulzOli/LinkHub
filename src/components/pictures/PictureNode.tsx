@@ -10,16 +10,19 @@ import {
   getOverlayActionMetrics,
 } from '../../features/appearance/themeTokens'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
-import type { ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
   useCanvasEditActions,
   useCanvasSelectionActions,
 } from '../canvas/CanvasActionsContext'
-import { EditIcon } from '../ui/EditIcon'
+import {
+  NodeActionBar,
+  NodeActionButton,
+  NodeResizeHandles,
+} from '../nodes/NodeChrome'
+import { NODE_CHROME_HOST, NODE_SURFACE } from '../nodes/nodeClasses'
 
-import { DeleteIcon } from '../ui/DeleteIcon'
-import { NODE_RESIZE_HANDLES, useNodePlacement } from './useNodePlacement'
+import { useNodePlacement } from './useNodePlacement'
 
 type PictureNodeProps = {
   picture: ImagePictureNode
@@ -61,21 +64,9 @@ export const PictureNode = memo(function PictureNode({
     ['--action-bar-offset' as const]: `${actionMetrics.offset}px`,
     transform: `translate(${picture.positionX}px, ${picture.positionY}px)`,
   }
-  const resizeHandles = NODE_RESIZE_HANDLES
-  const resizeHandleClassNameByDirection: Record<ResizeDirection, string> = {
-    n: styles.resizeHandleN,
-    s: styles.resizeHandleS,
-    e: styles.resizeHandleE,
-    w: styles.resizeHandleW,
-    ne: styles.resizeHandleNE,
-    nw: styles.resizeHandleNW,
-    se: styles.resizeHandleSE,
-    sw: styles.resizeHandleSW,
-  }
-
   return (
     <article
-      className={`${styles.node} ${isEditMode ? styles.nodeEdit : ''} ${isSelected ? styles.nodeSelected : ''}`}
+      className={`${NODE_SURFACE} ${NODE_CHROME_HOST}`}
       data-entity-id={picture.id}
       data-entity-kind="picture"
       data-mode={interactionMode}
@@ -108,50 +99,33 @@ export const PictureNode = memo(function PictureNode({
         )}
       </div>
       {isEditMode ? (
-        <div className={styles.actionBar}>
-          <button
-            aria-label="Edit picture"
-            className={styles.actionButton}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onRequestImagePicker(picture.id)
-            }}
-            title="Edit picture"
-          >
-            <span aria-hidden="true" className={styles.actionIcon}>
-              <EditIcon className={styles.actionSvg} />
-            </span>
-          </button>
-          <button
-            aria-label="Delete"
-            className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onRemove(picture.id)
-            }}
-            title="Delete"
-          >
-            <span aria-hidden="true" className={styles.actionIcon}>
-              <DeleteIcon className={styles.actionSvg} />
-            </span>
-          </button>
-        </div>
-      ) : null}
-      {isEditMode
-        ? resizeHandles.map((direction) => (
-            <button
-              key={direction}
-              aria-label={`Resize picture ${direction}`}
-              className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
-              type="button"
-              onPointerDown={createResizePointerDown(direction)}
+        <>
+          <NodeActionBar>
+            <NodeActionButton
+              kind="edit"
+              label="Edit picture"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRequestImagePicker(picture.id)
+              }}
             />
-          ))
-        : null}
+            <NodeActionButton
+              kind="delete"
+              label="Delete"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRemove(picture.id)
+              }}
+            />
+          </NodeActionBar>
+          <NodeResizeHandles
+            label={(direction) => `Resize picture ${direction}`}
+            onPointerDown={createResizePointerDown}
+          />
+        </>
+      ) : null}
     </article>
   )
 })

@@ -14,32 +14,14 @@ import type {
   SurfaceTransparency,
 } from '../../contracts/surfaceEffects'
 import { type ResizeDirection } from '../../features/placement/useResizePlacement'
-import { DeleteIcon } from '../ui/DeleteIcon'
-import { EditIcon } from '../ui/EditIcon'
+import {
+  NodeActionBar,
+  NodeActionButton,
+  NodeResizeHandles,
+} from '../nodes/NodeChrome'
+import { NODE_CHROME_HOST } from '../nodes/nodeClasses'
 import { GroupHeaderBar } from './GroupHeaderBar'
 import type { GroupFrameViewModel } from './useGroupFrameViewModel'
-
-const RESIZE_HANDLES: ResizeDirection[] = [
-  'n',
-  's',
-  'e',
-  'w',
-  'ne',
-  'nw',
-  'se',
-  'sw',
-]
-
-const resizeHandleClassNameByDirection: Record<ResizeDirection, string> = {
-  n: styles.resizeHandleN,
-  s: styles.resizeHandleS,
-  e: styles.resizeHandleE,
-  w: styles.resizeHandleW,
-  ne: styles.resizeHandleNE,
-  nw: styles.resizeHandleNW,
-  se: styles.resizeHandleSE,
-  sw: styles.resizeHandleSW,
-}
 
 type GroupFrameViewProps = {
   articleRef: RefObject<HTMLElement | null>
@@ -89,29 +71,23 @@ export const GroupFrameView = memo(function GroupFrameView({
     <>
       <article
         ref={articleRef}
-        className={`${styles.group} ${isEditMode ? styles.groupEdit : ''} ${isSelected ? styles.groupSelected : ''}`}
+        className={`${styles.group} ${NODE_CHROME_HOST} ${isEditMode ? styles.groupEdit : ''} ${isSelected ? styles.groupSelected : ''}`}
         data-collapsed={String(isCollapsed)}
         data-entity-id={group.id}
         data-entity-kind="group"
+        data-mode={isEditMode ? 'edit' : 'view'}
         data-selected={isSelected}
         data-shadow-style={resolvedShadowStyle}
         data-surface-transparency={String(resolvedSurfaceTransparency)}
         data-testid={`card-group-${group.id}`}
         style={groupStyle}
       >
-        {isEditMode && !isCollapsed
-          ? RESIZE_HANDLES.map((direction) => (
-              <button
-                aria-label={`Resize group ${direction}`}
-                className={`${styles.resizeHandle} ${resizeHandleClassNameByDirection[direction]}`}
-                data-role="resize-handle"
-                key={direction}
-                onPointerDown={createResizePointerDown(direction)}
-                tabIndex={-1}
-                type="button"
-              />
-            ))
-          : null}
+        {isEditMode && !isCollapsed ? (
+          <NodeResizeHandles
+            label={(direction) => `Resize group ${direction}`}
+            onPointerDown={createResizePointerDown}
+          />
+        ) : null}
         <GroupHeaderBar
           tools={headerTools}
           displayTitle={displayTitle}
@@ -131,33 +107,18 @@ export const GroupFrameView = memo(function GroupFrameView({
           />
         ) : null}
         {isEditMode ? (
-          <div className={styles.actionBar} data-role="action-bar">
-            <button
-              aria-label="Update group"
-              className={`${styles.actionButton} ${styles.actionButtonEdit}`}
-              title="Update group"
-              type="button"
+          <NodeActionBar>
+            <NodeActionButton
+              kind="edit"
+              label="Update group"
               onClick={onOpenEditor}
-            >
-              <span
-                aria-hidden="true"
-                className={`${styles.actionIcon} ${styles.actionIconEdit}`}
-              >
-                <EditIcon className={styles.actionSvg} />
-              </span>
-            </button>
-            <button
-              aria-label="Delete group"
-              className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-              title="Delete group"
-              type="button"
+            />
+            <NodeActionButton
+              kind="delete"
+              label="Delete group"
               onClick={onDelete}
-            >
-              <span aria-hidden="true" className={styles.actionIcon}>
-                <DeleteIcon className={styles.actionSvg} />
-              </span>
-            </button>
-          </div>
+            />
+          </NodeActionBar>
         ) : null}
       </article>
       {/* Outline lives in its own layer above cards/pictures so members that

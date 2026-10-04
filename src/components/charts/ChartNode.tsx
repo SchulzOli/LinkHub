@@ -44,10 +44,12 @@ import {
   useCanvasSelectionActions,
 } from '../canvas/CanvasActionsContext'
 import {
-  NODE_RESIZE_HANDLES,
-  useNodePlacement,
-} from '../pictures/useNodePlacement'
-import { DeleteIcon } from '../ui/DeleteIcon'
+  NodeActionBar,
+  NodeActionButton,
+  NodeResizeHandles,
+} from '../nodes/NodeChrome'
+import { NODE_CHROME_HOST, NODE_SURFACE } from '../nodes/nodeClasses'
+import { useNodePlacement } from '../pictures/useNodePlacement'
 import { StrokeIcon } from '../ui/StrokeIcon'
 
 import {
@@ -175,7 +177,7 @@ export const ChartNode = memo(function ChartNode({
   return (
     <article
       ref={nodeRef}
-      className={`${styles.node} ${isEditMode ? styles.nodeEdit : ''} ${isSelected ? styles.nodeSelected : ''}`}
+      className={`${NODE_SURFACE} ${NODE_CHROME_HOST}`}
       data-entity-id={chart.id}
       data-entity-kind="picture"
       data-mode={interactionMode}
@@ -350,33 +352,24 @@ export const ChartNode = memo(function ChartNode({
       </ChartPopover>
 
       {isEditMode ? (
-        <div className={styles.actionBar}>
-          <button
-            aria-label="Delete chart"
-            className={`${styles.actionButton} ${styles.actionButtonDanger}`}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onRemove(chart.id)
-            }}
-            title="Delete chart"
-            type="button"
-          >
-            <DeleteIcon className={styles.actionSvg} />
-          </button>
-        </div>
-      ) : null}
-      {isEditMode
-        ? NODE_RESIZE_HANDLES.map((direction) => (
-            <button
-              aria-label={`Resize chart ${direction}`}
-              className={`${styles.resizeHandle} ${styles[`resizeHandle${direction.toUpperCase()}`]}`}
-              key={direction}
-              onPointerDown={createResizePointerDown(direction)}
-              type="button"
+        <>
+          <NodeActionBar>
+            <NodeActionButton
+              kind="delete"
+              label="Delete chart"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRemove(chart.id)
+              }}
             />
-          ))
-        : null}
+          </NodeActionBar>
+          <NodeResizeHandles
+            label={(direction) => `Resize chart ${direction}`}
+            onPointerDown={createResizePointerDown}
+          />
+        </>
+      ) : null}
     </article>
   )
 })

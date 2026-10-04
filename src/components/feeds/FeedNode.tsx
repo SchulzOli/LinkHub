@@ -37,10 +37,12 @@ import {
 import { ChartPopover } from '../charts/ChartControls'
 import { stopCanvasPointer } from '../charts/chartControlOptions'
 import {
-  NODE_RESIZE_HANDLES,
-  useNodePlacement,
-} from '../pictures/useNodePlacement'
-import { DeleteIcon } from '../ui/DeleteIcon'
+  NodeActionBar,
+  NodeActionButton,
+  NodeResizeHandles,
+} from '../nodes/NodeChrome'
+import { NODE_CHROME_HOST, NODE_SURFACE } from '../nodes/nodeClasses'
+import { useNodePlacement } from '../pictures/useNodePlacement'
 import { StrokeIcon } from '../ui/StrokeIcon'
 
 import { FeedAddSourceForm, FeedOptions } from './FeedOptions'
@@ -202,7 +204,7 @@ export const FeedNode = memo(function FeedNode({
   return (
     <article
       ref={nodeRef}
-      className={`${nodeStyles.node} ${isEditMode ? nodeStyles.nodeEdit : ''} ${isSelected ? nodeStyles.nodeSelected : ''}`}
+      className={`${NODE_SURFACE} ${NODE_CHROME_HOST}`}
       data-entity-id={feed.id}
       data-entity-kind="picture"
       data-mode={interactionMode}
@@ -434,33 +436,24 @@ export const FeedNode = memo(function FeedNode({
       </ChartPopover>
 
       {isEditMode ? (
-        <div className={nodeStyles.actionBar}>
-          <button
-            aria-label="Delete feed"
-            className={`${nodeStyles.actionButton} ${nodeStyles.actionButtonDanger}`}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onRemove(feed.id)
-            }}
-            title="Delete feed"
-            type="button"
-          >
-            <DeleteIcon className={nodeStyles.actionSvg} />
-          </button>
-        </div>
-      ) : null}
-      {isEditMode
-        ? NODE_RESIZE_HANDLES.map((direction) => (
-            <button
-              aria-label={`Resize feed ${direction}`}
-              className={`${nodeStyles.resizeHandle} ${nodeStyles[`resizeHandle${direction.toUpperCase()}`]}`}
-              key={direction}
-              onPointerDown={createResizePointerDown(direction)}
-              type="button"
+        <>
+          <NodeActionBar>
+            <NodeActionButton
+              kind="delete"
+              label="Delete feed"
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRemove(feed.id)
+              }}
             />
-          ))
-        : null}
+          </NodeActionBar>
+          <NodeResizeHandles
+            label={(direction) => `Resize feed ${direction}`}
+            onPointerDown={createResizePointerDown}
+          />
+        </>
+      ) : null}
     </article>
   )
 })
