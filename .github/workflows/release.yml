@@ -1,8 +1,10 @@
 name: Release
 
-# One manual flow: set the version, build, commit and tag on main, create the
-# GitHub Release, then publish to each selected store in parallel. A failed
-# store can be retried with "Re-run failed jobs" without touching the others.
+# One manual flow: check CI, set the version, build, commit and tag on main,
+# create the GitHub Release, then publish to each selected store in parallel.
+# A failed store can be retried with "Re-run failed jobs" without touching the
+# others. If the run stops after the tag was pushed, start it again with the
+# same version: it resumes from the tag.
 
 on:
   workflow_dispatch:
@@ -25,6 +27,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: release
@@ -51,31 +54,70 @@ jobs:
           node-version: 22
           cache: npm
 
-      # Stores accept only dotted integers and reject a version that is not
-      # higher than the published one (Chrome: PKG_INVALID_VERSION_NUMBER).
+      # Stores accept only 1-4 dotted integers of 0-65535 without leading
+      # zeros, and reject a version that is not higher than the published
+      # one (Chrome: PKG_INVALID_VERSION_NUMBER).
+      #
+      # If the tag already exists without a GitHub Release, an earlier run
+      # stopped after pushing: resume from that tag instead of bumping again.
       - name: Check version
         id: version
         env:
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
           VERSION=$(echo "$VERSION" | xargs)
           VERSION="${VERSION#v}"
-          CURRENT=$(node -p "require('./package.json').version")
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::\"$VERSION\" is not X.Y.Z - the stores reject other formats"
+          TAG="v$VERSION"
+          PART='(0|[1-9][0-9]{0,4})'
+          if [[ ! "$VERSION" =~ ^$PART\.$PART\.$PART$ ]]; then
+            echo "::error::\"$VERSION\" is not X.Y.Z (numbers without leading zeros)"
             exit 1
           fi
+          for N in ${VERSION//./ }; do
+            if [ "$N" -gt 65535 ]; then
+              echo "::error::$N is above 65535, the store limit per version part"
+              exit 1
+            fi
+          done
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "::error::$TAG is already released"
+              exit 1
+            fi
+            echo "Tag $TAG exists without a release: resuming from the tag"
+            echo "resume=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CURRENT=$(node -p "require('./package.json').version")
           HIGHEST=$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -1)
           if [ "$VERSION" = "$CURRENT" ] || [ "$HIGHEST" != "$VERSION" ]; then
             echo "::error::$VERSION must be higher than the current version $CURRENT"
             exit 1
           fi
-          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
-            echo "::error::Tag v$VERSION already exists"
+          echo "resume=false" >> "$GITHUB_OUTPUT"
+
+      # Release only what CI has tested: the main commit must have a green run.
+      - name: Require green CI on main
+        if: steps.version.outputs.resume == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          CONCLUSION=$(gh run list --workflow ci.yml --commit "$SHA" --event push \
+            --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "::error::CI for main ${SHA:0:7} is '${CONCLUSION:-missing or running}'. Wait for a green CI run, then start the release again."
             exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check out existing tag
+        if: steps.version.outputs.resume == 'true'
+        run: git checkout -q "${{ steps.version.outputs.tag }}"
 
       - name: Select stores
         id: stores
@@ -88,6 +130,7 @@ jobs:
           echo "Stores: $STORES"
 
       - name: Set version
+        if: steps.version.outputs.resume == 'false'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
@@ -108,7 +151,19 @@ jobs:
           npm run build
           npm run build:extension
 
+      # Saved before anything is pushed, for the store jobs.
+      - name: Keep extension build for the stores
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: dist-extension
+          if-no-files-found: error
+          overwrite: true
+
+      # Only version files change, so the CI result of the parent commit
+      # still applies.
       - name: Commit and tag on main
+        if: steps.version.outputs.resume == 'false'
         env:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
@@ -128,14 +183,7 @@ jobs:
           (cd dist-extension && zip -qr "../linkhub-extension-$TAG.zip" .)
           gh release create "$TAG" \
             "linkhub-app-$TAG.zip" "linkhub-extension-$TAG.zip" \
-            --title "LinkHub $TAG" --generate-notes
-
-      - name: Keep extension build for the stores
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension
-          path: dist-extension
-          if-no-files-found: error
+            --verify-tag --title "LinkHub $TAG" --generate-notes
 
   publish:
     name: publish (${{ matrix.store }})

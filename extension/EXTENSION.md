@@ -93,6 +93,11 @@ Releases run in one manual GitHub Actions workflow,
 4. Then one job per selected store publishes that same build in parallel. If a
    store fails, use **Re-run failed jobs**; the other stores are not touched.
 
+The workflow refuses to start when the latest `main` commit has no green CI
+run, and checks the version format the stores accept (numbers 0–65535, no
+leading zeros). If a run stops after the tag was pushed, start it again with
+the same version: it resumes from the tag instead of bumping again.
+
 Required repository secrets (each store job receives only its own):
 
 | Store   | Secrets                                                                 |
