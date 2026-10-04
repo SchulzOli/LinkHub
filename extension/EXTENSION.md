@@ -85,8 +85,8 @@ Releases run in one manual GitHub Actions workflow,
 [Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml):
 
 1. Open **Actions → Release → Run workflow**.
-2. Enter the new version (`X.Y.Z`, higher than the latest release tag) and
-   pick the stores.
+2. Enter the new version (`X.Y.Z`, higher than both the latest
+   `v*` tag and the version in `package.json` on `main`) and pick the stores.
 3. The workflow sets the version in `package.json`, `package-lock.json` and
    `extension/manifest.json`, builds the app and the extension, commits this
    on top of the current `main` commit, pushes it as tag `vX.Y.Z`, and

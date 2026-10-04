@@ -42,7 +42,8 @@ tiles from the current app, with fixed demo data for charts and feeds (link card
 ## Publish
 
 Releases run in one manual workflow: **Actions → Release → Run workflow**.
-Enter the new version (`X.Y.Z`, higher than the latest release tag) and pick
+Enter the new version (`X.Y.Z`, higher than both the latest
+`v*` tag and the version in `package.json` on `main`) and pick
 the stores. The workflow sets the version, builds, pushes tag `vX.Y.Z` (main
 itself is not changed),
 creates the GitHub Release, and then publishes the same build to each selected
