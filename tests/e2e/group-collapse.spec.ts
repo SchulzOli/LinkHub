@@ -118,6 +118,20 @@ test('keeps the group header the same size when collapsed', async ({
       height: Math.round(expanded.height),
       width: Math.round(expanded.width),
     })
+  // Title row is vertically centred in the collapsed group.
+  const group = page.getByTestId(/card-group-/).first()
+  const groupBox = await group.boundingBox()
+  const headerBox = await header.boundingBox()
+
+  if (!groupBox || !headerBox) {
+    throw new Error('missing collapsed geometry')
+  }
+
+  const gapAbove = headerBox.y - groupBox.y
+  const gapBelow =
+    groupBox.y + groupBox.height - (headerBox.y + headerBox.height)
+
+  expect(Math.abs(gapAbove - gapBelow)).toBeLessThanOrEqual(1)
 })
 
 test('toggles group collapse from the header in view mode', async ({

@@ -36,8 +36,11 @@
 }
 
 .group[data-collapsed='true'] {
-  /* Same header height as when expanded. */
+  /* Same header height as when expanded, centred so the gap above and
+     below the title is equal. */
   grid-template-rows: var(--group-header-height, 2rem);
+  align-content: center;
+  padding-top: 0;
 }
 
 .groupSelected {
@@ -434,12 +437,6 @@
   padding-inline: 0;
   display: inline-grid;
   place-items: center;
-}
-
-.closeEditButton {
-  min-height: 2rem;
-  padding-inline: 0.75rem;
-  font-size: 0.8rem;
 }
 
 .editEffectGrid {
