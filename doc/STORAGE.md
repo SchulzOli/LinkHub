@@ -70,7 +70,7 @@ Relevant fields include:
 - `viewport`
 - `groups`
 - `cards`
-- `pictures`
+- `pictures` - every free-floating node: pictures, charts and news feeds
 - `createdAt`
 - `updatedAt`
 
@@ -145,6 +145,26 @@ Implementation:
 - [../src/contracts/workspaceAnalytics.ts](../src/contracts/workspaceAnalytics.ts)
 - [../src/features/analytics/workspaceAnalytics.ts](../src/features/analytics/workspaceAnalytics.ts)
 - [../src/features/importExport/canvasBundle.ts](../src/features/importExport/canvasBundle.ts)
+
+## Free-Floating Nodes
+
+`workspace.pictures` holds every node that is not a link card or a group. The
+`type` field tells them apart:
+
+| `type`    | Contract                       | Stores                                                                       |
+| --------- | ------------------------------ | ---------------------------------------------------------------------------- |
+| `picture` | `src/contracts/pictureNode.ts` | `imageId`, position, size                                                    |
+| `chart`   | `src/contracts/chartNode.ts`   | feed URL, symbol, chart settings (see [CHART_FEED.md](CHART_FEED.md))        |
+| `feed`    | `src/contracts/feedNode.ts`    | feed sources, proxy URL, display settings (see [NEWS_FEED.md](NEWS_FEED.md)) |
+
+These nodes have no `groupId`. A node belongs to a group when it lies inside
+the group body. When a group is collapsed, it records the ids of its member
+nodes in `groups[].collapsedPictureIds`, because collapsing moves the nodes
+below the group up and bounds alone could then pick up a node that is not a
+member. The list is cleared when the group expands.
+
+Chart data and feed articles are not stored. They are fetched again when the
+node renders. A feed node caches its result in memory only.
 
 ## Images And Picture Nodes
 

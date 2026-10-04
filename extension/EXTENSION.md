@@ -48,6 +48,24 @@ npm run build:extension
 2. Chrome/Edge: reload the unpacked extension in the extensions page
 3. Firefox: reload the temporary add-on in `about:debugging`
 
+### Store screenshots and promotional tiles
+
+```bash
+npx playwright test tests/e2e/screenshots.spec.ts --project=chromium
+```
+
+This regenerates the eight 1280×800 screenshots in `extension/screenshots/`
+and the four promotional tiles in `extension/store-assets/` (rendered from
+`promo-tile.html`). Chart and feed data are fixed demo data, so the images do
+not depend on the network. Store copy and the screenshot captions live in
+[STORE_LISTING.md](STORE_LISTING.md).
+
+### Privacy policy URL
+
+The privacy policy is published with the documentation site at
+https://schulzoli.github.io/LinkHub/privacy/. Use that URL in the Chrome,
+Edge and AMO privacy fields.
+
 ### Data migration
 
 The extension has its own isolated storage. To move existing data from the web build into the extension, export a canvas bundle in the web build and import that bundle in the extension from the Data tab.
@@ -90,9 +108,13 @@ npm run build:extension
 
 Then create the AMO upload ZIP:
 
-```powershell
-Compress-Archive -Path dist-extension\* -DestinationPath linkhub-firefox.zip -Force
+```bash
+npm run deploy:dry
 ```
+
+This writes `dist-extension.zip` with the built files at the archive root (no
+shell, PowerShell or `zip` binary needed). Without store credentials the
+script stops after the ZIP. Rename it to `linkhub-firefox.zip` if you upload by hand.
 
 Important:
 
@@ -216,9 +238,13 @@ npm run build:extension
 
 Then create the Chrome Web Store upload ZIP:
 
-```powershell
-Compress-Archive -Path dist-extension\* -DestinationPath linkhub-chrome.zip -Force
+```bash
+npm run deploy:dry
 ```
+
+This writes `dist-extension.zip` with the built files at the archive root (no
+shell, PowerShell or `zip` binary needed). Without store credentials the
+script stops after the ZIP. Rename it to `linkhub-chrome.zip` if you upload by hand.
 
 Important:
 
@@ -267,7 +293,7 @@ For LinkHub, the intended disclosure should stay aligned with the actual behavio
 
 Chrome's policy requires a privacy policy when a product handles user data, and Chrome explicitly states that this still applies when the data is stored only locally.
 
-For that reason, this repository keeps a hosted policy page at `public/privacy/index.html`. After deploying the site, use the hosted `/privacy/index.html` URL in the Chrome Web Store privacy policy field.
+For that reason, this repository keeps the policy at `public/privacy/index.html`. The Pages workflow publishes it at https://schulzoli.github.io/LinkHub/privacy/ — use that URL in the Chrome Web Store privacy policy field.
 
 #### 6. One-time Google setup for service-account publishing
 
@@ -357,8 +383,7 @@ Already covered in this repository:
 Still to prepare outside the codebase:
 
 - Chrome Web Store developer account setup
-- public privacy policy URL
-- final store listing copy and images
+- final store listing copy (see STORE_LISTING.md)
 - optional reviewer/test notes in the dashboard
 
 ---
