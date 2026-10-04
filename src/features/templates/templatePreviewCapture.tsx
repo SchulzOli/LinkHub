@@ -205,7 +205,11 @@ function PreviewGroup(props: {
     borderColor: tokens.cardBorder,
   })
   const layoutSize = getGroupLayoutSize(group)
-  const metrics = getGroupChromeMetrics(layoutSize, TEMPLATE_PREVIEW_GRID_SIZE)
+  const metrics = getGroupChromeMetrics(
+    layoutSize,
+    TEMPLATE_PREVIEW_GRID_SIZE,
+    group.size,
+  )
   const surfaceTransparency =
     group.surfaceTransparency ?? appearance.defaultSurfaceTransparency
   const width = metrics.pixelWidth * transform.scale

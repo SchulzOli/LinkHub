@@ -266,6 +266,7 @@ function drawTemplateGroup(input: {
   const chrome = getGroupChromeMetrics(
     getGroupLayoutSize(input.group),
     TEMPLATE_PREVIEW_GRID_SIZE,
+    input.group.size,
   )
   const x = input.transform.x + input.group.positionX * input.transform.scale
   const y = input.transform.y + input.group.positionY * input.transform.scale

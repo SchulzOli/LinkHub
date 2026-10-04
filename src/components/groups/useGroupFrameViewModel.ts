@@ -56,7 +56,11 @@ export function useGroupFrameViewModel({
   const isCollapsed = group.collapsed === true
   const layoutSize = getGroupLayoutSize(group)
   const size = getCardPixelDimensions(layoutSize, guide.gridSize)
-  const chromeMetrics = getGroupChromeMetrics(layoutSize, guide.gridSize)
+  const chromeMetrics = getGroupChromeMetrics(
+    layoutSize,
+    guide.gridSize,
+    group.size,
+  )
   const resolvedCornerRadius =
     group.cornerRadius ?? appearance.defaultCardCornerRadius
   const groupCornerRadii = getGroupCornerRadii({

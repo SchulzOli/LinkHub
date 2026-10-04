@@ -86,6 +86,40 @@ test('collapses a group, hides child cards, and pulls lower cards upward', async
     })
 })
 
+test('keeps the group header the same size when collapsed', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'Add group' }).click()
+  await openGroupEditor(page)
+  await dismissVisibleEditPanels(page)
+
+  const header = page.getByTestId(/card-group-header-/).first()
+  const expanded = await header.boundingBox()
+
+  if (!expanded) {
+    throw new Error('missing header geometry before collapse')
+  }
+
+  await page
+    .getByTestId(/group-collapse-toggle-/)
+    .first()
+    .click()
+
+  await expect
+    .poll(async () => {
+      const collapsed = await header.boundingBox()
+
+      return {
+        height: Math.round(collapsed?.height ?? 0),
+        width: Math.round(collapsed?.width ?? 0),
+      }
+    })
+    .toEqual({
+      height: Math.round(expanded.height),
+      width: Math.round(expanded.width),
+    })
+})
+
 test('toggles group collapse from the header in view mode', async ({
   page,
 }) => {

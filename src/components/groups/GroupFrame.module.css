@@ -36,7 +36,8 @@
 }
 
 .group[data-collapsed='true'] {
-  grid-template-rows: minmax(0, 1fr);
+  /* Same header height as when expanded. */
+  grid-template-rows: var(--group-header-height, 2rem);
 }
 
 .groupSelected {

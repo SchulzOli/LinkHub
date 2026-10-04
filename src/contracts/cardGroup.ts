@@ -57,10 +57,20 @@ function resolveGroupLayoutSize(
     : size
 }
 
-export function getGroupChromeMetrics(size: GroupSize, gridSize: number) {
+/**
+ * `size` is the rendered (layout) size; `chromeSize` drives header, padding
+ * and gap. Pass the expanded size there so the header keeps the same height
+ * whether the group is collapsed or expanded.
+ */
+export function getGroupChromeMetrics(
+  size: GroupSize,
+  gridSize: number,
+  chromeSize: GroupSize = size,
+) {
   const pixelWidth = size.columns * gridSize
   const pixelHeight = size.rows * gridSize
-  const compactDimension = Math.min(pixelWidth, pixelHeight)
+  const chromeHeight = chromeSize.rows * gridSize
+  const compactDimension = Math.min(chromeSize.columns * gridSize, chromeHeight)
   const padding = Math.max(
     GROUP_CHROME_LIMITS.minPaddingPx,
     Math.min(
@@ -79,7 +89,7 @@ export function getGroupChromeMetrics(size: GroupSize, gridSize: number) {
     GROUP_CHROME_LIMITS.minHeaderHeightPx,
     Math.min(
       GROUP_CHROME_LIMITS.maxHeaderHeightPx,
-      Math.round(pixelHeight * 0.14),
+      Math.round(chromeHeight * 0.14),
     ),
   )
 
@@ -99,7 +109,7 @@ export function getGroupCornerRadii(input: {
   size: GroupSize
 }) {
   const layoutSize = resolveGroupLayoutSize(input.size, input.collapsed)
-  const metrics = getGroupChromeMetrics(layoutSize, input.gridSize)
+  const metrics = getGroupChromeMetrics(layoutSize, input.gridSize, input.size)
   const expandedMetrics = getGroupChromeMetrics(input.size, input.gridSize)
   const compactDimension = Math.min(
     expandedMetrics.pixelWidth,
@@ -150,7 +160,7 @@ export function getGroupBodyBounds(
   gridSize: number,
 ) {
   const layoutSize = resolveGroupLayoutSize(group.size, group.collapsed)
-  const metrics = getGroupChromeMetrics(layoutSize, gridSize)
+  const metrics = getGroupChromeMetrics(layoutSize, gridSize, group.size)
   // Groups only have chrome on top (the header); the body spans the full
   // width and runs down to the bottom edge, so members can use every cell.
   const left = group.positionX
