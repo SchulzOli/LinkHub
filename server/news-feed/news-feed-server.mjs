@@ -26,7 +26,16 @@ function sendJson(response, status, body) {
 
 const server = createServer((request, response) => {
   // Fixed base: the Host header is untrusted and only path + query matter.
-  const url = new URL(request.url ?? '/', 'http://localhost')
+  // A malformed request-target (e.g. "//[") must not crash the server.
+  let url
+
+  try {
+    url = new URL(request.url ?? '/', 'http://localhost')
+  } catch {
+    response.writeHead(400, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: 'Malformed request URL' }))
+    return
+  }
 
   const origin = request.headers.origin
 
