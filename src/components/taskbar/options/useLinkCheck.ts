@@ -1,7 +1,14 @@
 import { useCallback } from 'react'
 
-import { checkLinks } from '../../../features/links/linkChecker'
+import {
+  cancelLinkChecks,
+  checkLinks,
+} from '../../../features/links/linkChecker'
 import { useLinkCheckStore } from '../../../state/useLinkCheckStore'
+import {
+  onNetworkFeatureDisabled,
+  useNetworkFeaturesStore,
+} from '../../../state/useNetworkFeaturesStore'
 import { useWorkspaceStore } from '../../../state/useWorkspaceStore'
 
 export type LinkCheckStatus =
@@ -16,6 +23,13 @@ export type LinkCheckStatus =
  * Reads workspace cards directly from the store so the hook can be used
  * in any component without threading card props through the panel tree.
  */
+// Switching Link check off stops a running batch: no further requests, and
+// the cards' "checking" badges are cleared.
+onNetworkFeatureDisabled('linkCheck', () => {
+  cancelLinkChecks()
+  useLinkCheckStore.getState().clearResults()
+})
+
 export function useLinkCheck() {
   const statuses = useLinkCheckStore((state) => state.statuses)
   const isChecking = useLinkCheckStore((state) => state.isChecking)
@@ -42,6 +56,11 @@ export function useLinkCheck() {
   })()
 
   const handleCheckLinks = useCallback(() => {
+    // The switch in Menu → Privacy gates every request to the user's links.
+    if (!useNetworkFeaturesStore.getState().linkCheck) {
+      return
+    }
+
     const workspace = useWorkspaceStore.getState().workspace
     const cards = workspace.cards
 

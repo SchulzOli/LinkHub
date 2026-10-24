@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { subscribeChartFeed } from '../../../../src/features/charts/chartFeedClient'
+import {
+  closeAllChartFeeds,
+  subscribeChartFeed,
+} from '../../../../src/features/charts/chartFeedClient'
 import type { ChartServerMessage } from '../../../../src/features/charts/chartFeedProtocol'
 
 type Listener = (event: { data?: unknown }) => void
@@ -70,6 +73,25 @@ describe('chart feed client (WebSocket)', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+  })
+
+  it('closes sockets at once and never reconnects after closeAllChartFeeds', () => {
+    const url = 'ws://shutdown.test/feed'
+    const stop = subscribeChartFeed(
+      { url, symbol: 'AAPL', range: '1D', live: true },
+      handlers(),
+    )
+    const socket = FakeWebSocket.instances[0]
+
+    socket.emit('open')
+    socket.emit('close')
+    // A reconnect is now pending; switching charts off must cancel it.
+    closeAllChartFeeds()
+    stop()
+    vi.advanceTimersByTime(60_000)
+
+    expect(socket.readyState).toBe(FakeWebSocket.CLOSED)
+    expect(FakeWebSocket.instances).toHaveLength(1)
   })
 
   it('shares one socket per URL and routes messages by subscription id', () => {

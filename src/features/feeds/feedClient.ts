@@ -1,4 +1,5 @@
 import type { FeedSource } from '../../contracts/feedNode'
+import { onNetworkFeatureDisabled } from '../../state/useNetworkFeaturesStore'
 
 import { FeedParseError, parseFeed, type ParsedFeed } from './feedParser'
 
@@ -129,6 +130,21 @@ async function loadParsedFeed(
   }
 }
 
+/** Loads in flight, so switching feeds off can stop them (and their alternate-feed follow-up). */
+const activeLoads = new Set<AbortController>()
+
+/** Aborts every feed load in flight and drops the shared cache. */
+export function abortAllFeedLoads() {
+  for (const controller of activeLoads) {
+    controller.abort()
+  }
+
+  activeLoads.clear()
+  cache.clear()
+}
+
+onNetworkFeatureDisabled('chartsAndFeeds', abortAllFeedLoads)
+
 async function loadSource(
   feedUrl: string,
   proxyUrl: string,
@@ -136,6 +152,8 @@ async function loadSource(
   const fetchedAt = Date.now()
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+  activeLoads.add(controller)
 
   try {
     const feed = await loadParsedFeed(feedUrl, proxyUrl, controller.signal)
@@ -159,6 +177,7 @@ async function loadSource(
     }
   } finally {
     clearTimeout(timer)
+    activeLoads.delete(controller)
   }
 }
 

@@ -41,6 +41,10 @@ import { useResizePlacement } from '../../features/placement/useResizePlacement'
 import { useAppearanceStore } from '../../state/useAppearanceStore'
 import { useLinkCheckStore } from '../../state/useLinkCheckStore'
 import {
+  resolveFaviconsOfflineOnly,
+  useFaviconsOfflineOnly,
+} from '../../state/useNetworkFeaturesStore'
+import {
   useWorkspaceStore,
   type InteractionMode,
 } from '../../state/useWorkspaceStore'
@@ -201,7 +205,10 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     () => parseCardSizeDraft(widthDraft, heightDraft),
     [heightDraft, widthDraft],
   )
-  const faviconUrl = resolveCardFaviconUrl(card, appearance.faviconsOfflineOnly)
+  const faviconsOfflineOnly = useFaviconsOfflineOnly(
+    appearance.faviconsOfflineOnly,
+  )
+  const faviconUrl = resolveCardFaviconUrl(card, faviconsOfflineOnly)
   const resolvedCardImageUrl = card.faviconOverrideImageId
     ? (overrideImageUrl ?? faviconUrl)
     : faviconUrl
@@ -261,9 +268,8 @@ export const LinkCardContainer = memo(function LinkCardContainer({
       void (async () => {
         try {
           const hostname = new URL(normalizedUrl).hostname
-          const blob = await fetchFaviconBlob(
-            hostname,
-            appearance.faviconsOfflineOnly,
+          const blob = await fetchFaviconBlob(hostname, () =>
+            resolveFaviconsOfflineOnly(appearance.faviconsOfflineOnly),
           )
 
           if (!blob) {
@@ -733,7 +739,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         articleRef={articleRef}
         card={card}
         createResizePointerDown={createResizePointerDown}
-        faviconsOfflineOnly={appearance.faviconsOfflineOnly}
+        faviconsOfflineOnly={faviconsOfflineOnly}
         interactionMode={interactionMode}
         isEditMode={isEditMode}
         isSelected={isSelected}

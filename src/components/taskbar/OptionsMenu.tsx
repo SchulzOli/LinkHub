@@ -53,6 +53,12 @@ const ThemeGallery = lazy(async () => {
   return { default: module.ThemeGallery }
 })
 
+const PrivacyPanel = lazy(async () => {
+  const module = await import('./PrivacyPanel')
+
+  return { default: module.PrivacyPanel }
+})
+
 const TemplatesPanel = lazy(async () => {
   const module = await import('./options/TemplatesPanel')
 
@@ -380,6 +386,8 @@ export function OptionsMenu({
                   storageStatus={storageStatistics.kind}
                 />
               </div>
+            ) : activeTab === 'privacy' ? (
+              <PrivacyPanel menuId={menuId} tabListId={tabListId} />
             ) : (
               <OptionsDataSection
                 activeWorkspaceId={activeWorkspaceId}

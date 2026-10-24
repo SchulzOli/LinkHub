@@ -7,6 +7,10 @@ import { saveImageAsset } from '../../storage/imageRepository'
  *   1. `https://<host>/favicon.ico`
  *   2. Google favicons service (unless `offlineOnly` is true)
  *
+ * `offlineOnly` may be a function: it is then asked right before the
+ * Google request, so switching Google off while the first request is
+ * still pending is honoured.
+ *
  * Returns the raw Blob on success, or `null` when all attempts fail.
  *
  * The optional `fetchFn` parameter allows test injection of a mock fetch
@@ -14,7 +18,7 @@ import { saveImageAsset } from '../../storage/imageRepository'
  */
 export async function fetchFaviconBlob(
   hostname: string,
-  offlineOnly: boolean,
+  offlineOnly: boolean | (() => boolean),
   fetchFn: typeof globalThis.fetch = globalThis.fetch,
 ): Promise<Blob | null> {
   // Attempt 1: host's own /favicon.ico
@@ -27,7 +31,7 @@ export async function fetchFaviconBlob(
   }
 
   // Attempt 2: Google service — only when offline-only is NOT active
-  if (!offlineOnly) {
+  if (!(typeof offlineOnly === 'function' ? offlineOnly() : offlineOnly)) {
     const googleResult = await tryFetchFavicon(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
       fetchFn,

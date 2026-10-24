@@ -88,3 +88,21 @@ export async function openGroupEditor(
   await updateButton.click()
   await expect(page.getByTestId('group-edit-panel')).toBeVisible()
 }
+
+/**
+ * Turns network features on before the app loads (they are off by default,
+ * see Menu → Privacy). Call before `page.goto`.
+ */
+export async function enableNetworkFeatures(
+  page: Page,
+  features: Partial<
+    Record<'googleFavicons' | 'chartsAndFeeds' | 'linkCheck', boolean>
+  >,
+) {
+  await page.addInitScript((value) => {
+    const key = 'linkhub.network-features'
+    const current = JSON.parse(window.localStorage.getItem(key) ?? '{}')
+
+    window.localStorage.setItem(key, JSON.stringify({ ...current, ...value }))
+  }, features)
+}

@@ -17,6 +17,9 @@ type HostQueue = {
 }
 
 const hostQueues = new Map<string, HostQueue>()
+/** Bumped by `cancelLinkChecks`; queued work of an older batch stops. */
+let batchGeneration = 0
+const activeRequests = new Set<AbortController>()
 
 function getHost(urlString: string): string | null {
   try {
@@ -29,6 +32,8 @@ function getHost(urlString: string): string | null {
 async function checkSingleUrl(url: string): Promise<LinkCheckResult> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  activeRequests.add(controller)
 
   try {
     await fetch(url, {
@@ -44,14 +49,35 @@ async function checkSingleUrl(url: string): Promise<LinkCheckResult> {
     return 'broken'
   } finally {
     clearTimeout(timer)
+    activeRequests.delete(controller)
   }
+}
+
+/**
+ * Stops the running batch: no queued URL is requested any more, active
+ * requests are aborted, and no further results or completion are reported.
+ */
+export function cancelLinkChecks() {
+  batchGeneration += 1
+  hostQueues.clear()
+
+  for (const controller of activeRequests) {
+    controller.abort()
+  }
+
+  activeRequests.clear()
 }
 
 function processHostQueue(
   host: string,
   onUrlResult: (url: string, result: LinkCheckResult) => void,
   onHostComplete: () => void,
+  generation: number,
 ) {
+  if (generation !== batchGeneration) {
+    return
+  }
+
   const entry = hostQueues.get(host)
 
   if (!entry || entry.queue.length === 0) {
@@ -65,14 +91,18 @@ function processHostQueue(
 
   checkSingleUrl(url)
     .then((result) => {
-      onUrlResult(url, result)
+      if (generation === batchGeneration) {
+        onUrlResult(url, result)
+      }
     })
     .catch(() => {
-      onUrlResult(url, 'broken')
+      if (generation === batchGeneration) {
+        onUrlResult(url, 'broken')
+      }
     })
     .finally(() => {
       setTimeout(() => {
-        processHostQueue(host, onUrlResult, onHostComplete)
+        processHostQueue(host, onUrlResult, onHostComplete, generation)
       }, HOST_DELAY_MS)
     })
 }
@@ -91,7 +121,9 @@ export function checkLinks(
   onResult: (cardId: string, result: LinkCheckResult) => void,
   onComplete: () => void,
 ): void {
-  hostQueues.clear()
+  cancelLinkChecks()
+
+  const generation = batchGeneration
 
   // 1. Group cards by URL
   const cardsByUrl = new Map<string, string[]>()
@@ -164,6 +196,6 @@ export function checkLinks(
   }
 
   for (const host of hostQueues.keys()) {
-    processHostQueue(host, handleUrlResult, handleHostComplete)
+    processHostQueue(host, handleUrlResult, handleHostComplete, generation)
   }
 }

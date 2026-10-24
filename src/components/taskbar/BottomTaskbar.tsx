@@ -3,6 +3,7 @@ import styles from './BottomTaskbar.module.css'
 import { useEffect, useId, useRef } from 'react'
 
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import { EditIcon } from '../ui/EditIcon'
 import { OptionsMenu } from './OptionsMenu'
@@ -64,6 +65,9 @@ export function BottomTaskbar({
   workspaceRailPinned,
   workspaceSummaries,
 }: BottomTaskbarProps) {
+  const chartsAndFeeds = useNetworkFeaturesStore(
+    (state) => state.chartsAndFeeds,
+  )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const workspaceRailRef = useRef<HTMLDivElement | null>(null)
   const workspaceRailToggleRef = useRef<HTMLButtonElement | null>(null)
@@ -291,8 +295,13 @@ export function BottomTaskbar({
               <button
                 aria-label="Add chart"
                 className={styles.modeButton}
+                disabled={!chartsAndFeeds}
                 onClick={onCreateChart}
-                title="Add chart"
+                title={
+                  chartsAndFeeds
+                    ? 'Add chart'
+                    : 'Add chart (off in Menu → Privacy)'
+                }
                 type="button"
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
@@ -302,8 +311,13 @@ export function BottomTaskbar({
               <button
                 aria-label="Add news feed"
                 className={styles.modeButton}
+                disabled={!chartsAndFeeds}
                 onClick={onCreateFeed}
-                title="Add news feed"
+                title={
+                  chartsAndFeeds
+                    ? 'Add news feed'
+                    : 'Add news feed (off in Menu → Privacy)'
+                }
                 type="button"
               >
                 <span aria-hidden="true" className={styles.modeIcon}>

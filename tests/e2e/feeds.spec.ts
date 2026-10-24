@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { enableNetworkFeatures } from './fixtures'
+
 const PROXY = 'http://127.0.0.1:8788/rss'
 const NOW = Date.now()
 
@@ -94,6 +96,8 @@ async function itemTitles(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // Charts and feeds are off by default (Menu → Privacy).
+  await enableNetworkFeatures(page, { chartsAndFeeds: true })
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto('/')
   await page.evaluate(async () => {

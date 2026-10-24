@@ -1,4 +1,10 @@
-export type MenuTab = 'options' | 'themes' | 'templates' | 'statistics' | 'data'
+export type MenuTab =
+  | 'options'
+  | 'themes'
+  | 'templates'
+  | 'statistics'
+  | 'data'
+  | 'privacy'
 
 export const OPTIONS_MENU_TABS: Array<{ id: MenuTab; label: string }> = [
   { id: 'options', label: 'Options' },
@@ -6,4 +12,5 @@ export const OPTIONS_MENU_TABS: Array<{ id: MenuTab; label: string }> = [
   { id: 'templates', label: 'Templates' },
   { id: 'statistics', label: 'Statistics' },
   { id: 'data', label: 'Data' },
+  { id: 'privacy', label: 'Privacy' },
 ]
