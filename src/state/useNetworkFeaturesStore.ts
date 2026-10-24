@@ -21,15 +21,38 @@ function readStoredFeatures(): NetworkFeatures {
   }
 }
 
-function writeStoredFeatures(features: NetworkFeatures) {
+/**
+ * Switches turned off in this tab whose change could not be saved (quota,
+ * private mode). They stay off whatever storage says, so re-reading it
+ * never silently turns a feature back on. Only opt-outs are kept: another
+ * tab must still be able to turn a feature off here.
+ */
+let unsavedOptOuts: Partial<Record<NetworkFeatureKey, false>> = {}
+
+function writeStoredFeatures(
+  features: NetworkFeatures,
+  changedKey: NetworkFeatureKey,
+) {
+  unsavedOptOuts = { ...unsavedOptOuts }
+  delete unsavedOptOuts[changedKey]
+
   try {
     window.localStorage.setItem(
       NETWORK_FEATURES_STORAGE_KEY,
       JSON.stringify(features),
     )
+    unsavedOptOuts = {}
   } catch {
     // Quota or private mode: the switch still applies for this session.
+    if (!features[changedKey]) {
+      unsavedOptOuts = { ...unsavedOptOuts, [changedKey]: false }
+    }
   }
+}
+
+/** Stored switches, with this tab's unsaved opt-outs on top. */
+function readEffectiveFeatures(): NetworkFeatures {
+  return { ...readStoredFeatures(), ...unsavedOptOuts }
 }
 
 type NetworkFeaturesState = NetworkFeatures & {
@@ -90,9 +113,9 @@ export const useNetworkFeaturesStore = create<NetworkFeaturesState>(
     setFeature: (key, enabled) => {
       // Re-read first, so a stale tab never writes back an old value for
       // another switch.
-      const next = { ...readStoredFeatures(), [key]: enabled }
+      const next = { ...readEffectiveFeatures(), [key]: enabled }
 
-      writeStoredFeatures(next)
+      writeStoredFeatures(next, key)
       applyFeatures({ ...pickFeatures(get()), ...next })
     },
   }),
@@ -102,7 +125,7 @@ export const useNetworkFeaturesStore = create<NetworkFeaturesState>(
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
     if (event.key === NETWORK_FEATURES_STORAGE_KEY || event.key === null) {
-      applyFeatures(readStoredFeatures())
+      applyFeatures(readEffectiveFeatures())
     }
   })
 }

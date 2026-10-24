@@ -112,7 +112,9 @@ export const LinkCardView = memo(function LinkCardView({
 
                   const attempt = Number(image.dataset.fallbackAttempt ?? 0)
 
-                  if (attempt >= 2) {
+                  // Without Google there is no second fallback: after the
+                  // site's own favicon.ico the letter placeholder is next.
+                  if (attempt >= 2 || (attempt === 1 && faviconsOfflineOnly)) {
                     // All fallbacks exhausted – show placeholder initial chip
                     if (placeholderDataUrl) {
                       image.src = placeholderDataUrl

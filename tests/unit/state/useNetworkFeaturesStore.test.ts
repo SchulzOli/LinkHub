@@ -95,6 +95,35 @@ describe('network features', () => {
     expect(useNetworkFeaturesStore.getState().chartsAndFeeds).toBe(false)
   })
 
+  it('keeps an opt-out that could not be saved', () => {
+    useNetworkFeaturesStore.getState().setFeature('chartsAndFeeds', true)
+
+    const setItem = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError')
+      })
+
+    // Storage still says "on"; this tab switches off but can't save it.
+    useNetworkFeaturesStore.getState().setFeature('chartsAndFeeds', false)
+    useNetworkFeaturesStore.getState().setFeature('linkCheck', true)
+
+    expect(useNetworkFeaturesStore.getState()).toMatchObject({
+      chartsAndFeeds: false,
+      linkCheck: true,
+    })
+
+    // A change from another tab can't turn the unsaved opt-out back on
+    // (an unsaved opt-in may be lost: that is the safe direction).
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: NETWORK_FEATURES_STORAGE_KEY }),
+    )
+
+    expect(useNetworkFeaturesStore.getState().chartsAndFeeds).toBe(false)
+
+    setItem.mockRestore()
+  })
+
   it('never allows Google favicons while the switch is off', () => {
     expect(resolveFaviconsOfflineOnly(false)).toBe(true)
 

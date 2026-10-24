@@ -1,15 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('/')
-})
-
 test('starts fully local and turns each network feature on separately', async ({
   page,
 }) => {
   const requests: string[] = []
 
+  // Listen before the first load, so requests made at startup count too.
   page.on('request', (request) => requests.push(request.url()))
+  await page.goto('/')
 
   // Off by default: nothing that would reach the network can be added.
   await expect(page.getByRole('button', { name: 'Add chart' })).toBeDisabled()
@@ -61,4 +59,27 @@ test('starts fully local and turns each network feature on separately', async ({
       (url) => !url.startsWith(appOrigin) && !url.startsWith('data:'),
     ),
   ).toEqual([])
+})
+
+test('shows the letter placeholder when a site has no favicon and Google is off', async ({
+  page,
+  context,
+}) => {
+  await context.route('https://nofavicon.example.com/**', (route) =>
+    route.fulfill({ status: 404, body: '' }),
+  )
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Add link' }).click()
+  await page.getByLabel('Link URL').fill('nofavicon.example.com')
+  await page.getByLabel('Link title').fill('No icon')
+  await page.getByRole('button', { name: 'Create' }).click()
+
+  const image = page
+    .getByTestId(/link-card-/)
+    .filter({ hasText: 'No icon' })
+    .locator('img')
+    .first()
+
+  await expect(image).toHaveAttribute('src', /^data:/)
 })
