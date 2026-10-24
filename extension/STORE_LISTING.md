@@ -111,9 +111,9 @@ LinkHub is a new-tab override extension. It replaces the browser new tab page wi
 
 The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account, sign-in, or remote sync service is involved.
 
-Network requests made by the extension:
+Network requests made by the extension. Google favicons, chart and news feed nodes, and Check Links are each off by default and only work after the user turns them on in Menu → Privacy:
 
-- Favicons: when the user creates a link card, the extension loads `https://<site>/favicon.ico`, then Google's public favicon service (https://www.google.com/s2/favicons) as a fallback, and caches the icon locally. The option "Favicons offline-only" disables the Google fallback.
+- Favicons: when the user creates a link card, the extension loads `https://<site>/favicon.ico` and caches the icon locally. Only with "Google favicons" turned on does it fall back to Google's public favicon service (https://www.google.com/s2/favicons).
 - Chart nodes (optional, user-added): connect to the WebSocket or SSE feed URL set on the node. The default is `ws://127.0.0.1:8787/feed`, a server the user runs locally from the open-source repository.
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
@@ -170,7 +170,7 @@ Important behavior:
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers.
-- During normal use the only automatic network request is the favicon lookup when a user creates a link card. Chart and news feed nodes connect only to addresses the user sets, and Check Links runs only when started.
+- During normal use the only automatic network request is the favicon lookup from the site itself when a user creates a link card. Google favicons, chart and news feed nodes, and Check Links are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
 - The extension does not inject scripts into websites and does not require elevated browsing permissions.
 
 If the reviewer wants to validate the packaged build, use:
@@ -213,7 +213,9 @@ Your LinkHub data stays isolated to the browser profile and device where you use
 
 ### External requests
 
-- Favicons: when you create a link card, LinkHub loads the site's icon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. "Favicons offline-only" turns the Google fallback off.
+Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
+
+- Favicons: when you create a link card, LinkHub loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
 - Chart nodes connect to the feed server address set on the chart (by default a server on your own computer).
 - News feed nodes load the RSS or Atom addresses you add, through the feed proxy set on the node (by default on your own computer) or directly. With "Images" on, article images load from the news sites.
 - Check Links sends a HEAD request to each link card's address when you start it.

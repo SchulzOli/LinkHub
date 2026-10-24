@@ -269,14 +269,19 @@
 
         <section>
           <h2>5. External requests</h2>
-          <p>LinkHub makes these network requests, and only these:</p>
+          <p>
+            LinkHub makes these network requests, and only these. Google
+            favicons, chart and news feed nodes, and Check Links are each off by
+            default and only work after you turn them on under
+            <em>Menu → Privacy</em>, which also shows their current status.
+          </p>
           <ul>
             <li>
               <strong>Favicons.</strong> When you create a link card, LinkHub
-              loads the site's icon once, first from the site itself
-              (<code>/favicon.ico</code>), then from Google's public favicon
-              service as a fallback, and keeps it locally. The option
-              <em>Favicons offline-only</em> turns the Google fallback off.
+              loads the site's icon once from the site itself
+              (<code>/favicon.ico</code>) and keeps it locally. Only with
+              <em>Google favicons</em> turned on does it fall back to Google's
+              public favicon service.
             </li>
             <li>
               <strong>Chart nodes.</strong> A chart connects to the feed server

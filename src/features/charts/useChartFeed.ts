@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import type { ChartRange } from '../../contracts/chartNode'
+import { CHARTS_AND_FEEDS_OFF_MESSAGE } from '../../contracts/networkFeatures'
 
 import { subscribeChartFeed, type ChartFeedStatus } from './chartFeedClient'
 import {
@@ -28,10 +29,16 @@ type KeyedState = ChartFeedState & {
 
 const INITIAL_STATE: KeyedState = { status: 'connecting', points: [] }
 
+const DISABLED_STATE: ChartFeedState = {
+  status: 'closed',
+  points: [],
+  error: CHARTS_AND_FEEDS_OFF_MESSAGE,
+}
+
 /**
  * Streams one chart series. Re-subscribes whenever the source, range, live
  * flag or `reloadToken` changes; the snapshot replaces the series, ticks
- * extend it.
+ * extend it. With `enabled` false nothing connects at all.
  */
 export function useChartFeed(input: {
   url: string
@@ -39,12 +46,17 @@ export function useChartFeed(input: {
   range: ChartRange
   live: boolean
   reloadToken: number
+  enabled: boolean
 }): ChartFeedState {
-  const { url, symbol, range, live, reloadToken } = input
+  const { url, symbol, range, live, reloadToken, enabled } = input
   const [state, setState] = useState<KeyedState>(INITIAL_STATE)
   const sourceKey = `${url}|${symbol}`
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     let active = true
 
     // The client reports 'connecting' through onStatus right away.
@@ -116,7 +128,11 @@ export function useChartFeed(input: {
       active = false
       unsubscribe()
     }
-  }, [url, symbol, range, live, reloadToken, sourceKey])
+  }, [url, symbol, range, live, reloadToken, sourceKey, enabled])
+
+  if (!enabled) {
+    return DISABLED_STATE
+  }
 
   // Until the new source answers, never show the previous source's series.
   if (state.sourceKey !== undefined && state.sourceKey !== sourceKey) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import type { FeedSource } from '../../contracts/feedNode'
+import { CHARTS_AND_FEEDS_OFF_MESSAGE } from '../../contracts/networkFeatures'
 
 import { fetchFeedSource, type FeedSourceResult } from './feedClient'
 import { mergeFeedItems } from './feedItems'
@@ -25,14 +26,16 @@ type KeyedResults = {
 /**
  * Loads every source of a feed node, merges the items and refreshes every
  * `refreshMinutes` (0 = manual). `reloadToken` changes force a fresh fetch.
+ * With `enabled` false nothing is fetched; every source reports why.
  */
 export function useFeedItems(input: {
   sources: FeedSource[]
   proxyUrl: string
   refreshMinutes: number
   reloadToken: number
+  enabled: boolean
 }): FeedState {
-  const { sources, proxyUrl, refreshMinutes, reloadToken } = input
+  const { sources, proxyUrl, refreshMinutes, reloadToken, enabled } = input
   const urls = useMemo(() => sources.map((source) => source.url), [sources])
   const key = `${proxyUrl}|${urls.join('\n')}`
   const [state, setState] = useState<KeyedResults>({
@@ -42,6 +45,10 @@ export function useFeedItems(input: {
   })
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     let active = true
 
     const load = (force: boolean) => {
@@ -83,9 +90,28 @@ export function useFeedItems(input: {
       cancelAnimationFrame(frame)
       clearInterval(timer)
     }
-  }, [key, proxyUrl, refreshMinutes, reloadToken, urls])
+  }, [key, proxyUrl, refreshMinutes, reloadToken, urls, enabled])
 
-  const results = state.key === key ? state.results : EMPTY_RESULTS
+  const disabledResults = useMemo(
+    () =>
+      Object.fromEntries(
+        urls.map((url): [string, FeedSourceResult] => [
+          url,
+          {
+            status: 'error',
+            url,
+            message: CHARTS_AND_FEEDS_OFF_MESSAGE,
+            fetchedAt: 0,
+          },
+        ]),
+      ),
+    [urls],
+  )
+  const results = !enabled
+    ? disabledResults
+    : state.key === key
+      ? state.results
+      : EMPTY_RESULTS
   const items = useMemo(
     () =>
       mergeFeedItems(
@@ -97,10 +123,12 @@ export function useFeedItems(input: {
       ),
     [results, urls],
   )
-  const fetchedTimes = Object.values(results).map((result) => result.fetchedAt)
+  const fetchedTimes = Object.values(results)
+    .map((result) => result.fetchedAt)
+    .filter((time) => time > 0)
 
   return {
-    loading: state.key !== key || state.pending > 0,
+    loading: enabled && (state.key !== key || state.pending > 0),
     items,
     results,
     ...(fetchedTimes.length ? { updatedAt: Math.max(...fetchedTimes) } : {}),

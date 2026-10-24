@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 
 import { checkLinks } from '../../../features/links/linkChecker'
 import { useLinkCheckStore } from '../../../state/useLinkCheckStore'
+import { useNetworkFeaturesStore } from '../../../state/useNetworkFeaturesStore'
 import { useWorkspaceStore } from '../../../state/useWorkspaceStore'
 
 export type LinkCheckStatus =
@@ -42,6 +43,11 @@ export function useLinkCheck() {
   })()
 
   const handleCheckLinks = useCallback(() => {
+    // The switch in Menu → Privacy gates every request to the user's links.
+    if (!useNetworkFeaturesStore.getState().linkCheck) {
+      return
+    }
+
     const workspace = useWorkspaceStore.getState().workspace
     const cards = workspace.cards
 
