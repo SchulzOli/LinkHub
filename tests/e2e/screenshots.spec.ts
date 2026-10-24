@@ -21,7 +21,7 @@ import { pathToFileURL } from 'node:url'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { moveElementToPoint } from './dragHelpers'
-import { dismissVisibleEditPanels } from './fixtures'
+import { dismissVisibleEditPanels, enableNetworkFeatures } from './fixtures'
 
 // ── Viewport: 1280×800 at 1x - the exact size Chrome, Edge and AMO accept ──
 const VIEWPORT = { width: 1280, height: 800 }
@@ -288,6 +288,13 @@ test.describe('Store listing screenshots', () => {
     'store screenshots are generated on the desktop project only',
   )
   test.beforeEach(async ({ page }) => {
+    // The store assets show charts, feeds and real favicons, which are off
+    // by default (Menu → Privacy). The init script re-applies this after
+    // clearAppState empties localStorage.
+    await enableNetworkFeatures(page, {
+      chartsAndFeeds: true,
+      googleFavicons: true,
+    })
     await page.goto('/')
     await clearAppState(page)
   })
