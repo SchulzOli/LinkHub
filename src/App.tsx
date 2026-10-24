@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { WorkspaceScreen } from './components/canvas/WorkspaceScreen'
 import { applyAppearanceStyle } from './features/appearance/stylePresets'
+import { useAutoDashboardRefresh } from './features/auto/useAutoDashboardRefresh'
 import { prefetchTemplatePreviewCapture } from './features/templates/templatePreviewCapture'
 import { useWorkspaceStore } from './state/useWorkspaceStore'
 import { getPersistedWorkspace } from './state/workspaceStoreHelpers'
@@ -63,6 +64,8 @@ function App() {
   const status = useWorkspaceStore((state) => state.status)
   const hydratedRef = useRef(false)
   const resumePendingRef = useRef(false)
+
+  useAutoDashboardRefresh()
 
   useEffect(() => {
     if (status !== 'ready' || !hydratedRef.current) {

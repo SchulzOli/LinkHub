@@ -45,7 +45,9 @@ const vendorChunkGroups = [
   },
   {
     name: 'vendor',
-    test: /node_modules[\\/]/,
+    // The Anthropic SDK stays out: it is only imported dynamically, by the
+    // Auto dashboard's optional AI step, and gets its own lazy chunk.
+    test: /node_modules[\\/](?!@anthropic-ai|@opentelemetry|json-schema-to-ts|standardwebhooks|@stablelib|fast-sha256)/,
     priority: 10,
   },
 ]

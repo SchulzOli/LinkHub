@@ -8,6 +8,7 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
+  "optional_permissions": ["history", "topSites"],
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
@@ -19,9 +20,7 @@
       "id": "linkhub@extension",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
+        "required": ["none"]
       }
     }
   }

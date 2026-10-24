@@ -53,6 +53,12 @@ const ThemeGallery = lazy(async () => {
   return { default: module.ThemeGallery }
 })
 
+const AutoDashboardPanel = lazy(async () => {
+  const module = await import('./AutoDashboardPanel')
+
+  return { default: module.AutoDashboardPanel }
+})
+
 const TemplatesPanel = lazy(async () => {
   const module = await import('./options/TemplatesPanel')
 
@@ -380,6 +386,8 @@ export function OptionsMenu({
                   storageStatus={storageStatistics.kind}
                 />
               </div>
+            ) : activeTab === 'auto' ? (
+              <AutoDashboardPanel menuId={menuId} tabListId={tabListId} />
             ) : (
               <OptionsDataSection
                 activeWorkspaceId={activeWorkspaceId}

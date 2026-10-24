@@ -232,7 +232,7 @@ For this project, the extension package itself is already in good shape:
 - `manifest_version: 3` is already in place
 - the required extension icons are present in `extension/icons/`
 - the extension has a narrow purpose: replace the new tab page with LinkHub
-- the manifest currently requests no extra high-risk permissions
+- the manifest requests no install-time permissions; `history` and `topSites` are optional and only requested from the Auto dashboard settings
 
 What is still needed before a Chrome release:
 

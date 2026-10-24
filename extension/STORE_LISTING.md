@@ -118,7 +118,9 @@ Network requests made by the extension:
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
 
-No workspace content, statistics or personal data are sent anywhere. The extension requests no permissions, has no content scripts and loads no remote code.
+- Auto dashboard (optional, off by default): builds a workspace from the pages the user opens most. It can read the browser's top sites and history only after the user turns on that source and grants the optional `topSites` / `history` permission; this data is processed locally. If the user also turns on "AI arrangement" and enters their own Anthropic API key, the titles and URLs of the candidate pages are sent to the Anthropic API (https://api.anthropic.com) to group them.
+
+Apart from the optional AI arrangement above, no workspace content, statistics or personal data are sent anywhere. The extension requests no permissions at install time (`history` and `topSites` are optional and requested only from the Auto dashboard settings), has no content scripts and loads no remote code.
 
 ### Build environment
 
@@ -171,7 +173,7 @@ Important behavior:
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers.
 - During normal use the only automatic network request is the favicon lookup when a user creates a link card. Chart and news feed nodes connect only to addresses the user sets, and Check Links runs only when started.
-- The extension does not inject scripts into websites and does not require elevated browsing permissions.
+- The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard.
 
 If the reviewer wants to validate the packaged build, use:
 
