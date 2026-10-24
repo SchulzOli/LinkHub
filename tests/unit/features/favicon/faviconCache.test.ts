@@ -125,6 +125,27 @@ describe('fetchFaviconBlob', () => {
     expect(log[1].url).toBe(GOOGLE_URL)
   })
 
+  it('asks a function for offlineOnly only right before the Google request', async () => {
+    let offlineOnly = false
+    let resolveHost: (value: Response) => void = () => undefined
+
+    mockFetch.mockImplementationOnce((url: string) => {
+      log.push({ url })
+      return new Promise<Response>((resolve) => {
+        resolveHost = resolve
+      })
+    })
+
+    const pending = fetchFaviconBlob(HOSTNAME, () => offlineOnly, mockFetch)
+
+    // The user switches Google favicons off while the site request runs.
+    offlineOnly = true
+    resolveHost(new Response(null, { status: 404 }))
+
+    expect(await pending).toBeNull()
+    expect(log.map((entry) => entry.url)).toEqual([ICON_URL])
+  })
+
   it('does NOT fall back to Google when offlineOnly is true', async () => {
     stubFailOnce()
 

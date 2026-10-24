@@ -12,6 +12,7 @@ import { fetchFeedSource } from '../../../src/features/feeds/feedClient'
 import { useFeedItems } from '../../../src/features/feeds/useFeedItems'
 import {
   NETWORK_FEATURES_STORAGE_KEY,
+  onNetworkFeatureDisabled,
   resolveFaviconsOfflineOnly,
   useNetworkFeaturesStore,
 } from '../../../src/state/useNetworkFeaturesStore'
@@ -51,6 +52,47 @@ describe('network features', () => {
         window.localStorage.getItem(NETWORK_FEATURES_STORAGE_KEY) ?? '{}',
       ),
     ).toEqual({ googleFavicons: false, chartsAndFeeds: true, linkCheck: false })
+  })
+
+  it('follows a change made in another tab and stops the turned-off work', () => {
+    const stopCharts = vi.fn()
+    const unregister = onNetworkFeatureDisabled('chartsAndFeeds', stopCharts)
+
+    useNetworkFeaturesStore.getState().setFeature('chartsAndFeeds', true)
+
+    // Another tab switches charts off.
+    window.localStorage.setItem(
+      NETWORK_FEATURES_STORAGE_KEY,
+      JSON.stringify({ chartsAndFeeds: false, linkCheck: true }),
+    )
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: NETWORK_FEATURES_STORAGE_KEY }),
+    )
+
+    expect(useNetworkFeaturesStore.getState()).toMatchObject({
+      chartsAndFeeds: false,
+      linkCheck: true,
+    })
+    expect(stopCharts).toHaveBeenCalledOnce()
+    unregister()
+  })
+
+  it('never writes back a stale value for another switch', () => {
+    useNetworkFeaturesStore.getState().setFeature('chartsAndFeeds', true)
+    // Another tab turned charts off, but this tab missed the event.
+    window.localStorage.setItem(
+      NETWORK_FEATURES_STORAGE_KEY,
+      JSON.stringify({ chartsAndFeeds: false }),
+    )
+
+    useNetworkFeaturesStore.getState().setFeature('linkCheck', true)
+
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(NETWORK_FEATURES_STORAGE_KEY) ?? '{}',
+      ),
+    ).toEqual({ googleFavicons: false, chartsAndFeeds: false, linkCheck: true })
+    expect(useNetworkFeaturesStore.getState().chartsAndFeeds).toBe(false)
   })
 
   it('never allows Google favicons while the switch is off', () => {

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import {
   coerceNetworkFeatures,
+  NETWORK_FEATURE_KEYS,
   type NetworkFeatureKey,
   type NetworkFeatures,
 } from '../contracts/networkFeatures'
@@ -35,27 +36,83 @@ type NetworkFeaturesState = NetworkFeatures & {
   setFeature: (key: NetworkFeatureKey, enabled: boolean) => void
 }
 
+const disableHandlers = new Map<NetworkFeatureKey, Set<() => void>>()
+
+/**
+ * Runs `handler` whenever `key` is switched off, here or in another tab,
+ * so work already under way (open sockets, queued requests) stops at once
+ * instead of finishing after the user opted out.
+ */
+export function onNetworkFeatureDisabled(
+  key: NetworkFeatureKey,
+  handler: () => void,
+) {
+  const handlers = disableHandlers.get(key) ?? new Set()
+
+  handlers.add(handler)
+  disableHandlers.set(key, handlers)
+
+  return () => {
+    handlers.delete(handler)
+  }
+}
+
+export function isNetworkFeatureEnabled(key: NetworkFeatureKey) {
+  return useNetworkFeaturesStore.getState()[key]
+}
+
+function pickFeatures(state: NetworkFeatures): NetworkFeatures {
+  return {
+    googleFavicons: state.googleFavicons,
+    chartsAndFeeds: state.chartsAndFeeds,
+    linkCheck: state.linkCheck,
+  }
+}
+
+/** Applies new values and stops the work of every feature turned off. */
+function applyFeatures(next: NetworkFeatures) {
+  const previous = pickFeatures(useNetworkFeaturesStore.getState())
+
+  useNetworkFeaturesStore.setState(next)
+
+  for (const key of NETWORK_FEATURE_KEYS) {
+    if (previous[key] && !next[key]) {
+      for (const handler of disableHandlers.get(key) ?? []) {
+        handler()
+      }
+    }
+  }
+}
+
 export const useNetworkFeaturesStore = create<NetworkFeaturesState>(
-  (set, get) => ({
+  (_set, get) => ({
     ...readStoredFeatures(),
     setFeature: (key, enabled) => {
-      set({ [key]: enabled })
+      // Re-read first, so a stale tab never writes back an old value for
+      // another switch.
+      const next = { ...readStoredFeatures(), [key]: enabled }
 
-      const { googleFavicons, chartsAndFeeds, linkCheck } = get()
-
-      writeStoredFeatures({ googleFavicons, chartsAndFeeds, linkCheck })
+      writeStoredFeatures(next)
+      applyFeatures({ ...pickFeatures(get()), ...next })
     },
   }),
 )
+
+// Every open LinkHub tab follows a change made in any of them.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === NETWORK_FEATURES_STORAGE_KEY || event.key === null) {
+      applyFeatures(readStoredFeatures())
+    }
+  })
+}
 
 /**
  * Favicons stay offline-only (never Google) unless both the app-wide switch
  * allows Google and the workspace doesn't ask for offline-only.
  */
 export function resolveFaviconsOfflineOnly(workspaceOfflineOnly: boolean) {
-  return (
-    workspaceOfflineOnly || !useNetworkFeaturesStore.getState().googleFavicons
-  )
+  return workspaceOfflineOnly || !isNetworkFeatureEnabled('googleFavicons')
 }
 
 export function useFaviconsOfflineOnly(workspaceOfflineOnly: boolean) {

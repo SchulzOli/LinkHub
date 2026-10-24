@@ -131,8 +131,7 @@ export function useCardActions({
       void (async () => {
         try {
           const hostname = new URL(card.url).hostname
-          const blob = await fetchFaviconBlob(
-            hostname,
+          const blob = await fetchFaviconBlob(hostname, () =>
             resolveFaviconsOfflineOnly(
               workspace.appearance.faviconsOfflineOnly,
             ),

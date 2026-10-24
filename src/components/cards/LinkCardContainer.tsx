@@ -40,7 +40,10 @@ import { useDragPlacement } from '../../features/placement/useDragPlacement'
 import { useResizePlacement } from '../../features/placement/useResizePlacement'
 import { useAppearanceStore } from '../../state/useAppearanceStore'
 import { useLinkCheckStore } from '../../state/useLinkCheckStore'
-import { useFaviconsOfflineOnly } from '../../state/useNetworkFeaturesStore'
+import {
+  resolveFaviconsOfflineOnly,
+  useFaviconsOfflineOnly,
+} from '../../state/useNetworkFeaturesStore'
 import {
   useWorkspaceStore,
   type InteractionMode,
@@ -265,7 +268,9 @@ export const LinkCardContainer = memo(function LinkCardContainer({
       void (async () => {
         try {
           const hostname = new URL(normalizedUrl).hostname
-          const blob = await fetchFaviconBlob(hostname, faviconsOfflineOnly)
+          const blob = await fetchFaviconBlob(hostname, () =>
+            resolveFaviconsOfflineOnly(appearance.faviconsOfflineOnly),
+          )
 
           if (!blob) {
             return
@@ -281,7 +286,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         }
       })()
     },
-    [card.id, onUpdate, faviconsOfflineOnly],
+    [card.id, onUpdate, appearance.faviconsOfflineOnly],
   )
 
   const commitSizeDrafts = useCallback(
