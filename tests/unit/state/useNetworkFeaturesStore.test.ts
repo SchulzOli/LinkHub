@@ -40,6 +40,7 @@ describe('network features', () => {
       linkCheck: false,
       autoDashboard: false,
       aiArrangement: false,
+      deviceSync: false,
     })
     expect(coerceNetworkFeatures(null)).toEqual(DEFAULT_NETWORK_FEATURES)
     expect(
@@ -51,6 +52,7 @@ describe('network features', () => {
       linkCheck: true,
       autoDashboard: false,
       aiArrangement: false,
+      deviceSync: false,
     })
   })
 
@@ -68,6 +70,7 @@ describe('network features', () => {
       linkCheck: false,
       autoDashboard: false,
       aiArrangement: false,
+      deviceSync: false,
     })
   })
 
@@ -115,6 +118,7 @@ describe('network features', () => {
       linkCheck: true,
       autoDashboard: false,
       aiArrangement: false,
+      deviceSync: false,
     })
     expect(useNetworkFeaturesStore.getState().chartsAndFeeds).toBe(false)
   })

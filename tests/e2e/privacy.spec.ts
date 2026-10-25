@@ -54,6 +54,7 @@ test('works as a pure, fully local link dashboard out of the box', async ({
     'linkCheck',
     'autoDashboard',
     'aiArrangement',
+    'deviceSync',
   ]) {
     await expect(page.getByTestId(`privacy-status-${key}`)).toContainText('Off')
   }
@@ -79,12 +80,12 @@ test('turns each network feature on separately and keeps the choice', async ({
   await page.getByRole('tab', { name: 'Privacy' }).click()
 
   await page.getByLabel('Charts and news feeds').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 6 on')
+  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 7 on')
   await expect(page.getByTestId('privacy-status-chartsAndFeeds')).toContainText(
     'On',
   )
   await page.getByLabel('Link check').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 6 on')
+  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 7 on')
   await page.keyboard.press('Escape')
 
   await expect(page.getByRole('button', { name: 'Add chart' })).toBeVisible()

@@ -54,6 +54,12 @@ const ThemeGallery = lazy(async () => {
   return { default: module.ThemeGallery }
 })
 
+const SyncPanel = lazy(async () => {
+  const module = await import('./SyncPanel')
+
+  return { default: module.SyncPanel }
+})
+
 const AutoDashboardPanel = lazy(async () => {
   const module = await import('./AutoDashboardPanel')
 
@@ -95,9 +101,13 @@ export function OptionsMenu({
   const autoDashboardOn = useNetworkFeaturesStore(
     (state) => state.autoDashboard,
   )
-  // The Auto tab only exists while the Auto dashboard is on in Privacy.
+  const deviceSyncOn = useNetworkFeaturesStore((state) => state.deviceSync)
+  // The Auto and Sync tabs only exist while their switch in Privacy is on.
   const activeTab =
-    selectedTab === 'auto' && !autoDashboardOn ? 'options' : selectedTab
+    (selectedTab === 'auto' && !autoDashboardOn) ||
+    (selectedTab === 'sync' && !deviceSyncOn)
+      ? 'options'
+      : selectedTab
   const [promptDialog, setPromptDialog] = useState<PromptDialogState | null>(
     null,
   )
@@ -401,6 +411,8 @@ export function OptionsMenu({
               </div>
             ) : activeTab === 'auto' ? (
               <AutoDashboardPanel menuId={menuId} tabListId={tabListId} />
+            ) : activeTab === 'sync' ? (
+              <SyncPanel menuId={menuId} tabListId={tabListId} />
             ) : activeTab === 'privacy' ? (
               <PrivacyPanel menuId={menuId} tabListId={tabListId} />
             ) : (

@@ -28,8 +28,11 @@ export function OptionsMenuHeader({
   const autoDashboardOn = useNetworkFeaturesStore(
     (state) => state.autoDashboard,
   )
+  const deviceSyncOn = useNetworkFeaturesStore((state) => state.deviceSync)
   const visibleTabs = OPTIONS_MENU_TABS.filter(
-    (tab) => tab.id !== 'auto' || autoDashboardOn,
+    (tab) =>
+      (tab.id !== 'auto' || autoDashboardOn) &&
+      (tab.id !== 'sync' || deviceSyncOn),
   )
   return (
     <div className={styles.topSection}>

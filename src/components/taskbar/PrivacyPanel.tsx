@@ -23,6 +23,7 @@ const FEATURE_LABELS: Record<NetworkFeatureKey, string> = {
   linkCheck: 'Link check',
   autoDashboard: 'Auto dashboard',
   aiArrangement: 'AI arrangement',
+  deviceSync: 'Device sync',
 }
 
 function plural(count: number, word: string) {
@@ -119,6 +120,14 @@ export function PrivacyPanel({ menuId, tabListId }: PrivacyPanelProps) {
         : features.autoDashboard
           ? 'On · may contact api.anthropic.com when the Auto dashboard is built'
           : 'On, but the Auto dashboard is off',
+    },
+    {
+      key: 'deviceSync',
+      description:
+        'Keeps workspaces, themes and images in step across your devices through a WebDAV folder you choose (Nextcloud, a NAS, …). Everything is encrypted here first.',
+      status: features.deviceSync
+        ? 'On · connects only to your sync folder, set it up in the Sync tab'
+        : 'Off · nothing leaves this device',
     },
   ]
 

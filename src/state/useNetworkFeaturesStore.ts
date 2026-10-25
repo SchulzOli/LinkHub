@@ -94,6 +94,7 @@ function pickFeatures(state: NetworkFeatures): NetworkFeatures {
     linkCheck: state.linkCheck,
     autoDashboard: state.autoDashboard,
     aiArrangement: state.aiArrangement,
+    deviceSync: state.deviceSync,
   }
 }
 

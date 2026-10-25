@@ -21,6 +21,8 @@ export const NetworkFeaturesSchema = z.object({
   autoDashboard: z.boolean(),
   /** Lets the Auto dashboard ask the Anthropic API to arrange its pages. */
   aiArrangement: z.boolean(),
+  /** Device sync through a WebDAV folder the user chooses, encrypted. */
+  deviceSync: z.boolean(),
 })
 
 export type NetworkFeatures = z.infer<typeof NetworkFeaturesSchema>
@@ -33,6 +35,7 @@ export const DEFAULT_NETWORK_FEATURES: NetworkFeatures = {
   linkCheck: false,
   autoDashboard: false,
   aiArrangement: false,
+  deviceSync: false,
 }
 
 export const NETWORK_FEATURE_KEYS = Object.keys(

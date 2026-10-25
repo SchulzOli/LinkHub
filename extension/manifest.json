@@ -9,6 +9,7 @@
     "128": "icons/icon-128.png"
   },
   "optional_permissions": ["history", "topSites"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
