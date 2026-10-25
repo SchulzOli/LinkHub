@@ -64,7 +64,7 @@ rewrite the store assets. Store copy and the screenshot captions live in
 ### Privacy policy URL
 
 The privacy policy is published with the documentation site at
-https://schulzoli.github.io/LinkHub/privacy/. Use that URL in the Chrome,
+https://schulzoli.github.io/Linkhaven/privacy/. Use that URL in the Chrome,
 Edge and AMO privacy fields.
 
 ### Data migration
@@ -82,7 +82,7 @@ Current bundle imports can:
 ## Releasing
 
 Releases run in one manual GitHub Actions workflow,
-[Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml):
+[Release](https://github.com/SchulzOli/Linkhaven/actions/workflows/release.yml):
 
 1. Open **Actions → Release → Run workflow**.
 2. Enter the new version (`X.Y.Z`, higher than both the latest
@@ -330,7 +330,7 @@ For Linkhaven, the intended disclosure should stay aligned with the actual behav
 
 Chrome's policy requires a privacy policy when a product handles user data, and Chrome explicitly states that this still applies when the data is stored only locally.
 
-For that reason, this repository keeps the policy at `public/privacy/index.html`. The Pages workflow publishes it at https://schulzoli.github.io/LinkHub/privacy/ — use that URL in the Chrome Web Store privacy policy field.
+For that reason, this repository keeps the policy at `public/privacy/index.html`. The Pages workflow publishes it at https://schulzoli.github.io/Linkhaven/privacy/ — use that URL in the Chrome Web Store privacy policy field.
 
 #### 6. One-time Google setup for service-account publishing
 

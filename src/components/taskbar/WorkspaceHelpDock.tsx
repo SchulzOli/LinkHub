@@ -21,8 +21,8 @@ type PrivacySection = {
   title: string
 }
 
-const REPOSITORY_URL = 'https://github.com/SchulzOli/LinkHub'
-const FEEDBACK_URL = 'https://github.com/SchulzOli/LinkHub/issues'
+const REPOSITORY_URL = 'https://github.com/SchulzOli/Linkhaven'
+const FEEDBACK_URL = 'https://github.com/SchulzOli/Linkhaven/issues'
 
 const keyboardShortcuts: readonly ShortcutRow[] = [
   {

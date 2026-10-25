@@ -31,8 +31,8 @@ loads no remote code.
 You need Node.js 22 or later.
 
 ```bash
-git clone https://github.com/SchulzOli/LinkHub.git
-cd LinkHub
+git clone https://github.com/SchulzOli/Linkhaven.git
+cd Linkhaven
 npm install
 npm run dev
 ```

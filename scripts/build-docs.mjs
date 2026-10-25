@@ -54,7 +54,7 @@ if (
   )
   process.exit(1)
 }
-const repoUrl = 'https://github.com/SchulzOli/LinkHub'
+const repoUrl = 'https://github.com/SchulzOli/Linkhaven'
 
 /** doc/*.md files published as reference pages. */
 const REFERENCE_PAGES = [

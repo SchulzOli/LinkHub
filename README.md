@@ -1,15 +1,15 @@
 # Linkhaven
 
-[![CI](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml)
-[![Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml/badge.svg)](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml)
-[![Docs](https://github.com/SchulzOli/LinkHub/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/LinkHub/)
+[![CI](https://github.com/SchulzOli/Linkhaven/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/Linkhaven/actions/workflows/ci.yml)
+[![Release](https://github.com/SchulzOli/Linkhaven/actions/workflows/release.yml/badge.svg)](https://github.com/SchulzOli/Linkhaven/actions/workflows/release.yml)
+[![Docs](https://github.com/SchulzOli/Linkhaven/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/Linkhaven/)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/linkhub/dpbgplhiaobnegcbfedihimnoamlpgmd)
 [![Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0A7FEA?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/linkhub/gkcpbfphinbaoplepknkinjfkdhljghp)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/link-hub/)
 
 Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, news feeds, themes, and reusable layouts. It turns a blank tab into a spatial board where every link has a place, and the same React app powers both the hosted web build and the browser-extension new-tab experience for Chrome, Edge, and Firefox.
 
-**Documentation:** [schulzoli.github.io/LinkHub](https://schulzoli.github.io/LinkHub/)
+**Documentation:** [schulzoli.github.io/Linkhaven](https://schulzoli.github.io/Linkhaven/)
 
 ![Linkhaven canvas overview](extension/screenshots/01-canvas-overview.png)
 
@@ -183,11 +183,11 @@ Linkhaven is local-first.
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
-For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/LinkHub/privacy/](https://schulzoli.github.io/LinkHub/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
+For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/Linkhaven/privacy/](https://schulzoli.github.io/Linkhaven/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
 
 ## Documentation
 
-- [Documentation website](https://schulzoli.github.io/LinkHub/), built from `doc/` by `npm run docs:build`
+- [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
 - [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy
