@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 
 import {
   coerceNetworkFeatures,
   NETWORK_FEATURE_KEYS,
+  type FaviconSources,
   type NetworkFeatureKey,
   type NetworkFeatures,
 } from '../contracts/networkFeatures'
@@ -86,6 +88,7 @@ export function isNetworkFeatureEnabled(key: NetworkFeatureKey) {
 
 function pickFeatures(state: NetworkFeatures): NetworkFeatures {
   return {
+    siteFavicons: state.siteFavicons,
     googleFavicons: state.googleFavicons,
     chartsAndFeeds: state.chartsAndFeeds,
     linkCheck: state.linkCheck,
@@ -131,17 +134,22 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Favicons stay offline-only (never Google) unless both the app-wide switch
- * allows Google and the workspace doesn't ask for offline-only.
+ * Where card icons may load from: the site itself and/or Google, each only
+ * with its app-wide switch on. The workspace's "Favicons offline-only"
+ * option still rules Google out.
  */
-export function resolveFaviconsOfflineOnly(workspaceOfflineOnly: boolean) {
-  return workspaceOfflineOnly || !isNetworkFeatureEnabled('googleFavicons')
+export function resolveFaviconSources(
+  workspaceOfflineOnly: boolean,
+): FaviconSources {
+  const { siteFavicons, googleFavicons } = useNetworkFeaturesStore.getState()
+
+  return { site: siteFavicons, google: googleFavicons && !workspaceOfflineOnly }
 }
 
-export function useFaviconsOfflineOnly(workspaceOfflineOnly: boolean) {
-  const googleFavicons = useNetworkFeaturesStore(
-    (state) => state.googleFavicons,
-  )
+export function useFaviconSources(workspaceOfflineOnly: boolean) {
+  const site = useNetworkFeaturesStore((state) => state.siteFavicons)
+  const googleSwitch = useNetworkFeaturesStore((state) => state.googleFavicons)
+  const google = googleSwitch && !workspaceOfflineOnly
 
-  return workspaceOfflineOnly || !googleFavicons
+  return useMemo<FaviconSources>(() => ({ site, google }), [site, google])
 }

@@ -1,13 +1,13 @@
 ---
 title: Menu and settings
-description: The five menu tabs - Options, Themes, Templates, Statistics and Data.
+description: The six menu tabs - Options, Themes, Templates, Statistics, Data and Privacy.
 order: 5
 section: Guide
 ---
 
 # Menu and settings
 
-Open the menu with ☰ in the taskbar. It has five tabs.
+Open the menu with ☰ in the taskbar. It has six tabs.
 
 ## Options
 
@@ -68,6 +68,20 @@ Computed on your device from the active board:
   current one. See [Storage](storage.html#canvas-bundle-import-and-export).
 - **Maintenance**: **Check Links** sends a `HEAD` request to every card URL
   and marks cards whose site does not answer within 5 seconds.
+
+## Privacy
+
+Every feature that uses the network has its own switch here, with a live
+status of what it would contact. All are off by default, so a fresh
+Linkhaven is a pure link dashboard that makes no requests and needs no
+server.
+
+| Switch                | What it does when on                                                         |
+| --------------------- | ---------------------------------------------------------------------------- |
+| Website icons         | Loads each card's icon from its own site (`/favicon.ico`)                    |
+| Google favicons       | Asks Google's favicon service when a site has no icon                        |
+| Charts and news feeds | Shows the chart and feed buttons; chart and feed nodes connect to their feed |
+| Link check            | Enables **Check Links** in the Data tab                                      |
 
 ## Workspaces
 

@@ -35,7 +35,7 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 
 ### Content and organization
 
-- Create link cards from URLs with automatic favicon lookup
+- Create link cards from URLs; website icons load on request (Menu → Privacy), otherwise cards show a letter or your own image
 - Resize cards from 2x2 up to 12x12 grid cells
 - Override favicons with uploaded gallery images
 - Organize content inside collapsible groups and nested groups
@@ -175,8 +175,9 @@ Linkhaven is local-first.
 - IndexedDB is the primary persistence layer for workspaces, templates, themes, image metadata, and image blobs
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
-- Every feature that uses the network is off by default and has its own switch with live status under **Menu → Privacy**: Google favicons, chart and news feed nodes, and Check Links
-- Creating a link card fetches the site's favicon once from the site itself and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback
+- Out of the box Linkhaven is a pure link dashboard that makes no network requests and needs no server: no browser permissions, no charts or feeds, no icon lookups
+- Every feature that uses the network is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, chart and news feed nodes, and Check Links
+- With **Website icons** on, creating a link card fetches the site's `/favicon.ico` once and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback
 - Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
 - News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it

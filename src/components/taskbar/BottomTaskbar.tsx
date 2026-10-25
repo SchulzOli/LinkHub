@@ -292,38 +292,34 @@ export function BottomTaskbar({
                   <ImageGalleryIcon className={styles.modeSvg} />
                 </span>
               </button>
-              <button
-                aria-label="Add chart"
-                className={styles.modeButton}
-                disabled={!chartsAndFeeds}
-                onClick={onCreateChart}
-                title={
-                  chartsAndFeeds
-                    ? 'Add chart'
-                    : 'Add chart (off in Menu → Privacy)'
-                }
-                type="button"
-              >
-                <span aria-hidden="true" className={styles.modeIcon}>
-                  <AddChartIcon className={styles.modeSvg} />
-                </span>
-              </button>
-              <button
-                aria-label="Add news feed"
-                className={styles.modeButton}
-                disabled={!chartsAndFeeds}
-                onClick={onCreateFeed}
-                title={
-                  chartsAndFeeds
-                    ? 'Add news feed'
-                    : 'Add news feed (off in Menu → Privacy)'
-                }
-                type="button"
-              >
-                <span aria-hidden="true" className={styles.modeIcon}>
-                  <AddFeedIcon className={styles.modeSvg} />
-                </span>
-              </button>
+              {/* Pure link dashboard until charts and feeds are turned on
+                  in Menu → Privacy. */}
+              {chartsAndFeeds ? (
+                <>
+                  <button
+                    aria-label="Add chart"
+                    className={styles.modeButton}
+                    onClick={onCreateChart}
+                    title="Add chart"
+                    type="button"
+                  >
+                    <span aria-hidden="true" className={styles.modeIcon}>
+                      <AddChartIcon className={styles.modeSvg} />
+                    </span>
+                  </button>
+                  <button
+                    aria-label="Add news feed"
+                    className={styles.modeButton}
+                    onClick={onCreateFeed}
+                    title="Add news feed"
+                    type="button"
+                  >
+                    <span aria-hidden="true" className={styles.modeIcon}>
+                      <AddFeedIcon className={styles.modeSvg} />
+                    </span>
+                  </button>
+                </>
+              ) : null}
             </>
           ) : null}
         </div>

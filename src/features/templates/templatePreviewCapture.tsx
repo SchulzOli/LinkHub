@@ -12,7 +12,7 @@ import {
 } from '../../contracts/cardGroup'
 import type { LinkCard } from '../../contracts/linkCard'
 import type { PictureNode } from '../../contracts/pictureNode'
-import { resolveFaviconsOfflineOnly } from '../../state/useNetworkFeaturesStore'
+import { resolveFaviconSources } from '../../state/useNetworkFeaturesStore'
 import type { StoredImageAssetRecord } from '../../storage/imageRepository'
 import { resolveCardColors } from '../appearance/cardColorPalette'
 import { withAlpha } from '../appearance/colorMath'
@@ -423,7 +423,7 @@ function PreviewCard(props: {
     ? (imageUrlById.get(card.faviconOverrideImageId) ?? null)
     : resolveCardFaviconUrl(
         card,
-        resolveFaviconsOfflineOnly(appearance.faviconsOfflineOnly ?? false),
+        resolveFaviconSources(appearance.faviconsOfflineOnly ?? false),
       ) || null
   const previewCardImageUrl = resolvePreviewImageUrl(resolvedCardImageUrl)
   const usesFullBleedCardImageSource =

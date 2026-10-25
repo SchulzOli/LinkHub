@@ -13,7 +13,7 @@ import { useFeedItems } from '../../../src/features/feeds/useFeedItems'
 import {
   NETWORK_FEATURES_STORAGE_KEY,
   onNetworkFeatureDisabled,
-  resolveFaviconsOfflineOnly,
+  resolveFaviconSources,
   useNetworkFeaturesStore,
 } from '../../../src/state/useNetworkFeaturesStore'
 
@@ -34,6 +34,7 @@ describe('network features', () => {
 
   it('keeps every network feature off by default', () => {
     expect(DEFAULT_NETWORK_FEATURES).toEqual({
+      siteFavicons: false,
       googleFavicons: false,
       chartsAndFeeds: false,
       linkCheck: false,
@@ -41,7 +42,12 @@ describe('network features', () => {
     expect(coerceNetworkFeatures(null)).toEqual(DEFAULT_NETWORK_FEATURES)
     expect(
       coerceNetworkFeatures({ linkCheck: true, googleFavicons: 'yes' }),
-    ).toEqual({ googleFavicons: false, chartsAndFeeds: false, linkCheck: true })
+    ).toEqual({
+      siteFavicons: false,
+      googleFavicons: false,
+      chartsAndFeeds: false,
+      linkCheck: true,
+    })
   })
 
   it('persists a switch to localStorage', () => {
@@ -51,7 +57,12 @@ describe('network features', () => {
       JSON.parse(
         window.localStorage.getItem(NETWORK_FEATURES_STORAGE_KEY) ?? '{}',
       ),
-    ).toEqual({ googleFavicons: false, chartsAndFeeds: true, linkCheck: false })
+    ).toEqual({
+      siteFavicons: false,
+      googleFavicons: false,
+      chartsAndFeeds: true,
+      linkCheck: false,
+    })
   })
 
   it('follows a change made in another tab and stops the turned-off work', () => {
@@ -91,7 +102,12 @@ describe('network features', () => {
       JSON.parse(
         window.localStorage.getItem(NETWORK_FEATURES_STORAGE_KEY) ?? '{}',
       ),
-    ).toEqual({ googleFavicons: false, chartsAndFeeds: false, linkCheck: true })
+    ).toEqual({
+      siteFavicons: false,
+      googleFavicons: false,
+      chartsAndFeeds: false,
+      linkCheck: true,
+    })
     expect(useNetworkFeaturesStore.getState().chartsAndFeeds).toBe(false)
   })
 
@@ -124,14 +140,15 @@ describe('network features', () => {
     setItem.mockRestore()
   })
 
-  it('never allows Google favicons while the switch is off', () => {
-    expect(resolveFaviconsOfflineOnly(false)).toBe(true)
+  it('allows no icon source until its switch is on', () => {
+    expect(resolveFaviconSources(false)).toEqual({ site: false, google: false })
 
+    useNetworkFeaturesStore.getState().setFeature('siteFavicons', true)
     useNetworkFeaturesStore.getState().setFeature('googleFavicons', true)
 
-    expect(resolveFaviconsOfflineOnly(false)).toBe(false)
-    // The workspace's own offline-only option still wins.
-    expect(resolveFaviconsOfflineOnly(true)).toBe(true)
+    expect(resolveFaviconSources(false)).toEqual({ site: true, google: true })
+    // The workspace's own offline-only option still rules Google out.
+    expect(resolveFaviconSources(true)).toEqual({ site: true, google: false })
   })
 
   it('does not connect a chart while charts are off', () => {

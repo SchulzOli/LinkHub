@@ -293,6 +293,7 @@ test.describe('Store listing screenshots', () => {
     // clearAppState empties localStorage.
     await enableNetworkFeatures(page, {
       chartsAndFeeds: true,
+      siteFavicons: true,
       googleFavicons: true,
     })
     await page.goto('/')

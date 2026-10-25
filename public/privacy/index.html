@@ -195,9 +195,10 @@
           <p class="intro">
             Linkhaven stores your workspace data locally in your browser on your
             device. It does not send your boards, templates, themes, images, or
-            local usage statistics to Linkhaven servers. Network requests only
-            go to the sites you link to, their favicons, and the chart or news
-            feed servers you configure yourself.
+            local usage statistics to Linkhaven servers. With the default
+            settings it makes no network requests; requests only go to the sites
+            you open, and to icon, chart or news feed sources once you turn
+            those features on.
           </p>
           <div class="meta">
             <span>Last updated: 2026-10-04</span>
@@ -270,18 +271,20 @@
         <section>
           <h2>5. External requests</h2>
           <p>
-            Linkhaven makes these network requests, and only these. Google
-            favicons, chart and news feed nodes, and Check Links are each off by
+            With its default settings Linkhaven makes no network requests at
+            all. The requests below belong to website icons, Google favicons,
+            chart and news feed nodes, and Check Links, which are each off by
             default and only work after you turn them on under
             <em>Menu → Privacy</em>, which also shows their current status.
           </p>
           <ul>
             <li>
-              <strong>Favicons.</strong> When you create a link card, Linkhaven
-              loads the site's icon once from the site itself
-              (<code>/favicon.ico</code>) and keeps it locally. Only with
-              <em>Google favicons</em> turned on does it fall back to Google's
-              public favicon service.
+              <strong>Website icons.</strong> With <em>Website icons</em> on,
+              creating a link card loads the site's icon once from the site
+              itself (<code>/favicon.ico</code>) and keeps it locally. With
+              <em>Google favicons</em> also on, Google's public favicon service
+              is the fallback. With both off, cards show a letter or an image
+              you uploaded.
             </li>
             <li>
               <strong>Chart nodes.</strong> A chart connects to the feed server

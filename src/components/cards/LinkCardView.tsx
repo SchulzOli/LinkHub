@@ -10,6 +10,7 @@ import {
 import styles from './LinkCard.module.css'
 
 import type { LinkCard as LinkCardModel } from '../../contracts/linkCard'
+import type { FaviconSources } from '../../contracts/networkFeatures'
 import type { SurfaceShadowStyle } from '../../contracts/surfaceEffects'
 import {
   createPlaceholderDataUrl,
@@ -28,7 +29,7 @@ import type { LinkCardViewModel } from './useLinkCardViewModel'
 type LinkCardViewProps = {
   articleRef: RefObject<HTMLElement | null>
   card: LinkCardModel
-  faviconsOfflineOnly: boolean
+  faviconSources: FaviconSources
   interactionMode: InteractionMode
   isEditMode: boolean
   isSelected: boolean
@@ -58,7 +59,7 @@ function toLinkClassName(className: string) {
 export const LinkCardView = memo(function LinkCardView({
   articleRef,
   card,
-  faviconsOfflineOnly,
+  faviconSources,
   interactionMode,
   isEditMode,
   isSelected,
@@ -110,45 +111,48 @@ export const LinkCardView = memo(function LinkCardView({
                     return
                   }
 
-                  const attempt = Number(image.dataset.fallbackAttempt ?? 0)
-
-                  // Without Google there is no second fallback: after the
-                  // site's own favicon.ico the letter placeholder is next.
-                  if (attempt >= 2 || (attempt === 1 && faviconsOfflineOnly)) {
-                    // All fallbacks exhausted – show placeholder initial chip
+                  const showPlaceholder = () => {
                     if (placeholderDataUrl) {
                       image.src = placeholderDataUrl
                     } else {
                       image.style.visibility = 'hidden'
                     }
+                  }
+
+                  // Fallbacks, each only while its source is allowed: the
+                  // site's own favicon.ico, then Google; then the letter.
+                  let fallbacks: string[] = []
+
+                  try {
+                    const { origin, hostname } = new URL(card.url)
+
+                    fallbacks = [
+                      ...(faviconSources.site ? [`${origin}/favicon.ico`] : []),
+                      ...(faviconSources.google
+                        ? [
+                            `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
+                          ]
+                        : []),
+                    ]
+                  } catch {
+                    // URL parse error – only the placeholder is left
+                  }
+
+                  const attempt = Number(image.dataset.fallbackAttempt ?? 0)
+                  const failed = image.getAttribute('src')
+                  const next = fallbacks
+                    .slice(attempt)
+                    .find((candidate) => candidate !== failed)
+
+                  if (!next) {
+                    showPlaceholder()
                     return
                   }
 
-                  image.dataset.fallbackAttempt = String(attempt + 1)
-
-                  try {
-                    const origin = new URL(card.url).origin
-
-                    if (attempt === 0) {
-                      // First fallback: host's own favicon.ico
-                      image.src = `${origin}/favicon.ico`
-                      return
-                    }
-
-                    if (attempt === 1 && !faviconsOfflineOnly) {
-                      // Second fallback: Google service
-                      const hostname = new URL(card.url).hostname
-                      image.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`
-                      return
-                    }
-                  } catch {
-                    // URL parse error – show placeholder
-                    if (placeholderDataUrl) {
-                      image.src = placeholderDataUrl
-                    } else {
-                      image.style.visibility = 'hidden'
-                    }
-                  }
+                  image.dataset.fallbackAttempt = String(
+                    fallbacks.indexOf(next) + 1,
+                  )
+                  image.src = next
                 }}
               />
             ) : (
