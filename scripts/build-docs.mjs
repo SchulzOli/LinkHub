@@ -402,6 +402,7 @@ function homeBody(pages) {
   <p class="lead">An infinite board for links, groups, pictures, live charts and news feeds. Local-first: no account, no cloud, no tracking.</p>
   <div class="hero-actions">
     <a class="button primary" href="getting-started.html">Get started</a>
+    <a class="button" href="app/">Open the web app</a>
     <a class="button" href="https://chromewebstore.google.com/detail/linkhub/dpbgplhiaobnegcbfedihimnoamlpgmd" rel="noopener">Chrome</a>
     <a class="button" href="https://microsoftedge.microsoft.com/addons/detail/linkhub/gkcpbfphinbaoplepknkinjfkdhljghp" rel="noopener">Edge</a>
     <a class="button" href="https://addons.mozilla.org/en-US/firefox/addon/link-hub/" rel="noopener">Firefox</a>

@@ -1,69 +1,41 @@
-# Linkhaven app (Tauri)
+# Web app and device sync
 
-Besides the browser extension, Linkhaven ships as a native app for
-Windows, macOS, Linux, Android and iOS, built with [Tauri 2](https://tauri.app).
-It is the same web app in the system web view; data stays on the device
-like in the extension, and [device sync](#device-sync) connects the two.
+Linkhaven comes in two forms that share one codebase:
 
-The extension stays the way to get Linkhaven as the browser's new tab.
-The app is for phones and for using Linkhaven as its own window.
+- the **browser extension** (Chrome, Edge, Firefox) makes Linkhaven your new
+  tab page
+- the **web app** (PWA) installs on phones, tablets and computers from
+  [schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/)
 
-## What is different in the app
+Both keep everything on the device and work offline. Each one stores its
+own data; [device sync](#device-sync) keeps them in step.
 
-- Links open in the system's default browser; the app window never
-  navigates away from Linkhaven.
-- Device sync uses Tauri's HTTP plugin, so a WebDAV server needs no CORS
-  setup.
-- Browser data for the Auto dashboard (history, top sites) only exists in
-  the extension. In the app, the Auto dashboard uses link opens on your
-  own cards.
+## Web app (PWA)
 
-## Desktop
+Open the address above, then install it:
 
-Requirements: Node.js 22, Rust (stable, via [rustup](https://rustup.rs)) and
-the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your
-system (on Linux: `libwebkit2gtk-4.1-dev librsvg2-dev
-libayatana-appindicator3-dev`).
+- **Android (Chrome):** menu → _Install app_
+- **iPhone and iPad (Safari):** Share → _Add to Home Screen_
+- **Windows, macOS, Linux (Chrome or Edge):** the install icon in the
+  address bar
 
-```bash
-npm ci
-npm run app:dev     # app window with hot reload
-npm run app:build   # installers in src-tauri/target/release/bundle/
-```
+After the first visit a service worker keeps the app's files on the device,
+so it opens without a network. It only answers for Linkhaven's own files;
+everything else goes to the network as usual. A new version downloads in
+the background and is used from the next start on.
 
-The [Desktop app workflow](../.github/workflows/app.yml) builds installers
-for all three systems on demand and for tags like `app-v1.2.0`. They are
-unsigned: Windows SmartScreen and macOS Gatekeeper warn until signing is set
-up ([Windows](https://tauri.app/distribute/sign/windows/),
-[macOS](https://tauri.app/distribute/sign/macos/)).
+Differences to the extension: the web app is not the new tab page, and the
+Auto dashboard can't read browser history or top sites (only link opens on
+your own cards).
 
-## Android and iOS
-
-The mobile projects are generated once on a machine with the platform SDKs
-and then committed:
+### Build it yourself
 
 ```bash
-# Android: Android Studio with SDK, NDK and a JDK 17
-npx tauri android init
-npx tauri android dev      # emulator or a connected phone
-npx tauri android build    # APK/AAB in src-tauri/gen/android/app/build/outputs/
-
-# iOS: a Mac with Xcode
-npx tauri ios init
-npx tauri ios dev
-npx tauri ios build
+npm run build:pwa   # into dist-pwa/, served from any folder over HTTPS
 ```
 
-Store releases need a Google Play developer account and an Apple Developer
-Program membership; see Tauri's guides for
-[Google Play](https://tauri.app/distribute/google-play/) and the
-[App Store](https://tauri.app/distribute/app-store/).
-
-The app icons for every platform come from `src-tauri/app-icon.svg`:
-
-```bash
-npx tauri icon src-tauri/app-icon.svg -o src-tauri/icons
-```
+The [Docs and web app workflow](../.github/workflows/pages.yml) publishes it
+to GitHub Pages under `app/` on every push to `main`.
 
 ## Device sync
 
@@ -95,13 +67,28 @@ The folder holds `linkhaven-sync.json` (the salt and a check value, not
 secret), `state.bin` (everything else, encrypted) and `images/` (one
 encrypted file per image).
 
-### In the browser extension
+### In the extension
 
 The extension asks for access to the sync server's address when you press
-Connect, and gives it back when you disconnect.
+Connect, and gives it back when you disconnect. No server setup is needed.
 
-### In a plain browser tab
+### In the web app: allow it on the server (CORS)
 
-Opened as a website (for example `npm run dev`), the browser only lets
-Linkhaven reach a WebDAV server that allows it (CORS). Nextcloud doesn't by
-default; use the extension or the app there.
+A web page may only talk to another server when that server allows it.
+WebDAV servers don't by default, so the web app needs this once on the
+server, for the origin `https://schulzoli.github.io`:
+
+- **Nextcloud / ownCloud:** install the _WebAppPassword_ app and add
+  `https://schulzoli.github.io` under Settings → Security → WebAppPassword
+  → allowed origins.
+- **Behind a reverse proxy** (nginx, Caddy, Traefik): answer `OPTIONS`
+  requests and add these headers for that origin:
+
+  ```
+  Access-Control-Allow-Origin: https://schulzoli.github.io
+  Access-Control-Allow-Methods: GET, PUT, DELETE, MKCOL, OPTIONS
+  Access-Control-Allow-Headers: Authorization, Content-Type, If-Match, If-None-Match
+  Access-Control-Expose-Headers: ETag
+  ```
+
+Without it, Connect reports that the server could not be reached.

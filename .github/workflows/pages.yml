@@ -1,16 +1,12 @@
-name: Docs
+name: Docs and web app
+
+# Publishes the documentation website and, under app/, the installable web
+# app (PWA) to GitHub Pages.
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'doc/**'
-      - 'scripts/build-docs.mjs'
-      - 'extension/screenshots/**'
-      - 'public/privacy/**'
-      - 'public/linkhaven-mark.svg'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -42,6 +38,9 @@ jobs:
 
       - name: Build documentation site
         run: npm run docs:build
+
+      - name: Build web app into site/app
+        run: npm run build:pwa -- --outDir site/app
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

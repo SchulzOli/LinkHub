@@ -2,10 +2,10 @@ import '@fontsource-variable/inter'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
-import { installTauriLinkHandling } from './features/platform/tauriLinks'
+import { registerServiceWorker } from './features/pwa/registerServiceWorker'
 import './styles/globals.css'
 
-installTauriLinkHandling()
+registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

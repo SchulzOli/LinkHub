@@ -26,6 +26,22 @@ Linkhaven replaces the new tab page in Chrome, Edge and Firefox.
 After the install, open a new tab. The extension asks for no permissions and
 loads no remote code.
 
+## Use it as an app on phone, tablet or PC
+
+Linkhaven also runs as an installable web app (PWA):
+[schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/).
+
+- **Android (Chrome):** open the link, then menu → _Install app_.
+- **iPhone and iPad (Safari):** open the link, then Share → _Add to Home
+  Screen_.
+- **Windows, macOS, Linux (Chrome or Edge):** open the link, then the install
+  icon in the address bar.
+
+Once installed it opens without a network, like the extension. Your data
+stays in that browser on that device; the app and the extension each keep
+their own. To use the same workspaces everywhere, turn on
+[device sync](../APP.md#device-sync).
+
 ## Run it from source
 
 You need Node.js 22 or later.

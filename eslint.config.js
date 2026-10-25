@@ -8,9 +8,8 @@ import tseslint from 'typescript-eslint'
 export default defineConfig([
   globalIgnores([
     'coverage',
-    'src-tauri/target',
-    'src-tauri/gen',
     'dist',
+    'dist-pwa',
     'playwright-report',
     'site',
     'test-results',

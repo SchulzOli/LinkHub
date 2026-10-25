@@ -52,7 +52,7 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 
 - Turn on **Device sync** under **Menu → Privacy** to keep workspaces, themes and images in step across devices through a WebDAV folder you own (Nextcloud, a NAS, …); no Linkhaven server involved
 - End-to-end encrypted with your own sync passphrase; the server only sees ciphertext
-- Besides the browser extension, Linkhaven runs as a native app on Windows, macOS, Linux, Android and iOS (Tauri); see [doc/APP.md](doc/APP.md)
+- Besides the browser extension, Linkhaven installs as a web app (PWA) on phones, tablets and computers and works offline: [schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/); see [doc/APP.md](doc/APP.md)
 
 ### Charts and news feeds
 
@@ -180,14 +180,13 @@ Firefox:
 
 To release, run **Actions → Release** with the new version and the stores to publish to; details in [extension/EXTENSION.md](extension/EXTENSION.md#releasing).
 
-## Desktop and Mobile App
+## Web App (PWA)
 
 ```bash
-npm run app:dev     # app window with hot reload (needs Rust and the Tauri prerequisites)
-npm run app:build   # installers in src-tauri/target/release/bundle/
+npm run build:pwa   # installable, offline-capable web app in dist-pwa/
 ```
 
-Android and iOS builds, signing and device sync setup are described in [doc/APP.md](doc/APP.md).
+It is published with the docs to [schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/). Installing it on phones and computers and setting up device sync are described in [doc/APP.md](doc/APP.md).
 
 ## Storage and Privacy
 
@@ -210,7 +209,7 @@ For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privac
 ## Documentation
 
 - [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
-- [doc/APP.md](doc/APP.md) for the desktop and mobile app and device sync
+- [doc/APP.md](doc/APP.md) for the web app (PWA) and device sync
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
 - [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy

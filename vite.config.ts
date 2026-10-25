@@ -2,6 +2,8 @@ import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
 
+import { pwaServiceWorker } from './scripts/pwaServiceWorker'
+
 // Match the Firefox add-on minimum version and the Chromium equivalents for extension builds.
 const extensionBuildTarget = ['chrome109', 'edge109', 'firefox109']
 
@@ -55,8 +57,11 @@ const vendorChunkGroups = [
 export default defineConfig(({ mode }) => {
   const isExtensionBuild = mode === 'extension'
   const analyzeBundle = mode === 'analyze'
+  // The installable web app, served from a sub-folder (GitHub Pages).
+  const isPwaBuild = mode === 'pwa'
 
   return {
+    base: isPwaBuild ? './' : undefined,
     build: {
       target: isExtensionBuild ? extensionBuildTarget : undefined,
       rolldownOptions: {
@@ -69,6 +74,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      ...(isPwaBuild ? [pwaServiceWorker()] : []),
       ...(analyzeBundle
         ? [
             visualizer({
