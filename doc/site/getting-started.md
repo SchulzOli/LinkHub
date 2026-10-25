@@ -32,7 +32,7 @@ You need Node.js 22 or later.
 
 ```bash
 git clone https://github.com/SchulzOli/LinkHub.git
-cd Linkhaven
+cd LinkHub
 npm install
 npm run dev
 ```

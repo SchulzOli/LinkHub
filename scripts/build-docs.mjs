@@ -314,7 +314,10 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
 <link rel="icon" type="image/svg+xml" href="assets/linkhaven-mark.svg" />
 <script>
   (() => {
-    const stored = localStorage.getItem('linkhaven-docs-theme')
+    // 'linkhub-docs-theme' is the key from before the rename to Linkhaven.
+    const stored =
+      localStorage.getItem('linkhaven-docs-theme') ??
+      localStorage.getItem('linkhub-docs-theme')
     const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
   })()
