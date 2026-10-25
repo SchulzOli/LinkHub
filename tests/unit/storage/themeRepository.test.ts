@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { defaultAppearanceProfile } from '../../../src/contracts/appearanceProfile'
 import { createThemeFromAppearance } from '../../../src/features/themes/themeLibrary'
 import {
-  registerLinkHubStorageBackend,
+  registerLinkhavenStorageBackend,
   STORAGE_STORES,
-  type LinkHubStorageBackend,
+  type LinkhavenStorageBackend,
 } from '../../../src/storage/storageBackend'
 import {
   deleteTheme,
@@ -17,7 +17,7 @@ import {
 type Store = Map<string, unknown>
 type StoreBag = Record<string, Store>
 
-function createInMemoryBackend(): LinkHubStorageBackend {
+function createInMemoryBackend(): LinkhavenStorageBackend {
   const stores: StoreBag = {}
 
   for (const name of Object.values(STORAGE_STORES)) {
@@ -68,11 +68,11 @@ function createInMemoryBackend(): LinkHubStorageBackend {
 describe('themeRepository', () => {
   afterEach(() => {
     // Reset by registering a clean backend for each next test.
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
   })
 
   it('persists, retrieves, lists, and deletes themes via the storage backend', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     const olderTheme = createThemeFromAppearance(
       defaultAppearanceProfile,
@@ -105,7 +105,7 @@ describe('themeRepository', () => {
   })
 
   it('returns null for missing themes and ignores invalid payloads', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     expect(await getTheme('missing')).toBeNull()
 
@@ -114,7 +114,7 @@ describe('themeRepository', () => {
     await putTheme(theme)
 
     // Inject an invalid record by using the backend directly.
-    registerLinkHubStorageBackend({
+    registerLinkhavenStorageBackend({
       kind: 'mixed',
       async openDatabase() {
         return {

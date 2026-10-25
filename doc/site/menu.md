@@ -1,13 +1,13 @@
 ---
 title: Menu and settings
-description: The five menu tabs - Options, Themes, Templates, Statistics and Data.
+description: The six menu tabs - Options, Themes, Templates, Statistics, Data and Privacy.
 order: 5
 section: Guide
 ---
 
 # Menu and settings
 
-Open the menu with ☰ in the taskbar. It has five tabs.
+Open the menu with ☰ in the taskbar. It has six tabs.
 
 ## Options
 
@@ -27,7 +27,7 @@ Blueprint, Minimal, Nord, Sunset and Neon. Each tile shows a small preview of
 the canvas in that theme.
 
 - **Save current** stores the active look as your own theme.
-- **Import** reads a `.linkhub-theme.json` file. Your own themes can be
+- **Import** reads a `.linkhaven-theme.json` file. Your own themes can be
   exported and deleted.
 - **Customize** opens the token editor: every color, radius and the font,
   separately for light and dark.
@@ -64,10 +64,24 @@ Computed on your device from the active board:
 
 - **Manage workspaces**: rename, reorder and delete boards (edit mode).
 - **Backup**: export the board with the image gallery, templates and themes
-  as one `.linkhub.zip`; import a bundle as a new workspace or to replace the
+  as one `.linkhaven.zip`; import a bundle as a new workspace or to replace the
   current one. See [Storage](storage.html#canvas-bundle-import-and-export).
 - **Maintenance**: **Check Links** sends a `HEAD` request to every card URL
   and marks cards whose site does not answer within 5 seconds.
+
+## Privacy
+
+Every feature that uses the network has its own switch here, with a live
+status of what it would contact. All are off by default, so a fresh
+Linkhaven is a pure link dashboard that makes no requests and needs no
+server.
+
+| Switch                | What it does when on                                                         |
+| --------------------- | ---------------------------------------------------------------------------- |
+| Website icons         | Loads each card's icon from its own site (`/favicon.ico`)                    |
+| Google favicons       | Asks Google's favicon service when a site has no icon                        |
+| Charts and news feeds | Shows the chart and feed buttons; chart and feed nodes connect to their feed |
+| Link check            | Enables **Check Links** in the Data tab                                      |
 
 ## Workspaces
 

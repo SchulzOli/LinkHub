@@ -1,6 +1,7 @@
 import styles from '../OptionsMenu.module.css'
 
-import { LinkHubMark } from '../../ui/LinkHubMark'
+import { useNetworkFeaturesStore } from '../../../state/useNetworkFeaturesStore'
+import { LinkhavenMark } from '../../ui/LinkhavenMark'
 import { CloseIcon } from '../TaskbarIcons'
 import type { MenuTab } from './optionsMenuTabs'
 import { OPTIONS_MENU_TABS } from './optionsMenuTabs'
@@ -24,18 +25,24 @@ export function OptionsMenuHeader({
   onSelectTab,
   tabListId,
 }: OptionsMenuHeaderProps) {
+  const autoDashboardOn = useNetworkFeaturesStore(
+    (state) => state.autoDashboard,
+  )
+  const visibleTabs = OPTIONS_MENU_TABS.filter(
+    (tab) => tab.id !== 'auto' || autoDashboardOn,
+  )
   return (
     <div className={styles.topSection}>
       <div className={styles.headerRow}>
         <div className={styles.headerIntro}>
           <span aria-hidden="true" className={styles.brandMark}>
-            <LinkHubMark
+            <LinkhavenMark
               className={styles.brandGlyph}
               color="var(--text-primary)"
             />
           </span>
           <div className={styles.titleRow}>
-            <h2 className={styles.title}>LinkHub</h2>
+            <h2 className={styles.title}>Linkhaven</h2>
             <span className={styles.headerMeta}>Local</span>
           </div>
         </div>
@@ -54,7 +61,7 @@ export function OptionsMenuHeader({
         id={tabListId}
         role="tablist"
       >
-        {OPTIONS_MENU_TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const selected = activeTab === tab.id
 
           return (

@@ -5,9 +5,15 @@ import {
   moveElementToPoint,
   moveGroupIntoGroupBody,
 } from './dragHelpers'
-import { dismissVisibleEditPanels, openGroupEditor } from './fixtures'
+import {
+  dismissVisibleEditPanels,
+  enableNetworkFeatures,
+  openGroupEditor,
+} from './fixtures'
 
 test.beforeEach(async ({ page }) => {
+  // Charts and feeds are off by default (Menu → Privacy).
+  await enableNetworkFeatures(page, { chartsAndFeeds: true })
   await page.goto('/')
   await page.evaluate(async () => {
     window.localStorage.clear()

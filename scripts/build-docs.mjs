@@ -1,10 +1,10 @@
 /**
- * Builds the LinkHub documentation website into site/.
+ * Builds the Linkhaven documentation website into site/.
  *
  * Sources (single source of truth, no copies):
  *   doc/site/*.md      guide pages with front matter
  *   doc/*.md           reference pages listed in REFERENCE_PAGES
- *   extension/screenshots/*.png, public/linkhub-mark.svg, public/privacy/
+ *   extension/screenshots/*.png, public/linkhaven-mark.svg, public/privacy/
  *
  * Usage: node scripts/build-docs.mjs [--out site]
  */
@@ -54,7 +54,7 @@ if (
   )
   process.exit(1)
 }
-const repoUrl = 'https://github.com/SchulzOli/LinkHub'
+const repoUrl = 'https://github.com/SchulzOli/Linkhaven'
 
 /** doc/*.md files published as reference pages. */
 const REFERENCE_PAGES = [
@@ -306,15 +306,18 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${escapeHtml(title)} · LinkHub</title>
+<title>${escapeHtml(title)} · Linkhaven</title>
 <meta name="description" content="${escapeHtml(description)}" />
-<meta property="og:title" content="${escapeHtml(title)} · LinkHub" />
+<meta property="og:title" content="${escapeHtml(title)} · Linkhaven" />
 <meta property="og:description" content="${escapeHtml(description)}" />
 <meta property="og:image" content="assets/screenshots/01-canvas-overview.png" />
-<link rel="icon" type="image/svg+xml" href="assets/linkhub-mark.svg" />
+<link rel="icon" type="image/svg+xml" href="assets/linkhaven-mark.svg" />
 <script>
   (() => {
-    const stored = localStorage.getItem('linkhub-docs-theme')
+    // 'linkhub-docs-theme' is the key from before the rename to Linkhaven.
+    const stored =
+      localStorage.getItem('linkhaven-docs-theme') ??
+      localStorage.getItem('linkhub-docs-theme')
     const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
   })()
@@ -327,7 +330,7 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
   <button class="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
   </button>
-  <a class="brand" href="index.html"><img src="assets/linkhub-mark.svg" alt="" width="28" height="28" /><span>LinkHub</span></a>
+  <a class="brand" href="index.html"><img src="assets/linkhaven-mark.svg" alt="" width="28" height="28" /><span>Linkhaven</span></a>
   <label class="search">
     <span class="visually-hidden">Search the docs</span>
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2" /></svg>
@@ -348,7 +351,7 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
   </main>
 </div>
 <footer class="footer">
-  <p>LinkHub is open source under the MIT license. <a href="${repoUrl}" rel="noopener">Source</a> · <a href="privacy/">Privacy policy</a> · <a href="${repoUrl}/issues" rel="noopener">Feedback</a></p>
+  <p>Linkhaven is open source under the MIT license. <a href="${repoUrl}" rel="noopener">Source</a> · <a href="privacy/">Privacy policy</a> · <a href="${repoUrl}/issues" rel="noopener">Feedback</a></p>
 </footer>
 <script src="assets/site.js" defer></script>
 </body>
@@ -395,7 +398,7 @@ function homeBody(pages) {
   return `
 <section class="hero">
   <p class="eyebrow">Your new tab, as a canvas</p>
-  <h1>LinkHub</h1>
+  <h1>Linkhaven</h1>
   <p class="lead">An infinite board for links, groups, pictures, live charts and news feeds. Local-first: no account, no cloud, no tracking.</p>
   <div class="hero-actions">
     <a class="button primary" href="getting-started.html">Get started</a>
@@ -404,7 +407,7 @@ function homeBody(pages) {
     <a class="button" href="https://addons.mozilla.org/en-US/firefox/addon/link-hub/" rel="noopener">Firefox</a>
   </div>
 </section>
-<figure class="hero-shot"><img src="assets/screenshots/01-canvas-overview.png" alt="LinkHub canvas with five groups of link cards" width="1280" height="800" /></figure>
+<figure class="hero-shot"><img src="assets/screenshots/01-canvas-overview.png" alt="Linkhaven canvas with five groups of link cards" width="1280" height="800" /></figure>
 <h2 id="explore">Explore</h2>
 <div class="cards">${cards}</div>
 <h2 id="screenshots">Screenshots</h2>
@@ -467,7 +470,7 @@ function build() {
     layout({
       title: 'Documentation',
       description:
-        'LinkHub turns your new tab into an infinite canvas for links, groups, charts and news feeds.',
+        'Linkhaven turns your new tab into an infinite canvas for links, groups, charts and news feeds.',
       body: homeBody(pages),
       nav: navHtml(pages, ''),
       toc: '',
@@ -487,13 +490,13 @@ function build() {
     { recursive: true },
   )
   cpSync(
-    resolve(root, 'public/linkhub-mark.svg'),
-    resolve(outDir, 'assets/linkhub-mark.svg'),
+    resolve(root, 'public/linkhaven-mark.svg'),
+    resolve(outDir, 'assets/linkhaven-mark.svg'),
   )
-  // The privacy page links ../linkhub-mark.svg; keep that path working.
+  // The privacy page links ../linkhaven-mark.svg; keep that path working.
   cpSync(
-    resolve(root, 'public/linkhub-mark.svg'),
-    resolve(outDir, 'linkhub-mark.svg'),
+    resolve(root, 'public/linkhaven-mark.svg'),
+    resolve(outDir, 'linkhaven-mark.svg'),
   )
   cpSync(resolve(root, 'public/privacy'), resolve(outDir, 'privacy'), {
     recursive: true,

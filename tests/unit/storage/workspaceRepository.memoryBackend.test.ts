@@ -6,9 +6,9 @@ import {
 } from '../../../src/contracts/workspace'
 import { createWorkspaceSummary } from '../../../src/contracts/workspaceDirectory'
 import {
-  registerLinkHubStorageBackend,
+  registerLinkhavenStorageBackend,
   STORAGE_STORES,
-  type LinkHubStorageBackend,
+  type LinkhavenStorageBackend,
 } from '../../../src/storage/storageBackend'
 import {
   createNextWorkspaceName,
@@ -22,7 +22,7 @@ import {
   saveWorkspaceDirectory,
 } from '../../../src/storage/workspaceRepository'
 
-function createInMemoryBackend(): LinkHubStorageBackend {
+function createInMemoryBackend(): LinkhavenStorageBackend {
   const stores = new Map<string, Map<string, unknown>>()
 
   for (const name of Object.values(STORAGE_STORES)) {
@@ -76,7 +76,7 @@ function createInMemoryBackend(): LinkHubStorageBackend {
   return { kind: 'memory', openDatabase }
 }
 
-function createThrowingBackend(): LinkHubStorageBackend {
+function createThrowingBackend(): LinkhavenStorageBackend {
   return {
     kind: 'throwing',
     async openDatabase() {
@@ -133,7 +133,7 @@ describe('getWorkspaceSnapshotByteSize', () => {
 describe('workspace persistence (in-memory backend)', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
   })
 
   it('saves and reloads a workspace through IDB', async () => {
@@ -193,7 +193,7 @@ describe('workspace persistence (in-memory backend)', () => {
 describe('workspace persistence (unavailable IDB)', () => {
   beforeEach(() => {
     window.localStorage.clear()
-    registerLinkHubStorageBackend(createThrowingBackend())
+    registerLinkhavenStorageBackend(createThrowingBackend())
   })
 
   it('falls back to localStorage when IDB is unavailable', async () => {

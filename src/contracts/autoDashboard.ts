@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /**
- * Settings for the optional Auto dashboard: a workspace LinkHub builds
+ * Settings for the optional Auto dashboard: a workspace Linkhaven builds
  * from what the user opens most. Everything is off until the user turns it
  * on, every signal source is opt-in, and the AI step only runs with the
  * user's own API key. Settings are app-wide (not per workspace) and stay
@@ -35,12 +35,13 @@ const ListSchema = z
   .max(AUTO_LIST_LIMIT)
 
 export const AutoDashboardSettingsSchema = z.object({
+  /** Follows the app-wide "Auto dashboard" switch; see `withSetupSwitches`. */
   enabled: z.boolean(),
   /** Workspace the dashboard is written to; created on the first build. */
   workspaceId: z.string().min(1).optional(),
   lastBuiltAt: z.string().optional(),
   sources: z.object({
-    /** Link opens LinkHub counts on its own cards. Needs no permission. */
+    /** Link opens Linkhaven counts on its own cards. Needs no permission. */
     linkhub: z.boolean(),
     /** The browser's most visited sites (`topSites` permission). */
     topSites: z.boolean(),
@@ -170,6 +171,24 @@ export function coerceAutoDashboardSettings(
 }
 
 /** True when the Auto workspace is due for a rebuild on open. */
+/**
+ * Whether the Auto dashboard and its AI step may run is only decided by
+ * the app-wide switches in Menu → Privacy, never by stored settings.
+ */
+export function withSetupSwitches(
+  settings: AutoDashboardSettings,
+  switches: { autoDashboard: boolean; aiArrangement: boolean },
+): AutoDashboardSettings {
+  return {
+    ...settings,
+    enabled: switches.autoDashboard,
+    ai: {
+      ...settings.ai,
+      enabled: switches.autoDashboard && switches.aiArrangement,
+    },
+  }
+}
+
 export function isAutoDashboardStale(
   settings: AutoDashboardSettings,
   now = Date.now(),

@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-test('builds an Auto workspace from the links opened in LinkHub', async ({
+test('builds an Auto workspace from the links opened in Linkhaven', async ({
   page,
   context,
 }) => {
@@ -34,14 +34,17 @@ test('builds an Auto workspace from the links opened in LinkHub', async ({
   await page.bringToFront()
 
   await page.getByRole('button', { name: 'Open menu' }).click()
+  // No Auto tab until the Auto dashboard is turned on in Privacy.
+  await expect(
+    page.getByRole('dialog').getByRole('tab', { name: 'Auto' }),
+  ).toHaveCount(0)
+  await page.getByRole('dialog').getByRole('tab', { name: 'Privacy' }).click()
+  await page.getByLabel('Auto dashboard').check()
   await page.getByRole('dialog').getByRole('tab', { name: 'Auto' }).click()
   await expect(page.getByTestId('auto-dashboard-panel')).toBeVisible()
-  await expect(page.getByTestId('auto-dashboard-build')).toHaveCount(0)
-
-  await page.getByLabel('Turn on the Auto dashboard').check()
   // Browser data only exists in the extension; the web build can't use it.
   await expect(page.getByLabel('Browsing history')).toBeDisabled()
-  await expect(page.getByLabel('LinkHub clicks')).toBeChecked()
+  await expect(page.getByLabel('Linkhaven clicks')).toBeChecked()
 
   await page.getByTestId('auto-dashboard-build').click()
 
@@ -69,6 +72,5 @@ test('builds an Auto workspace from the links opened in LinkHub', async ({
   await page.reload()
   await page.getByRole('button', { name: 'Open menu' }).click()
   await page.getByRole('dialog').getByRole('tab', { name: 'Auto' }).click()
-  await expect(page.getByLabel('Turn on the Auto dashboard')).toBeChecked()
   await expect(page.getByTestId('auto-dashboard-build')).toHaveText('Rebuild')
 })

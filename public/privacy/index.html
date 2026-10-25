@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinkHub Privacy Policy</title>
-    <link rel="icon" type="image/svg+xml" href="../linkhub-mark.svg" />
+    <title>Linkhaven Privacy Policy</title>
+    <link rel="icon" type="image/svg+xml" href="../linkhaven-mark.svg" />
     <style>
       :root {
         --bg-top: #0d1117;
@@ -188,35 +188,36 @@
       <article>
         <header class="hero">
           <p class="eyebrow">
-            <img class="mark" src="../linkhub-mark.svg" alt="" />
-            LinkHub Privacy Policy
+            <img class="mark" src="../linkhaven-mark.svg" alt="" />
+            Linkhaven Privacy Policy
           </p>
           <h1>Local-first by design.</h1>
           <p class="intro">
-            LinkHub stores your workspace data locally in your browser on your
+            Linkhaven stores your workspace data locally in your browser on your
             device. It does not send your boards, templates, themes, images, or
-            local usage statistics to LinkHub servers. Network requests only go
-            to the sites you link to, their favicons, and the chart or news feed
-            servers you configure yourself.
+            local usage statistics to Linkhaven servers. With the default
+            settings it makes no network requests; requests only go to the sites
+            you open, and to icon, chart, news feed or AI sources once you turn
+            those features on.
           </p>
           <div class="meta">
-            <span>Last updated: 2026-10-04</span>
-            <a class="back-link" href="../">Open LinkHub</a>
+            <span>Last updated: 2026-10-25</span>
+            <a class="back-link" href="../">Open Linkhaven</a>
           </div>
         </header>
 
         <section>
           <h2>1. Scope</h2>
           <p>
-            This policy applies to the LinkHub browser extension and to hosted
-            web builds of LinkHub that use the same local-first storage model.
+            This policy applies to the Linkhaven browser extension and to hosted
+            web builds of Linkhaven that use the same local-first storage model.
           </p>
         </section>
 
         <section>
-          <h2>2. What LinkHub stores</h2>
+          <h2>2. What Linkhaven stores</h2>
           <p>
-            LinkHub may store the content you create or import directly inside
+            Linkhaven may store the content you create or import directly inside
             your browser so the app can function between sessions.
           </p>
           <ul>
@@ -238,23 +239,23 @@
         <section>
           <h2>3. Where that data is stored</h2>
           <p>
-            LinkHub stores data locally in browser-managed storage on the
+            Linkhaven stores data locally in browser-managed storage on the
             current device, including browser storage mechanisms such as
             IndexedDB and local storage when required for the product to work.
           </p>
           <p class="note">
-            Your LinkHub data stays isolated to the browser profile and device
+            Your Linkhaven data stays isolated to the browser profile and device
             where you use it, unless you explicitly export it yourself.
           </p>
         </section>
 
         <section>
-          <h2>4. What LinkHub does not do</h2>
+          <h2>4. What Linkhaven does not do</h2>
           <ul>
             <li>It does not require an account or sign-in.</li>
             <li>
               It does not upload your workspace content or local usage
-              statistics to LinkHub servers.
+              statistics to Linkhaven servers.
             </li>
             <li>It does not include third-party advertising.</li>
             <li>
@@ -269,14 +270,22 @@
 
         <section>
           <h2>5. External requests</h2>
-          <p>LinkHub makes these network requests, and only these:</p>
+          <p>
+            With its default settings Linkhaven makes no network requests at
+            all. The requests below belong to website icons, Google favicons,
+            chart and news feed nodes, Check Links, and the Auto dashboard's AI
+            arrangement, which are each off by default and only work after you
+            turn them on under
+            <em>Menu → Privacy</em>, which also shows their current status.
+          </p>
           <ul>
             <li>
-              <strong>Favicons.</strong> When you create a link card, LinkHub
-              loads the site's icon once, first from the site itself
-              (<code>/favicon.ico</code>), then from Google's public favicon
-              service as a fallback, and keeps it locally. The option
-              <em>Favicons offline-only</em> turns the Google fallback off.
+              <strong>Website icons.</strong> With <em>Website icons</em> on,
+              creating a link card loads the site's icon once from the site
+              itself (<code>/favicon.ico</code>) and keeps it locally. With
+              <em>Google favicons</em> also on, Google's public favicon service
+              is the fallback. With both off, cards show a letter or an image
+              you uploaded.
             </li>
             <li>
               <strong>Chart nodes.</strong> A chart connects to the feed server
@@ -293,29 +302,42 @@
             </li>
             <li>
               <strong>Check Links.</strong> When you start it in the Data tab,
-              LinkHub sends a <code>HEAD</code> request to each link card's
+              Linkhaven sends a <code>HEAD</code> request to each link card's
               address to see whether it still answers.
+            </li>
+            <li>
+              <strong>Auto dashboard.</strong> With <em>Auto dashboard</em> on,
+              Linkhaven builds a workspace from the pages you open most. It
+              counts link opens on your own cards and, only if you turn on that
+              source and grant the optional browser permission, reads your top
+              sites or history. This data is processed on your device. With
+              <em>AI arrangement</em> also on and your own Anthropic API key
+              entered, the titles and addresses of the candidate pages are sent
+              to the Anthropic API (<code>api.anthropic.com</code>) to group
+              them. Turning the Auto dashboard off gives the browser permissions
+              back.
             </li>
           </ul>
           <p class="note">
-            None of these requests upload your canvas content, templates,
-            themes, imported bundles, gallery images, or usage statistics. The
-            servers you connect to see your IP address and the address that was
-            requested, as with any web request.
+            Apart from the page titles and addresses sent for the AI
+            arrangement, none of these requests upload your canvas content,
+            templates, themes, imported bundles, gallery images, or usage
+            statistics. The servers you connect to see your IP address and the
+            address that was requested, as with any web request.
           </p>
         </section>
 
         <section>
           <h2>6. Imports and exports</h2>
           <p>
-            If you choose to export data, LinkHub creates files on your device
+            If you choose to export data, Linkhaven creates files on your device
             only when you explicitly trigger the export action. If you choose to
-            import data, LinkHub reads the file you selected so it can restore
+            import data, Linkhaven reads the file you selected so it can restore
             that content into local browser storage.
           </p>
           <p>
-            These import and export actions are user-initiated. LinkHub does not
-            perform automatic cloud backup or remote synchronization.
+            These import and export actions are user-initiated. Linkhaven does
+            not perform automatic cloud backup or remote synchronization.
           </p>
         </section>
 
@@ -324,15 +346,15 @@
           <p>
             Your browser vendor, extension store provider, or hosting provider
             may collect their own operational, telemetry, or transaction data
-            under their own policies. That data handling is outside the LinkHub
-            application itself.
+            under their own policies. That data handling is outside the
+            Linkhaven application itself.
           </p>
         </section>
 
         <section>
           <h2>8. Changes to this policy</h2>
           <p>
-            If LinkHub's data handling changes materially, this page should be
+            If Linkhaven's data handling changes materially, this page should be
             updated before or at the same time as the corresponding product
             release.
           </p>
@@ -342,8 +364,8 @@
           <h2>9. Contact</h2>
           <p>
             For privacy-related questions, use the contact information provided
-            in the LinkHub store listing, project repository, or release page
-            where LinkHub is distributed.
+            in the Linkhaven store listing, project repository, or release page
+            where Linkhaven is distributed.
           </p>
         </section>
       </article>

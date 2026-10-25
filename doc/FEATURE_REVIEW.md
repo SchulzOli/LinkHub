@@ -41,5 +41,5 @@
 #### 3.2 PWA-Modus mit Share Target
 
 - Web-App-Manifest + Service Worker für die gehostete Version.
-- `share_target` erlaubt „Teilen → LinkHub" auf Android, sodass eine URL direkt als Karte landet.
+- `share_target` erlaubt „Teilen → Linkhaven" auf Android, sodass eine URL direkt als Karte landet.
 - Offline-Shell, damit die Web-Version ohne Netz weiter funktioniert.

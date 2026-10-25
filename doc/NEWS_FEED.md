@@ -49,7 +49,7 @@ the node. The text filter is not saved.
 
 Most news sites do not send CORS headers, so a browser page cannot read
 their feeds. The proxy (`server/news-feed/`) fetches a feed and returns it
-unchanged. LinkHub parses the XML in the browser.
+unchanged. Linkhaven parses the XML in the browser.
 
 ```
 GET /rss?url=<feed url>   → feed body with the original content type
@@ -67,11 +67,11 @@ Limits of the proxy:
   redirects. The check runs when the connection is made, so a host name
   that resolves to a public address first and a private one later is still
   blocked. Set `FEED_ALLOW_PRIVATE=1` to allow feeds on your own network.
-- Only LinkHub can read the responses in a browser: pages on `localhost` /
+- Only Linkhaven can read the responses in a browser: pages on `localhost` /
   `127.0.0.1` (any port) and browser extensions. Requests from other web
   sites get status 403. Requests without an `Origin` header (for example
   `curl`) are allowed. Set `FEED_ALLOWED_ORIGINS` (comma-separated) to
-  replace the default rule, for example when LinkHub runs on another host.
+  replace the default rule, for example when Linkhaven runs on another host.
 - At most 5 redirects, 15 s timeout, 5 MB per feed.
 - Responses are cached for 60 s.
 

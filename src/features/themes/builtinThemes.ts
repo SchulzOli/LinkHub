@@ -41,7 +41,7 @@ function createBuiltinTheme(
     id: `${BUILTIN_THEME_PREFIX}${slug}`,
     name,
     description,
-    author: 'LinkHub',
+    author: 'Linkhaven',
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     content: {

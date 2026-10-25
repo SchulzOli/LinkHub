@@ -7,24 +7,24 @@ Ziel: Excalidraw-ähnliches Freihand-Zeichnen auf dem unendlichen Canvas
 
 ## 1. Motivation
 
-LinkHub organisiert visuelle Informationen – Bookmarks, Bilder, Gruppen.  
-Eine einfache Zeichenebene erlaubt es, Beziehungen zu markieren, 
+Linkhaven organisiert visuelle Informationen – Bookmarks, Bilder, Gruppen.  
+Eine einfache Zeichenebene erlaubt es, Beziehungen zu markieren,
 Bereiche hervorzuheben oder Annotationen direkt auf dem Canvas zu hinterlassen.  
-Der Fokus liegt auf **freihändigen Strichen**, nicht auf einem vollständigen 
+Der Fokus liegt auf **freihändigen Strichen**, nicht auf einem vollständigen
 Zeichenprogramm.
 
 ---
 
-## 2. Abgrenzung: Was das Feature *nicht* ist
+## 2. Abgrenzung: Was das Feature _nicht_ ist
 
-| Nicht enthalten | Begründung |
-|---|---|
-| Formen (Rechteck, Ellipse, Pfeil, Linie) | Erfordert Shape-Erkennung + Resize-Handles – eigener Node-Typ |
-| Text-auf-Canvas | Überschneidet sich mit Sticky-Notes (Feature 2.2) |
-| Ebenen / Layer-Verwaltung | Zu komplex für MVP – Striche liegen immer über Cards/Groups |
-| Radierer (freihändig) | Stattdessen: Stroke-Select + Delete |
-| Druckempfindlichkeit | Nur für PointerEvents mit `pressure`-Support – Fallback auf konstante Breite |
-| Export als Bild | Spaeter via `html-to-image` analog Template-Preview |
+| Nicht enthalten                          | Begründung                                                                   |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| Formen (Rechteck, Ellipse, Pfeil, Linie) | Erfordert Shape-Erkennung + Resize-Handles – eigener Node-Typ                |
+| Text-auf-Canvas                          | Überschneidet sich mit Sticky-Notes (Feature 2.2)                            |
+| Ebenen / Layer-Verwaltung                | Zu komplex für MVP – Striche liegen immer über Cards/Groups                  |
+| Radierer (freihändig)                    | Stattdessen: Stroke-Select + Delete                                          |
+| Druckempfindlichkeit                     | Nur für PointerEvents mit `pressure`-Support – Fallback auf konstante Breite |
+| Export als Bild                          | Spaeter via `html-to-image` analog Template-Preview                          |
 
 ---
 
@@ -34,20 +34,20 @@ Zeichenprogramm.
 // src/contracts/freehandStroke.ts
 
 export const FreehandPointSchema = z.object({
-  x: z.number(),       // Canvas-Koordinate relativ zu stroke.positionX/Y
+  x: z.number(), // Canvas-Koordinate relativ zu stroke.positionX/Y
   y: z.number(),
   pressure: z.number().min(0).max(1).optional(),
 })
 
 export const FreehandStrokeSchema = z.object({
   id: z.string().min(1),
-  positionX: z.number(),       // Canvas-Offset (für Pan-Verschiebung)
+  positionX: z.number(), // Canvas-Offset (für Pan-Verschiebung)
   positionY: z.number(),
   points: z.array(FreehandPointSchema).min(1),
-  color: z.string(),           // CSS-Farbwert, z. B. "#a8a5ff"
-  width: z.number().positive(),// in Canvas-Einheiten (px bei zoom=1)
+  color: z.string(), // CSS-Farbwert, z. B. "#a8a5ff"
+  width: z.number().positive(), // in Canvas-Einheiten (px bei zoom=1)
   opacity: z.number().min(0).max(1),
-  smoothing: z.boolean().optional(),        // true = Catmull-Rom-Interpolation
+  smoothing: z.boolean().optional(), // true = Catmull-Rom-Interpolation
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -57,9 +57,9 @@ export type FreehandStroke = z.infer<typeof FreehandStrokeSchema>
 ```
 
 Der Stroke liegt in Canvas-Koordinaten, nicht in Screen-Koordinaten.  
-Das bedeutet: Panning ändert `positionX/Y` nicht; nur explizites Verschieben 
+Das bedeutet: Panning ändert `positionX/Y` nicht; nur explizites Verschieben
 eines ausgewählten Strokes ändert den Offset.  
-Die `points` sind relativ zu `positionX/Y`, sodass ein Stroke über 
+Die `points` sind relativ zu `positionX/Y`, sodass ein Stroke über
 `positionX/Y` verschoben werden kann, ohne die Punktdaten zu verändern.
 
 ---
@@ -142,7 +142,7 @@ function interpolateCatmullRom(
 ): { x: number; y: number }[]
 ```
 
-Der Stroke speichert weiterhin die rohen Pointer-Punkte; das Rendering 
+Der Stroke speichert weiterhin die rohen Pointer-Punkte; das Rendering
 interpoliert bei `smoothing === true`.
 
 ### Dedup / Simplification
@@ -156,7 +156,7 @@ function simplifyPoints(
 ): FreehandPoint[]
 ```
 
-Reduziert die Point-Anzahl um typischerweise 40–70 %, was Speicher 
+Reduziert die Point-Anzahl um typischerweise 40–70 %, was Speicher
 (IndexedDB) und Render-Zeit spart.
 
 ---
@@ -167,31 +167,33 @@ Reduziert die Point-Anzahl um typischerweise 40–70 %, was Speicher
 
 ```tsx
 // Innerhalb von InfiniteCanvas.tsx
-{visibleStrokes.map((stroke) => (
-  <svg
-    key={stroke.id}
-    style={{
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      transform: `translate(${stroke.positionX * viewport.zoom}px, ${stroke.positionY * viewport.zoom}px) scale(${viewport.zoom})`,
-      transformOrigin: 'top left',
-    }}
-  >
-    <path
-      d={buildPathData(stroke, viewport.zoom)}
-      fill="none"
-      stroke={stroke.color}
-      strokeWidth={stroke.width}
-      strokeOpacity={stroke.opacity}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-))}
+{
+  visibleStrokes.map((stroke) => (
+    <svg
+      key={stroke.id}
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        transform: `translate(${stroke.positionX * viewport.zoom}px, ${stroke.positionY * viewport.zoom}px) scale(${viewport.zoom})`,
+        transformOrigin: 'top left',
+      }}
+    >
+      <path
+        d={buildPathData(stroke, viewport.zoom)}
+        fill="none"
+        stroke={stroke.color}
+        strokeWidth={stroke.width}
+        strokeOpacity={stroke.opacity}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ))
+}
 ```
 
 Alternative: `<canvas>`-Overlay für bessere Performance bei vielen Strichen.  
@@ -202,7 +204,7 @@ Für MVP reicht SVG (einfacher, interaktiv, selektierbar).
 Nur Striche rendern, deren Bounding-Box den sichtbaren Viewport schneidet:
 
 ```typescript
-function getStrokeBounds(points: FreehandPoint[]): { minX, minY, maxX, maxY }
+function getStrokeBounds(points: FreehandPoint[]): { minX; minY; maxX; maxY }
 function isStrokeVisible(stroke, viewportBounds): boolean
 ```
 
@@ -233,7 +235,7 @@ Die `BottomTaskbar` zeigt statt Quick-Add:
 
 ### IndexedDB
 
-`strokes[]` werden als Teil des Workspace-Dokuments in `workspace_records` 
+`strokes[]` werden als Teil des Workspace-Dokuments in `workspace_records`
 gespeichert. Kein separater Object Store nötig.
 
 ### Schema-Migration
@@ -253,18 +255,18 @@ function migrateV1toV2(workspace: WorkspaceV1): WorkspaceV2 {
 
 ## 9. Implementierungs-Reihenfolge
 
-| Schritt | Beschreibung | Aufwand |
-|---------|-------------|---------|
-| 1 | `FreehandStroke`-Schema + Typen | 30 min |
-| 2 | Workspace-Schema erweitern, Migration v1→v2 | 1 h |
-| 3 | State-Slice (CRUD + Selection) | 1 h |
-| 4 | `InteractionMode` um `'draw'` erweitern, Mode-Toggle in Taskbar | 1 h |
-| 5 | `useFreehandDraw`-Hook (Pointer-Events, Smoothing, Simplification) | 4 h |
-| 6 | SVG-Rendering in `InfiniteCanvas` + Culling | 3 h |
-| 7 | Stroke-Selektion + Löschen | 2 h |
-| 8 | Stroke-Verschieben (Drag) | 2 h |
-| 9 | Farb-/Breiten-/Deckkraft-UI in Taskbar | 2 h |
-| 10 | Tests (Unit + E2E) | 3 h |
+| Schritt | Beschreibung                                                       | Aufwand |
+| ------- | ------------------------------------------------------------------ | ------- |
+| 1       | `FreehandStroke`-Schema + Typen                                    | 30 min  |
+| 2       | Workspace-Schema erweitern, Migration v1→v2                        | 1 h     |
+| 3       | State-Slice (CRUD + Selection)                                     | 1 h     |
+| 4       | `InteractionMode` um `'draw'` erweitern, Mode-Toggle in Taskbar    | 1 h     |
+| 5       | `useFreehandDraw`-Hook (Pointer-Events, Smoothing, Simplification) | 4 h     |
+| 6       | SVG-Rendering in `InfiniteCanvas` + Culling                        | 3 h     |
+| 7       | Stroke-Selektion + Löschen                                         | 2 h     |
+| 8       | Stroke-Verschieben (Drag)                                          | 2 h     |
+| 9       | Farb-/Breiten-/Deckkraft-UI in Taskbar                             | 2 h     |
+| 10      | Tests (Unit + E2E)                                                 | 3 h     |
 
 **Gesamt: ~18–20 h (2,5 Tage)**
 

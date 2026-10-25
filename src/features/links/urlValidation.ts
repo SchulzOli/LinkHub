@@ -1,3 +1,5 @@
+import type { FaviconSources } from '../../contracts/networkFeatures'
+
 export function normalizeUrl(input: string) {
   const value = input.trim()
 
@@ -30,16 +32,31 @@ export function createFaviconUrl(urlString: string) {
 const GOOGLE_FAVICON_PREFIX = 'https://www.google.com/s2/favicons'
 
 /**
- * The favicon URL a card may load. Cards store Google's favicon URL; with
- * "Favicons offline-only" on, that URL is replaced by the site's own
- * /favicon.ico so the Google service is never contacted.
+ * The favicon URL a card may load. Cards store Google's favicon URL; it is
+ * used only while Google is allowed, else the site's own /favicon.ico while
+ * the site is allowed, else nothing (the card shows its letter). Local
+ * `data:` and `blob:` images never touch the network and always load.
  */
 export function resolveCardFaviconUrl(
   card: { url: string; faviconUrl: string },
-  offlineOnly: boolean,
+  sources: FaviconSources,
 ) {
-  if (!offlineOnly || !card.faviconUrl.startsWith(GOOGLE_FAVICON_PREFIX)) {
-    return card.faviconUrl
+  const { faviconUrl } = card
+
+  if (/^(data|blob):/.test(faviconUrl)) {
+    return faviconUrl
+  }
+
+  if (faviconUrl.startsWith(GOOGLE_FAVICON_PREFIX) && sources.google) {
+    return faviconUrl
+  }
+
+  if (!sources.site) {
+    return ''
+  }
+
+  if (!faviconUrl.startsWith(GOOGLE_FAVICON_PREFIX)) {
+    return faviconUrl
   }
 
   try {

@@ -3,7 +3,7 @@ import {
   DEFAULT_AUTO_DASHBOARD_SETTINGS,
   type AutoDashboardSettings,
 } from '../contracts/autoDashboard'
-import { openLinkHubDb, STORAGE_STORES } from './db'
+import { openLinkhavenDb, STORAGE_STORES } from './db'
 
 const AUTO_DASHBOARD_SETTINGS_KEY = 'auto-dashboard'
 
@@ -12,7 +12,7 @@ const AUTO_DASHBOARD_SETTINGS_KEY = 'auto-dashboard'
 
 export async function loadAutoDashboardSettings(): Promise<AutoDashboardSettings> {
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     const raw = await db.get(
       STORAGE_STORES.workspaceMetadata,
       AUTO_DASHBOARD_SETTINGS_KEY,
@@ -29,7 +29,7 @@ export async function loadAutoDashboardSettings(): Promise<AutoDashboardSettings
 export async function saveAutoDashboardSettings(
   settings: AutoDashboardSettings,
 ) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
 
   await db.put(
     STORAGE_STORES.workspaceMetadata,

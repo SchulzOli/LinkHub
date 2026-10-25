@@ -1,21 +1,21 @@
 ---
 title: Getting started
-description: Install LinkHub as your new tab page or run it locally, and build your first board.
+description: Install Linkhaven as your new tab page or run it locally, and build your first board.
 order: 1
 section: Guide
 ---
 
 # Getting started
 
-LinkHub turns a blank tab into an infinite canvas. You place link cards,
+Linkhaven turns a blank tab into an infinite canvas. You place link cards,
 groups, pictures, live charts and news feeds on it and arrange them the way
 you think about them. Everything is stored in your browser.
 
-![The LinkHub canvas with five groups of link cards](assets/screenshots/01-canvas-overview.png)
+![The Linkhaven canvas with five groups of link cards](assets/screenshots/01-canvas-overview.png)
 
 ## Install the extension
 
-LinkHub replaces the new tab page in Chrome, Edge and Firefox.
+Linkhaven replaces the new tab page in Chrome, Edge and Firefox.
 
 | Browser | Store                                                                                                      |
 | ------- | ---------------------------------------------------------------------------------------------------------- |
@@ -31,8 +31,8 @@ loads no remote code.
 You need Node.js 22 or later.
 
 ```bash
-git clone https://github.com/SchulzOli/LinkHub.git
-cd LinkHub
+git clone https://github.com/SchulzOli/Linkhaven.git
+cd Linkhaven
 npm install
 npm run dev
 ```
@@ -43,7 +43,7 @@ Open <http://localhost:5173>. To load your own build as an extension, see
 ## Your first board
 
 1. Paste a URL anywhere on the canvas, or select **Add link** in the taskbar.
-   LinkHub creates a card with the site's icon.
+   Linkhaven creates a card with the site's icon.
 2. Select **Add group** and drag cards into the group body. Groups can hold
    other groups.
 3. Switch between **edit mode** and **view mode** with the pencil/eye button.
@@ -59,7 +59,7 @@ Open <http://localhost:5173>. To load your own build as an extension, see
 | Add link           | Quick add: URL and title for a new card             |
 | Add group          | A new group at the center of the view               |
 | Upload image       | Places an image file as a picture node              |
-| Open image gallery | All images stored by LinkHub                        |
+| Open image gallery | All images stored by Linkhaven                      |
 | Add chart          | A chart node, see [Charts](charts.html)             |
 | Add news feed      | A news feed node, see [News feeds](news-feeds.html) |
 | Edit / view mode   | Toggles between arranging and using the board       |

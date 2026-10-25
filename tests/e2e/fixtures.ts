@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-export const APP_TITLE = 'LinkHub'
+export const APP_TITLE = 'Linkhaven'
 export const QUICK_ADD_BUTTON = 'button[name="quick-add-toggle"]'
 export const CANVAS_TEST_ID = 'infinite-canvas'
 
@@ -87,4 +87,25 @@ export async function openGroupEditor(
   await expect(updateButton).toBeVisible()
   await updateButton.click()
   await expect(page.getByTestId('group-edit-panel')).toBeVisible()
+}
+
+/**
+ * Turns network features on before the app loads (they are off by default,
+ * see Menu → Privacy). Call before `page.goto`.
+ */
+export async function enableNetworkFeatures(
+  page: Page,
+  features: Partial<
+    Record<
+      'siteFavicons' | 'googleFavicons' | 'chartsAndFeeds' | 'linkCheck',
+      boolean
+    >
+  >,
+) {
+  await page.addInitScript((value) => {
+    const key = 'linkhub.network-features'
+    const current = JSON.parse(window.localStorage.getItem(key) ?? '{}')
+
+    window.localStorage.setItem(key, JSON.stringify({ ...current, ...value }))
+  }, features)
 }

@@ -5,6 +5,7 @@ import {
   DEFAULT_AUTO_DASHBOARD_SETTINGS,
   isAutoDashboardStale,
   parseAutoListDraft,
+  withSetupSwitches,
 } from '../../../src/contracts/autoDashboard'
 import {
   loadAutoDashboardSettings,
@@ -12,7 +13,7 @@ import {
 } from '../../../src/storage/autoDashboardRepository'
 
 describe('auto dashboard settings', () => {
-  it('is off with only the LinkHub source by default', () => {
+  it('is off with only the Linkhaven source by default', () => {
     expect(DEFAULT_AUTO_DASHBOARD_SETTINGS.enabled).toBe(false)
     expect(DEFAULT_AUTO_DASHBOARD_SETTINGS.sources).toEqual({
       linkhub: true,
@@ -84,6 +85,30 @@ describe('auto dashboard settings', () => {
     ).toBe(true)
     expect(isAutoDashboardStale({ ...on, refreshHours: 0 }, now)).toBe(false)
     expect(isAutoDashboardStale({ ...on, enabled: false }, now)).toBe(false)
+  })
+
+  it('runs and uses AI only as the setup switches say', () => {
+    const stored = {
+      ...DEFAULT_AUTO_DASHBOARD_SETTINGS,
+      enabled: true,
+      ai: { ...DEFAULT_AUTO_DASHBOARD_SETTINGS.ai, enabled: true },
+    }
+
+    expect(
+      withSetupSwitches(stored, { autoDashboard: false, aiArrangement: true }),
+    ).toMatchObject({ enabled: false, ai: { enabled: false } })
+    expect(
+      withSetupSwitches(DEFAULT_AUTO_DASHBOARD_SETTINGS, {
+        autoDashboard: true,
+        aiArrangement: false,
+      }),
+    ).toMatchObject({ enabled: true, ai: { enabled: false } })
+    expect(
+      withSetupSwitches(DEFAULT_AUTO_DASHBOARD_SETTINGS, {
+        autoDashboard: true,
+        aiArrangement: true,
+      }),
+    ).toMatchObject({ enabled: true, ai: { enabled: true } })
   })
 
   it('round-trips through IndexedDB', async () => {

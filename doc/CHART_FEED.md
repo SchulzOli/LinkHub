@@ -2,7 +2,7 @@
 
 Chart nodes plot an external time series, for example a stock price. The data
 comes from a feed server over **WebSocket** or **Server-Sent Events (SSE)**.
-LinkHub ships a reference server that streams real market data.
+Linkhaven ships a reference server that streams real market data.
 
 ## Quick start
 

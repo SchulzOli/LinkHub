@@ -122,7 +122,7 @@ describe('buildAutoDashboard', () => {
     expect(result.content.pictures).toEqual([])
   })
 
-  it('counts LinkHub link opens inside the time window only', () => {
+  it('counts Linkhaven link opens inside the time window only', () => {
     const workspace = createDefaultWorkspace({
       cards: [
         {

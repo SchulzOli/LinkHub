@@ -26,6 +26,7 @@ import {
 } from '../../features/feeds/feedItems'
 import { hostOf, type FeedItem } from '../../features/feeds/feedParser'
 import { useFeedItems } from '../../features/feeds/useFeedItems'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import {
   useWorkspaceStore,
   type InteractionMode,
@@ -104,6 +105,9 @@ export const FeedNode = memo(function FeedNode({
   const { onSelectPicture: onSelect } = useCanvasSelectionActions()
   const { onRemovePicture: onRemove } = useCanvasEditActions()
   const updateFeed = useWorkspaceStore((state) => state.updateFeed)
+  const chartsAndFeeds = useNetworkFeaturesStore(
+    (state) => state.chartsAndFeeds,
+  )
   const { handlePointerDown, createResizePointerDown } = useNodePlacement({
     node: feed,
     guide,
@@ -124,6 +128,7 @@ export const FeedNode = memo(function FeedNode({
     proxyUrl: feed.proxyUrl,
     refreshMinutes: settings.refreshMinutes,
     reloadToken,
+    enabled: chartsAndFeeds,
   })
 
   // Auto refresh moves the time-window cutoff forward with each fetch.

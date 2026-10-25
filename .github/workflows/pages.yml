@@ -9,7 +9,7 @@ on:
       - 'scripts/build-docs.mjs'
       - 'extension/screenshots/**'
       - 'public/privacy/**'
-      - 'public/linkhub-mark.svg'
+      - 'public/linkhaven-mark.svg'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 

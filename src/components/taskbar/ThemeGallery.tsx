@@ -266,7 +266,7 @@ export function ThemeGallery({
                 Import
               </button>
               <input
-                accept=".json,.linkhub-theme.json"
+                accept=".json,.linkhaven-theme.json,.linkhub-theme.json"
                 className={panelStyles.hiddenInput}
                 onChange={(event) => void handleImport(event)}
                 ref={importInputRef}

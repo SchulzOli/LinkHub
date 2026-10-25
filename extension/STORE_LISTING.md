@@ -66,7 +66,7 @@ The promotional tiles are rendered from `extension/store-assets/promo-tile.html`
 
 ## Description
 
-LinkHub replaces your browser new tab page with a visual canvas for everything you open every day.
+Linkhaven replaces your browser new tab page with a visual canvas for everything you open every day.
 
 Drag, group, resize and style link cards on a zoomable infinite board — and put live charts and news feeds right next to them. Every link has a place: no folders, no clutter, just a spatial layout you design yourself.
 
@@ -74,7 +74,7 @@ Drag, group, resize and style link cards on a zoomable infinite board — and pu
 Pan, zoom and navigate freely. Snap-to-grid keeps everything aligned. Multi-select, copy, paste, undo and a format painter let you work fast.
 
 **Link Cards**
-Create cards from any URL; favicons are fetched once and cached locally. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
+Create cards from any URL; with website icons turned on, favicons are fetched once and cached locally. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
 
 **Groups**
 Collect cards in collapsible groups and nest groups inside groups. Collapsing a group hides everything inside it, including charts and feeds.
@@ -83,7 +83,7 @@ Collect cards in collapsible groups and nest groups inside groups. Collapsing a 
 Chart nodes plot a time series from a WebSocket or Server-Sent Events feed: ranges from one day to all time, price or percent change, moving averages, log scale and CSV export. Charts inside a group follow the group's settings, and any chart can keep its own. An optional open-source feed server for market data ships with the source code.
 
 **News Feeds**
-Feed nodes merge several RSS or Atom feeds into one list. Filter by words, sort by date, source or title, limit to a time window, and switch sources on or off. Each article opens in a new tab. Paste a website address and LinkHub finds its feed.
+Feed nodes merge several RSS or Atom feeds into one list. Filter by words, sort by date, source or title, limit to a time window, and switch sources on or off. Each article opens in a new tab. Paste a website address and Linkhaven finds its feed.
 
 **Pictures**
 Drop images onto the canvas as picture nodes and manage them in a built-in gallery.
@@ -95,7 +95,7 @@ Six built-in themes — Excalidraw, Blueprint, Minimal, Nord, Sunset and Neon �
 Save selected cards, groups, pictures, charts and feeds as reusable templates with preview thumbnails, and insert them on any board.
 
 **Workspaces, Import & Export**
-Create, rename, reorder and switch between boards from the workspace rail. Export a board with its images, templates and themes as one .linkhub.zip file and import it anywhere.
+Create, rename, reorder and switch between boards from the workspace rail. Export a board with its images, templates and themes as one .linkhaven.zip file and import it anywhere.
 
 **Statistics**
 See link opens, canvas opens and storage use per board — computed and kept on your device.
@@ -107,13 +107,13 @@ No account. No cloud sync. No analytics. No ads. Your boards stay in your browse
 
 ## Notes to Reviewer
 
-LinkHub is a new-tab override extension. It replaces the browser new tab page with a local-first link canvas application.
+Linkhaven is a new-tab override extension. It replaces the browser new tab page with a local-first link canvas application.
 
 The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account, sign-in, or remote sync service is involved.
 
-Network requests made by the extension:
+Out of the box the extension makes no network requests and needs no server: it is a pure, local link dashboard. Every request below belongs to a feature that is off by default and only works after the user turns it on in Menu → Privacy:
 
-- Favicons: when the user creates a link card, the extension loads `https://<site>/favicon.ico`, then Google's public favicon service (https://www.google.com/s2/favicons) as a fallback, and caches the icon locally. The option "Favicons offline-only" disables the Google fallback.
+- Website icons: when the user creates a link card, the extension loads `https://<site>/favicon.ico` and caches the icon locally. With "Google favicons" also on, it falls back to Google's public favicon service (https://www.google.com/s2/favicons). With both off, cards show a letter or an image the user uploaded.
 - Chart nodes (optional, user-added): connect to the WebSocket or SSE feed URL set on the node. The default is `ws://127.0.0.1:8787/feed`, a server the user runs locally from the open-source repository.
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
@@ -155,7 +155,7 @@ The AMO linter warnings about innerHTML (React DOM, html-to-image) and Function 
 
 ### Notes for Certification (Edge)
 
-LinkHub is a new-tab override extension. After installation, open a new tab to launch the app.
+Linkhaven is a new-tab override extension. After installation, open a new tab to launch the app.
 
 How to test:
 
@@ -172,7 +172,7 @@ Important behavior:
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers.
-- During normal use the only automatic network request is the favicon lookup when a user creates a link card. Chart and news feed nodes connect only to addresses the user sets, and Check Links runs only when started.
+- With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
 - The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard.
 
 If the reviewer wants to validate the packaged build, use:
@@ -186,11 +186,11 @@ npm run build:extension
 
 ## Privacy Policy
 
-This policy applies to the LinkHub browser extension and to hosted web builds of LinkHub that use the same local-first storage model.
+This policy applies to the Linkhaven browser extension and to hosted web builds of Linkhaven that use the same local-first storage model.
 
-### What LinkHub stores
+### What Linkhaven stores
 
-LinkHub may store the content you create or import directly inside your browser so the app can function between sessions.
+Linkhaven may store the content you create or import directly inside your browser so the app can function between sessions.
 
 - Workspaces and workspace names
 - Link cards, groups, pictures, chart and news feed nodes (feed addresses and display settings), layout positions, and board settings
@@ -201,21 +201,23 @@ LinkHub may store the content you create or import directly inside your browser 
 
 ### Where that data is stored
 
-LinkHub stores data locally in browser-managed storage on the current device, including browser storage mechanisms such as IndexedDB and local storage when required for the product to work.
+Linkhaven stores data locally in browser-managed storage on the current device, including browser storage mechanisms such as IndexedDB and local storage when required for the product to work.
 
-Your LinkHub data stays isolated to the browser profile and device where you use it, unless you explicitly export it yourself.
+Your Linkhaven data stays isolated to the browser profile and device where you use it, unless you explicitly export it yourself.
 
-### What LinkHub does not do
+### What Linkhaven does not do
 
 - It does not require an account or sign-in.
-- It does not upload your workspace content or local usage statistics to LinkHub servers.
+- It does not upload your workspace content or local usage statistics to Linkhaven servers.
 - It does not include third-party advertising.
 - It does not use third-party analytics or behavioral tracking.
 - It does not sell or share your workspace data with external parties.
 
 ### External requests
 
-- Favicons: when you create a link card, LinkHub loads the site's icon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. "Favicons offline-only" turns the Google fallback off.
+Out of the box Linkhaven makes no network requests. Website icons, Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
+
+- Website icons: when you create a link card, Linkhaven loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
 - Chart nodes connect to the feed server address set on the chart (by default a server on your own computer).
 - News feed nodes load the RSS or Atom addresses you add, through the feed proxy set on the node (by default on your own computer) or directly. With "Images" on, article images load from the news sites.
 - Check Links sends a HEAD request to each link card's address when you start it.
@@ -224,20 +226,20 @@ None of these requests upload your canvas content, templates, themes, imported f
 
 ### Imports and exports
 
-If you choose to export data, LinkHub creates files on your device only when you explicitly trigger the export action. If you choose to import data, LinkHub reads the file you selected so it can restore that content into local browser storage.
+If you choose to export data, Linkhaven creates files on your device only when you explicitly trigger the export action. If you choose to import data, Linkhaven reads the file you selected so it can restore that content into local browser storage.
 
-These import and export actions are user-initiated. LinkHub does not perform automatic cloud backup or remote synchronization.
+These import and export actions are user-initiated. Linkhaven does not perform automatic cloud backup or remote synchronization.
 
 ### Browser and store providers
 
-Your browser vendor, extension store provider, or hosting provider may collect their own operational, telemetry, or transaction data under their own policies. That data handling is outside the LinkHub application itself.
+Your browser vendor, extension store provider, or hosting provider may collect their own operational, telemetry, or transaction data under their own policies. That data handling is outside the Linkhaven application itself.
 
 ### Changes to this policy
 
-If LinkHub's data handling changes materially, this page should be updated before or at the same time as the corresponding product release.
+If Linkhaven's data handling changes materially, this page should be updated before or at the same time as the corresponding product release.
 
 ### Contact
 
-For privacy-related questions, use the contact information provided in the LinkHub store listing, project repository, or release page where LinkHub is distributed.
+For privacy-related questions, use the contact information provided in the Linkhaven store listing, project repository, or release page where Linkhaven is distributed.
 
 Last updated: 2026-10-04

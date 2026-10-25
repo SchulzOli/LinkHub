@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { dismissVisibleEditPanels } from './fixtures'
+import { dismissVisibleEditPanels, enableNetworkFeatures } from './fixtures'
 
 test.beforeEach(async ({ page }) => {
+  // These tests check how the card icon renders, so turn on website
+  // icons (off by default, Menu → Privacy).
+  await enableNetworkFeatures(page, { siteFavicons: true })
   await page.goto('/')
   await page.evaluate(async () => {
     window.localStorage.clear()

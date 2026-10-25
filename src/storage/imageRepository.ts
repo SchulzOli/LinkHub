@@ -5,7 +5,7 @@ import {
   type GeneratedImageThumbnail,
 } from '../features/images/imageThumbnail'
 import { createId } from '../utils/id'
-import { openLinkHubDb, STORAGE_STORES } from './db'
+import { openLinkhavenDb, STORAGE_STORES } from './db'
 
 export type StoredImageAssetRecord = {
   asset: ImageAsset
@@ -133,7 +133,7 @@ export async function saveImageAsset(input: {
     createdAt: now,
     updatedAt: now,
   }
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [
       STORAGE_STORES.imageAsset,
@@ -158,7 +158,7 @@ export async function saveImageAsset(input: {
 }
 
 export async function listImageAssets() {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const assets = (await db.getAll(STORAGE_STORES.imageAsset)) as ImageAsset[]
 
   return [...assets].sort((left, right) =>
@@ -184,7 +184,7 @@ export async function listStoredImageAssetRecords() {
 }
 
 export async function getImageAsset(imageId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
 
   return (
     ((await db.get(STORAGE_STORES.imageAsset, imageId)) as
@@ -194,7 +194,7 @@ export async function getImageAsset(imageId: string) {
 }
 
 export async function getImageBlob(imageId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
 
   return (
     ((await db.get(STORAGE_STORES.imageBlob, imageId)) as Blob | undefined) ??
@@ -203,7 +203,7 @@ export async function getImageBlob(imageId: string) {
 }
 
 async function readThumbnailBlobFromStore(imageId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   return (
     ((await db.get(STORAGE_STORES.imageThumbnailBlob, imageId)) as
       | Blob
@@ -216,7 +216,7 @@ async function persistBackfilledThumbnail(
   asset: ImageAsset,
   generated: GeneratedImageThumbnail,
 ) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [STORAGE_STORES.imageAsset, STORAGE_STORES.imageThumbnailBlob],
     'readwrite',
@@ -375,7 +375,7 @@ export async function putStoredImageAssetRecord(input: StoredImageAssetRecord) {
         ? { ...input.asset, thumbnail: undefined }
         : input.asset
 
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [
       STORAGE_STORES.imageAsset,
@@ -453,7 +453,7 @@ export async function updateImageAsset(
 }
 
 export async function deleteImageAsset(imageId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [
       STORAGE_STORES.imageAsset,

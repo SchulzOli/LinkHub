@@ -1,20 +1,22 @@
 import { openDB } from 'idb'
 
 import {
-  getLinkHubStorageBackend,
-  registerLinkHubStorageBackend,
+  getLinkhavenStorageBackend,
+  registerLinkhavenStorageBackend,
   STORAGE_STORES,
-  type LinkHubStorageBackend,
+  type LinkhavenStorageBackend,
 } from './storageBackend'
 
+// The app's former name. Storage keys, document formats and the Firefox
+// add-on id keep it, so data and installs carry over to Linkhaven.
 const DB_NAME = 'linkhub'
 const DB_VERSION = 6
 
-export async function openLinkHubDb() {
-  return getLinkHubStorageBackend().openDatabase()
+export async function openLinkhavenDb() {
+  return getLinkhavenStorageBackend().openDatabase()
 }
 
-function createIndexedDbStorageBackend(): LinkHubStorageBackend {
+function createIndexedDbStorageBackend(): LinkhavenStorageBackend {
   return {
     kind: 'indexeddb',
     openDatabase: () =>
@@ -76,6 +78,6 @@ function createIndexedDbStorageBackend(): LinkHubStorageBackend {
   }
 }
 
-registerLinkHubStorageBackend(createIndexedDbStorageBackend())
+registerLinkhavenStorageBackend(createIndexedDbStorageBackend())
 
 export { STORAGE_STORES }

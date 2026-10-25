@@ -3,6 +3,7 @@ import styles from './BottomTaskbar.module.css'
 import { useEffect, useId, useRef } from 'react'
 
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import { EditIcon } from '../ui/EditIcon'
 import { OptionsMenu } from './OptionsMenu'
@@ -64,6 +65,9 @@ export function BottomTaskbar({
   workspaceRailPinned,
   workspaceSummaries,
 }: BottomTaskbarProps) {
+  const chartsAndFeeds = useNetworkFeaturesStore(
+    (state) => state.chartsAndFeeds,
+  )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const workspaceRailRef = useRef<HTMLDivElement | null>(null)
   const workspaceRailToggleRef = useRef<HTMLButtonElement | null>(null)
@@ -288,28 +292,34 @@ export function BottomTaskbar({
                   <ImageGalleryIcon className={styles.modeSvg} />
                 </span>
               </button>
-              <button
-                aria-label="Add chart"
-                className={styles.modeButton}
-                onClick={onCreateChart}
-                title="Add chart"
-                type="button"
-              >
-                <span aria-hidden="true" className={styles.modeIcon}>
-                  <AddChartIcon className={styles.modeSvg} />
-                </span>
-              </button>
-              <button
-                aria-label="Add news feed"
-                className={styles.modeButton}
-                onClick={onCreateFeed}
-                title="Add news feed"
-                type="button"
-              >
-                <span aria-hidden="true" className={styles.modeIcon}>
-                  <AddFeedIcon className={styles.modeSvg} />
-                </span>
-              </button>
+              {/* Pure link dashboard until charts and feeds are turned on
+                  in Menu → Privacy. */}
+              {chartsAndFeeds ? (
+                <>
+                  <button
+                    aria-label="Add chart"
+                    className={styles.modeButton}
+                    onClick={onCreateChart}
+                    title="Add chart"
+                    type="button"
+                  >
+                    <span aria-hidden="true" className={styles.modeIcon}>
+                      <AddChartIcon className={styles.modeSvg} />
+                    </span>
+                  </button>
+                  <button
+                    aria-label="Add news feed"
+                    className={styles.modeButton}
+                    onClick={onCreateFeed}
+                    title="Add news feed"
+                    type="button"
+                  >
+                    <span aria-hidden="true" className={styles.modeIcon}>
+                      <AddFeedIcon className={styles.modeSvg} />
+                    </span>
+                  </button>
+                </>
+              ) : null}
             </>
           ) : null}
         </div>

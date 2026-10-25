@@ -1,5 +1,5 @@
 /**
- * Only LinkHub may read through the proxy: the dev server / preview on
+ * Only Linkhaven may read through the proxy: the dev server / preview on
  * localhost and the browser extension. Other web pages get no CORS header,
  * so they can't use the proxy from a visitor's browser.
  * FEED_ALLOWED_ORIGINS (comma-separated) replaces the default rule.

@@ -33,7 +33,7 @@ const RECENCY_HALF_LIFE_DAYS = 14
 const UNKNOWN_RECENCY = 0.5
 
 const SOURCE_WEIGHTS: Record<AutoSignalSource, number> = {
-  // A click on a LinkHub card is a deliberate choice; weigh it higher.
+  // A click on a Linkhaven card is a deliberate choice; weigh it higher.
   linkhub: 1.5,
   history: 1,
   topSites: 1,

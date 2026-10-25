@@ -21,7 +21,7 @@ import {
 export type AutoBuildDeps = {
   readHistory: (days: number) => Promise<BrowserVisit[]>
   readTopSites: () => Promise<BrowserVisit[]>
-  /** Every workspace except the Auto one, for LinkHub's own click counts. */
+  /** Every workspace except the Auto one, for Linkhaven's own click counts. */
   loadLinkHubWorkspaces: () => Promise<Workspace[]>
   requestAiPlan: (input: {
     apiKey: string
@@ -54,7 +54,7 @@ function parseLocalDateKey(dateKey: string) {
   return new Date(year, month - 1, day, 12).getTime()
 }
 
-/** Link opens counted on LinkHub's own cards, inside the time window. */
+/** Link opens counted on Linkhaven's own cards, inside the time window. */
 export function collectLinkHubSignals(
   workspaces: Workspace[],
   days: number,

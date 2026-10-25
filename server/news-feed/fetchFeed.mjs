@@ -13,7 +13,7 @@ import { request as httpRequest } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import { isIP } from 'node:net'
 
-const USER_AGENT = 'Mozilla/5.0 (LinkHub news feed proxy)'
+const USER_AGENT = 'Mozilla/5.0 (Linkhaven news feed proxy)'
 const TIMEOUT_MS = Number(process.env.FEED_TIMEOUT_MS ?? 15000)
 const MAX_BYTES = Number(process.env.FEED_MAX_BYTES ?? 5 * 1024 * 1024)
 const MAX_REDIRECTS = 5

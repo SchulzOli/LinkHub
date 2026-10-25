@@ -54,7 +54,7 @@ describe('card clipboard', () => {
     })
   })
 
-  it('rejects non-LinkHub clipboard text', () => {
+  it('rejects non-Linkhaven clipboard text', () => {
     expect(parseCardClipboard('https://example.com/')).toBeNull()
   })
 

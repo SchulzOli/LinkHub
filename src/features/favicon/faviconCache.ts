@@ -1,11 +1,16 @@
 import { resolveSupportedImageUploadMimeType } from '../../contracts/imageAsset'
+import type { FaviconSources } from '../../contracts/networkFeatures'
 import { saveImageAsset } from '../../storage/imageRepository'
 
 /**
  * Tries to fetch a favicon for the given domain.
- * Fallback chain:
- *   1. `https://<host>/favicon.ico`
- *   2. Google favicons service (unless `offlineOnly` is true)
+ * Fallback chain, each step only when its source is allowed:
+ *   1. `https://<host>/favicon.ico` (`site`)
+ *   2. Google favicons service (`google`)
+ *
+ * `sources` may be a function: it is then asked right before each request,
+ * so switching a source off while an earlier request is pending is
+ * honoured. With neither source allowed nothing is requested.
  *
  * Returns the raw Blob on success, or `null` when all attempts fail.
  *
@@ -14,24 +19,28 @@ import { saveImageAsset } from '../../storage/imageRepository'
  */
 export async function fetchFaviconBlob(
   hostname: string,
-  offlineOnly: boolean,
+  sources: FaviconSources | (() => FaviconSources),
   fetchFn: typeof globalThis.fetch = globalThis.fetch,
 ): Promise<Blob | null> {
-  // Attempt 1: host's own /favicon.ico
-  const hostResult = await tryFetchFavicon(
-    `https://${hostname}/favicon.ico`,
-    fetchFn,
-  )
-  if (hostResult) {
-    return hostResult
+  const current = () => (typeof sources === 'function' ? sources() : sources)
+
+  if (current().site) {
+    const hostResult = await tryFetchFavicon(
+      `https://${hostname}/favicon.ico`,
+      fetchFn,
+    )
+
+    if (hostResult) {
+      return hostResult
+    }
   }
 
-  // Attempt 2: Google service — only when offline-only is NOT active
-  if (!offlineOnly) {
+  if (current().google) {
     const googleResult = await tryFetchFavicon(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
       fetchFn,
     )
+
     if (googleResult) {
       return googleResult
     }

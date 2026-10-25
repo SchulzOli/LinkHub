@@ -52,6 +52,9 @@ function makeBlob(size: number, type = 'image/png'): Blob {
 
 // ─── Tests for fetchFaviconBlob ────────────────────────────────────────────
 
+const BOTH = { site: true, google: true }
+const SITE_ONLY = { site: true, google: false }
+
 describe('fetchFaviconBlob', () => {
   const HOSTNAME = 'example.com'
   const ICON_URL = 'https://example.com/favicon.ico'
@@ -105,7 +108,7 @@ describe('fetchFaviconBlob', () => {
   it('returns the blob from the host favicon.ico when it succeeds', async () => {
     stubOkOnce(makeBlob(512, 'image/x-icon'))
 
-    const result = await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(result).not.toBeNull()
     expect(result!.size).toBe(512)
@@ -113,11 +116,11 @@ describe('fetchFaviconBlob', () => {
     expect(log[0].url).toBe(ICON_URL)
   })
 
-  it('falls back to Google service when host fails and offlineOnly is false', async () => {
+  it('falls back to Google service when host fails and Google is allowed', async () => {
     stubFailOnce()
     stubOkOnce()
 
-    const result = await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(result).not.toBeNull()
     expect(log).toHaveLength(2)
@@ -125,10 +128,46 @@ describe('fetchFaviconBlob', () => {
     expect(log[1].url).toBe(GOOGLE_URL)
   })
 
-  it('does NOT fall back to Google when offlineOnly is true', async () => {
+  it('asks a sources function right before the Google request', async () => {
+    let google = true
+    let resolveHost: (value: Response) => void = () => undefined
+
+    mockFetch.mockImplementationOnce((url: string) => {
+      log.push({ url })
+      return new Promise<Response>((resolve) => {
+        resolveHost = resolve
+      })
+    })
+
+    const pending = fetchFaviconBlob(
+      HOSTNAME,
+      () => ({ site: true, google }),
+      mockFetch,
+    )
+
+    // The user switches Google favicons off while the site request runs.
+    google = false
+    resolveHost(new Response(null, { status: 404 }))
+
+    expect(await pending).toBeNull()
+    expect(log.map((entry) => entry.url)).toEqual([ICON_URL])
+  })
+
+  it('requests nothing when no source is allowed', async () => {
+    const result = await fetchFaviconBlob(
+      HOSTNAME,
+      { site: false, google: false },
+      mockFetch,
+    )
+
+    expect(result).toBeNull()
+    expect(log).toHaveLength(0)
+  })
+
+  it('does NOT fall back to Google when Google is not allowed', async () => {
     stubFailOnce()
 
-    const result = await fetchFaviconBlob(HOSTNAME, true, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, SITE_ONLY, mockFetch)
 
     expect(result).toBeNull()
     expect(log).toHaveLength(1)
@@ -139,7 +178,7 @@ describe('fetchFaviconBlob', () => {
     stubFailOnce()
     stubFailOnce()
 
-    const result = await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(result).toBeNull()
     expect(log).toHaveLength(2)
@@ -149,7 +188,7 @@ describe('fetchFaviconBlob', () => {
     stubTimeoutOnce()
     stubFailOnce()
 
-    const result = await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(result).toBeNull()
     expect(log).toHaveLength(2)
@@ -159,7 +198,7 @@ describe('fetchFaviconBlob', () => {
     stubOkOnce(makeBlob(50))
     stubOkOnce()
 
-    const result = await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    const result = await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(result).not.toBeNull()
     expect(result!.size).toBe(1024)
@@ -171,7 +210,7 @@ describe('fetchFaviconBlob', () => {
   it('passes AbortSignal and cache options to fetch', async () => {
     stubOkOnce()
 
-    await fetchFaviconBlob(HOSTNAME, false, mockFetch)
+    await fetchFaviconBlob(HOSTNAME, BOTH, mockFetch)
 
     expect(log).toHaveLength(1)
     const opts = mockFetch.mock.calls[0][1] as RequestInit

@@ -354,18 +354,18 @@ async function deployChrome(config, { dryRun }) {
 }
 
 function createSourceArchive() {
-  const sourceZip = resolve(root, 'linkhub-source.zip')
+  const sourceZip = resolve(root, 'linkhaven-source.zip')
   console.log('\nCreating source archive…')
   try {
     execFileSync(
       'git',
-      ['archive', '--format=zip', '-o', 'linkhub-source.zip', 'HEAD'],
+      ['archive', '--format=zip', '-o', 'linkhaven-source.zip', 'HEAD'],
       {
         cwd: root,
         stdio: 'inherit',
       },
     )
-    console.log('✓ linkhub-source.zip')
+    console.log('✓ linkhaven-source.zip')
   } catch (err) {
     fail(
       `Failed to create source archive: ${err.message}\n  (git must be available and the working directory must be a git repo)`,
@@ -460,7 +460,7 @@ writeCiEnvFile(
     ['JWT_SECRET', process.env.FIREFOX_JWT_SECRET],
     ['EXT_ID', process.env.FIREFOX_EXT_ID || 'linkhub'],
     ['ZIP', 'dist-extension.zip'],
-    ['ZIP_SOURCE', 'linkhub-source.zip'],
+    ['ZIP_SOURCE', 'linkhaven-source.zip'],
   ],
   ['JWT_ISSUER', 'JWT_SECRET'],
 )

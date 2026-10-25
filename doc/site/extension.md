@@ -1,6 +1,6 @@
 ---
 title: Browser extension
-description: Build, load, package and publish the LinkHub extension.
+description: Build, load, package and publish the Linkhaven extension.
 order: 7
 section: Develop
 ---
@@ -53,6 +53,6 @@ Locally, `npm run deploy` (or `deploy:chrome`, `deploy:edge`, `deploy:firefox`)
 uploads the ZIP with the credentials in `chrome.env`, `edge.env` and
 `firefox.env`. The full release guide, including the one-time store setup and
 the required secrets, is in
-[extension/EXTENSION.md](https://github.com/SchulzOli/LinkHub/blob/main/extension/EXTENSION.md).
+[extension/EXTENSION.md](https://github.com/SchulzOli/Linkhaven/blob/main/extension/EXTENSION.md).
 Store copy and reviewer notes:
-[extension/STORE_LISTING.md](https://github.com/SchulzOli/LinkHub/blob/main/extension/STORE_LISTING.md).
+[extension/STORE_LISTING.md](https://github.com/SchulzOli/Linkhaven/blob/main/extension/STORE_LISTING.md).

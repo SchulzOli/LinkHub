@@ -1,7 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { moveCardIntoGroupBody, moveElementToPoint } from './dragHelpers'
-import { dismissVisibleEditPanels, openGroupEditor } from './fixtures'
+import {
+  dismissVisibleEditPanels,
+  enableNetworkFeatures,
+  openGroupEditor,
+} from './fixtures'
 
 const FEED_URL = 'ws://127.0.0.1:8787/feed'
 
@@ -14,7 +18,7 @@ type Subscribe = {
 }
 
 /**
- * In-test feed server speaking the LinkHub chart feed protocol. Every
+ * In-test feed server speaking the Linkhaven chart feed protocol. Every
  * subscribe gets a small deterministic snapshot; `tick` pushes live points.
  */
 async function mockChartFeed(page: Page) {
@@ -101,6 +105,8 @@ async function setChartSymbol(page: Page, chart: Locator, symbol: string) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // Charts and feeds are off by default (Menu → Privacy).
+  await enableNetworkFeatures(page, { chartsAndFeeds: true })
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto('/')
   await page.evaluate(async () => {

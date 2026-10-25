@@ -2,6 +2,7 @@ import type { RefObject } from 'react'
 import panelStyles from '../ui/panel/Panel.module.css'
 
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import type { LinkCheckStatus } from './options/useLinkCheck'
 
 import { DeleteIcon } from '../ui/DeleteIcon'
@@ -81,10 +82,12 @@ export function OptionsDataSection({
   workspaceStatus,
   workspaceSummaries,
 }: OptionsDataSectionProps) {
+  const linkCheckEnabled = useNetworkFeaturesStore((state) => state.linkCheck)
   const isBusy = dataStatus.kind === 'busy'
   const workspaceBusy = workspaceStatus.kind === 'busy'
-  const linkCheckMeta =
-    linkCheckStatus.kind === 'checking'
+  const linkCheckMeta = !linkCheckEnabled
+    ? 'Off'
+    : linkCheckStatus.kind === 'checking'
       ? 'Checking…'
       : linkCheckStatus.kind === 'done'
         ? `${linkCheckStatus.ok} ok, ${linkCheckStatus.broken} broken`
@@ -315,7 +318,7 @@ export function OptionsDataSection({
           >
             <input
               ref={importFileInputRef}
-              accept=".zip,.linkhub.zip,application/zip"
+              accept=".zip,.linkhaven.zip,.linkhub.zip,application/zip"
               className={panelStyles.hiddenInput}
               data-testid="canvas-import-input"
               type="file"
@@ -345,13 +348,18 @@ export function OptionsDataSection({
 
         <PanelSection meta={linkCheckMeta} title="Maintenance">
           <SettingRow
-            hint="Sends a HEAD request to every link card. Cards that don't answer within 5 seconds get a yellow badge until the tab is closed."
+            hint={
+              linkCheckEnabled
+                ? "Sends a HEAD request to every link card. Cards that don't answer within 5 seconds get a yellow badge until the tab is closed."
+                : 'Off: Linkhaven sends no requests to your links. Turn it on in Menu → Privacy.'
+            }
             label="Check Links"
           >
             <button
               className={panelStyles.button}
               data-testid="check-links"
               disabled={
+                !linkCheckEnabled ||
                 linkCheckStatus.kind === 'checking' ||
                 workspaceEntityCounts.cards === 0
               }

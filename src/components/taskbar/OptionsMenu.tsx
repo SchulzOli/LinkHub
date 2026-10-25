@@ -20,6 +20,7 @@ import {
 import { collectReferencedImageIds } from '../../features/importExport/canvasBundle'
 import { collectBundleImageIds } from '../../features/templates/templateLibrary'
 import { useAppearanceStore } from '../../state/useAppearanceStore'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import { useWorkspaceStore } from '../../state/useWorkspaceStore'
 import { PromptDialog } from '../ui/PromptDialog'
 import { isSelectMenuPortalTarget } from '../ui/SelectMenu'
@@ -59,6 +60,12 @@ const AutoDashboardPanel = lazy(async () => {
   return { default: module.AutoDashboardPanel }
 })
 
+const PrivacyPanel = lazy(async () => {
+  const module = await import('./PrivacyPanel')
+
+  return { default: module.PrivacyPanel }
+})
+
 const TemplatesPanel = lazy(async () => {
   const module = await import('./options/TemplatesPanel')
 
@@ -84,7 +91,13 @@ export function OptionsMenu({
   onToggle,
   onRequestClose,
 }: OptionsMenuProps) {
-  const [activeTab, setActiveTab] = useState<MenuTab>('options')
+  const [selectedTab, setSelectedTab] = useState<MenuTab>('options')
+  const autoDashboardOn = useNetworkFeaturesStore(
+    (state) => state.autoDashboard,
+  )
+  // The Auto tab only exists while the Auto dashboard is on in Privacy.
+  const activeTab =
+    selectedTab === 'auto' && !autoDashboardOn ? 'options' : selectedTab
   const [promptDialog, setPromptDialog] = useState<PromptDialogState | null>(
     null,
   )
@@ -235,14 +248,14 @@ export function OptionsMenu({
   })
 
   const handleRequestClose = useCallback(() => {
-    setActiveTab('options')
+    setSelectedTab('options')
     resetWorkspaceEditor()
     onRequestClose()
   }, [onRequestClose, resetWorkspaceEditor])
 
   const handleToggle = useCallback(() => {
     if (open) {
-      setActiveTab('options')
+      setSelectedTab('options')
       resetWorkspaceEditor()
     }
 
@@ -319,7 +332,7 @@ export function OptionsMenu({
             activeTab={activeTab}
             menuId={menuId}
             onRequestClose={handleRequestClose}
-            onSelectTab={setActiveTab}
+            onSelectTab={setSelectedTab}
             tabListId={tabListId}
           />
           <Suspense fallback={null}>
@@ -388,6 +401,8 @@ export function OptionsMenu({
               </div>
             ) : activeTab === 'auto' ? (
               <AutoDashboardPanel menuId={menuId} tabListId={tabListId} />
+            ) : activeTab === 'privacy' ? (
+              <PrivacyPanel menuId={menuId} tabListId={tabListId} />
             ) : (
               <OptionsDataSection
                 activeWorkspaceId={activeWorkspaceId}

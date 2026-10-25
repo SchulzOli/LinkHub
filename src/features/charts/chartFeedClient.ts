@@ -1,4 +1,5 @@
 import { getChartTransport, type ChartRange } from '../../contracts/chartNode'
+import { onNetworkFeatureDisabled } from '../../state/useNetworkFeaturesStore'
 import { createId } from '../../utils/id'
 
 import {
@@ -185,6 +186,11 @@ class PooledWebSocket {
   dispose() {
     this.disposed = true
 
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer)
+      this.idleTimer = null
+    }
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
@@ -204,9 +210,14 @@ function subscribeWebSocket(
   let pooled = socketsByUrl.get(request.url)
 
   if (!pooled) {
-    pooled = new PooledWebSocket(request.url, () => {
-      socketsByUrl.delete(request.url)
+    const created: PooledWebSocket = new PooledWebSocket(request.url, () => {
+      // Only forget this socket, never a newer one for the same URL.
+      if (socketsByUrl.get(request.url) === created) {
+        socketsByUrl.delete(request.url)
+      }
     })
+
+    pooled = created
     socketsByUrl.set(request.url, pooled)
   }
 
@@ -215,6 +226,20 @@ function subscribeWebSocket(
     handlers,
   )
 }
+
+/**
+ * Closes every pooled socket now and cancels pending reconnects, skipping
+ * the idle grace period. Used when the user switches charts off.
+ */
+export function closeAllChartFeeds() {
+  for (const pooled of socketsByUrl.values()) {
+    pooled.dispose()
+  }
+
+  socketsByUrl.clear()
+}
+
+onNetworkFeatureDisabled('chartsAndFeeds', closeAllChartFeeds)
 
 /** SSE: one EventSource per subscription; the browser handles reconnects. */
 function subscribeSse(request: ChartFeedRequest, handlers: ChartFeedHandlers) {

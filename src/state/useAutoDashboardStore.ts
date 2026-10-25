@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import {
   DEFAULT_AUTO_DASHBOARD_SETTINGS,
+  withSetupSwitches,
   type AutoDashboardSettings,
 } from '../contracts/autoDashboard'
 import { createDefaultWorkspace, type Workspace } from '../contracts/workspace'
@@ -17,6 +18,7 @@ import {
   saveWorkspace,
   saveWorkspaceSnapshot,
 } from '../storage/workspaceRepository'
+import { useNetworkFeaturesStore } from './useNetworkFeaturesStore'
 import { useWorkspaceStore } from './useWorkspaceStore'
 import { getPersistedWorkspace } from './workspaceStoreHelpers'
 
@@ -152,8 +154,21 @@ export const useAutoDashboardStore = create<AutoDashboardState>((set, get) => ({
   },
   build: () => {
     buildPromise ??= (async () => {
-      const { settings } = get()
+      const settings = withSetupSwitches(
+        get().settings,
+        useNetworkFeaturesStore.getState(),
+      )
       const workspaceState = useWorkspaceStore.getState()
+
+      if (!settings.enabled) {
+        set({
+          status: {
+            kind: 'warning',
+            message: 'The Auto dashboard is off. Turn it on in Menu → Privacy.',
+          },
+        })
+        return
+      }
 
       set({ status: { kind: 'busy', message: 'Building the Auto dashboard…' } })
 

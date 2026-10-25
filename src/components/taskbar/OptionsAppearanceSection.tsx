@@ -25,6 +25,7 @@ import {
   SURFACE_SHADOW_STYLE_LABELS,
   SURFACE_SHADOW_STYLE_OPTIONS,
 } from '../../features/appearance/surfaceEffects'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import { ColorPresetPicker } from '../ui/ColorPresetPicker'
 import { PanelSection, SettingRow, Slider, Switch } from '../ui/panel/Panel'
 import { SelectMenu } from '../ui/SelectMenu'
@@ -70,6 +71,9 @@ export function OptionsAppearanceSection({
   setThemeMode,
   tabListId,
 }: OptionsAppearanceSectionProps) {
+  const googleFavicons = useNetworkFeaturesStore(
+    (state) => state.googleFavicons,
+  )
   const canvasEffectsEnabled = useCanvasEffectsEnabled()
   const canvasEffectsSupported = isHtmlInCanvasSupported()
   const defaultColorPresets = getDefaultCardColorPresets(
@@ -142,12 +146,17 @@ export function OptionsAppearanceSection({
             />
           </SettingRow>
           <SettingRow
-            hint="Skip the Google favicon service and use only the site's favicon.ico."
+            hint={
+              googleFavicons
+                ? "Skip the Google favicon service and use only the site's favicon.ico."
+                : 'Google favicons are off for every workspace (Menu → Privacy).'
+            }
             label="Favicons offline-only"
           >
             <Switch
               ariaLabel="Favicons offline-only"
-              checked={appearance.faviconsOfflineOnly}
+              checked={appearance.faviconsOfflineOnly || !googleFavicons}
+              disabled={!googleFavicons}
               onChange={setFaviconsOfflineOnly}
             />
           </SettingRow>

@@ -1,19 +1,19 @@
-# LinkHub
+# Linkhaven
 
-[![CI](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/LinkHub/actions/workflows/ci.yml)
-[![Release](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml/badge.svg)](https://github.com/SchulzOli/LinkHub/actions/workflows/release.yml)
-[![Docs](https://github.com/SchulzOli/LinkHub/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/LinkHub/)
+[![CI](https://github.com/SchulzOli/Linkhaven/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SchulzOli/Linkhaven/actions/workflows/ci.yml)
+[![Release](https://github.com/SchulzOli/Linkhaven/actions/workflows/release.yml/badge.svg)](https://github.com/SchulzOli/Linkhaven/actions/workflows/release.yml)
+[![Docs](https://github.com/SchulzOli/Linkhaven/actions/workflows/pages.yml/badge.svg?branch=main)](https://schulzoli.github.io/Linkhaven/)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/linkhub/dpbgplhiaobnegcbfedihimnoamlpgmd)
 [![Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0A7FEA?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/linkhub/gkcpbfphinbaoplepknkinjfkdhljghp)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/link-hub/)
 
-LinkHub is a local-first infinite canvas for bookmarks, images, live charts, news feeds, themes, and reusable layouts. It turns a blank tab into a spatial board where every link has a place, and the same React app powers both the hosted web build and the browser-extension new-tab experience for Chrome, Edge, and Firefox.
+Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, news feeds, themes, and reusable layouts. It turns a blank tab into a spatial board where every link has a place, and the same React app powers both the hosted web build and the browser-extension new-tab experience for Chrome, Edge, and Firefox.
 
-**Documentation:** [schulzoli.github.io/LinkHub](https://schulzoli.github.io/LinkHub/)
+**Documentation:** [schulzoli.github.io/Linkhaven](https://schulzoli.github.io/Linkhaven/)
 
-![LinkHub canvas overview](extension/screenshots/01-canvas-overview.png)
+![Linkhaven canvas overview](extension/screenshots/01-canvas-overview.png)
 
-## Why LinkHub
+## Why Linkhaven
 
 - Infinite canvas with pan, zoom, snap-to-grid placement, marquee multi-select, copy/cut/paste, undo, and format painter
 - Link cards, collapsible nested groups, pictures, live charts, and RSS/Atom news feeds on the same board
@@ -35,12 +35,18 @@ LinkHub is a local-first infinite canvas for bookmarks, images, live charts, new
 
 ### Content and organization
 
-- Create link cards from URLs with automatic favicon lookup
+- Create link cards from URLs; website icons load on request (Menu → Privacy), otherwise cards show a letter or your own image
 - Resize cards from 2x2 up to 12x12 grid cells
 - Override favicons with uploaded gallery images
 - Organize content inside collapsible groups and nested groups
 - Drop images onto the canvas as standalone picture nodes
 - Collapsing a group hides every node inside it, including charts and feeds
+
+### Auto dashboard (optional)
+
+- Turn it on under **Menu → Privacy** to get an Auto tab and a workspace built from what you open most: links, news feeds and charts
+- Sources: link opens on your own cards, and in the extension the browser's top sites and history (optional permissions, asked for once, read locally)
+- With **AI arrangement** also on, Claude groups the pages using your own Anthropic API key; only page titles and URLs are sent
 
 ### Charts and news feeds
 
@@ -52,14 +58,14 @@ LinkHub is a local-first infinite canvas for bookmarks, images, live charts, new
 ### Themes, templates, and workspaces
 
 - Built-in themes: Excalidraw, Blueprint, Minimal, Nord, Sunset, and Neon
-- Save the current appearance as a custom theme, export it, or import `.linkhub-theme.json`
+- Save the current appearance as a custom theme, export it, or import `.linkhaven-theme.json`
 - Save selected canvas content as reusable templates with preview thumbnails
 - Download template exports as `.template.json` files
 - Create, rename, reorder, delete, and switch between multiple workspaces
 
 ### Data portability and local insights
 
-- Export the current canvas as a `.linkhub.zip` bundle
+- Export the current canvas as a `.linkhaven.zip` bundle
 - Bundle exports can include the current workspace, gallery images, saved templates, and saved custom themes
 - Import can either replace the current canvas or create a new workspace
 - Statistics stay local and cover card counts, group counts, link opens, canvas opens, and storage usage
@@ -68,31 +74,31 @@ LinkHub is a local-first infinite canvas for bookmarks, images, live charts, new
 
 ### Groups and layout organization
 
-![LinkHub groups and layout organization](extension/screenshots/02-groups-organization.png)
+![Linkhaven groups and layout organization](extension/screenshots/02-groups-organization.png)
 
 ### Theme and appearance customization
 
-![LinkHub theme customization](extension/screenshots/03-themes-customization.png)
+![Linkhaven theme customization](extension/screenshots/03-themes-customization.png)
 
 ### Card editing and styling controls
 
-![LinkHub card editing and styling](extension/screenshots/04-card-edit-styling.png)
+![Linkhaven card editing and styling](extension/screenshots/04-card-edit-styling.png)
 
 ### Multiple workspaces
 
-![LinkHub multiple workspaces](extension/screenshots/05-multiple-workspaces.png)
+![Linkhaven multiple workspaces](extension/screenshots/05-multiple-workspaces.png)
 
 ### Template library
 
-![LinkHub template library](extension/screenshots/06-template-library.png)
+![Linkhaven template library](extension/screenshots/06-template-library.png)
 
 ### Charts and news feeds
 
-![LinkHub charts and news feeds](extension/screenshots/07-charts-and-news.png)
+![Linkhaven charts and news feeds](extension/screenshots/07-charts-and-news.png)
 
 ### Local statistics
 
-![LinkHub local statistics](extension/screenshots/08-local-statistics.png)
+![Linkhaven local statistics](extension/screenshots/08-local-statistics.png)
 
 ## Quick Start
 
@@ -141,7 +147,7 @@ npm run build
 
 ## Browser Extension
 
-LinkHub can be packaged as a browser-extension new-tab experience for Chrome, Edge, and Firefox.
+Linkhaven can be packaged as a browser-extension new-tab experience for Chrome, Edge, and Firefox.
 
 ### Build the extension
 
@@ -170,22 +176,24 @@ To release, run **Actions → Release** with the new version and the stores to p
 
 ## Storage and Privacy
 
-LinkHub is local-first.
+Linkhaven is local-first.
 
 - IndexedDB is the primary persistence layer for workspaces, templates, themes, image metadata, and image blobs
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
-- Creating a link card fetches the site's favicon once (from the site itself, then Google's public favicon service as a fallback) and caches it locally; **Favicons offline-only** skips the Google fallback
+- Out of the box Linkhaven is a pure link dashboard that makes no network requests and needs no server: no browser permissions, no charts or feeds, no icon lookups, no AI
+- Every feature that uses the network or reads browser data is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement
+- With **Website icons** on, creating a link card fetches the site's `/favicon.ico` once and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback
 - Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
 - News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
-For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/LinkHub/privacy/](https://schulzoli.github.io/LinkHub/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
+For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/Linkhaven/privacy/](https://schulzoli.github.io/Linkhaven/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
 
 ## Documentation
 
-- [Documentation website](https://schulzoli.github.io/LinkHub/), built from `doc/` by `npm run docs:build`
+- [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
 - [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy
@@ -195,8 +203,8 @@ For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privac
 - [public/privacy/index.html](public/privacy/index.html) for the standalone privacy page
 - [CONTRIBUTING.md](CONTRIBUTING.md) for contribution workflow
 
-## Support LinkHub
+## Support Linkhaven
 
-If LinkHub is useful to you and you want to support more polish, testing, and store-release work, you can do that here:
+If Linkhaven is useful to you and you want to support more polish, testing, and store-release work, you can do that here:
 
 - [Buy Me a Coffee](https://www.buymeacoffee.com/SchulzOli)

@@ -35,6 +35,7 @@ import {
 } from '../../features/charts/chartSeries'
 import { searchChartSymbols } from '../../features/charts/chartSymbolSearch'
 import { useChartFeed } from '../../features/charts/useChartFeed'
+import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
 import {
   useWorkspaceStore,
   type InteractionMode,
@@ -112,6 +113,9 @@ export const ChartNode = memo(function ChartNode({
   const groups = useWorkspaceStore((state) => state.workspace.groups)
   const setChartSetting = useWorkspaceStore((state) => state.setChartSetting)
   const updateChart = useWorkspaceStore((state) => state.updateChart)
+  const chartsAndFeeds = useNetworkFeaturesStore(
+    (state) => state.chartsAndFeeds,
+  )
   const { handlePointerDown, createResizePointerDown } = useNodePlacement({
     node: chart,
     guide,
@@ -139,6 +143,7 @@ export const ChartNode = memo(function ChartNode({
     range: settings.range,
     live: settings.live,
     reloadToken,
+    enabled: chartsAndFeeds,
   })
 
   useEffect(
@@ -393,8 +398,12 @@ function ChartSourceForm(props: {
       : ''
 
   // Look up listings while typing ("7CD" → 7CD.F, 7CD.MU, …).
+  const chartsAndFeeds = useNetworkFeaturesStore(
+    (state) => state.chartsAndFeeds,
+  )
+
   useEffect(() => {
-    if (!searchQuery || !transport) {
+    if (!searchQuery || !transport || !chartsAndFeeds) {
       return
     }
 
@@ -409,7 +418,7 @@ function ChartSourceForm(props: {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [searchQuery, transport, trimmedUrl])
+  }, [searchQuery, transport, trimmedUrl, chartsAndFeeds])
 
   const visibleResults = searchQuery
     ? results.filter((result) => result.symbol !== trimmedSymbol).slice(0, 6)
