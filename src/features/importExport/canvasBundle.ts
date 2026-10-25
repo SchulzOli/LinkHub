@@ -33,7 +33,7 @@ const TEMPLATES_FILE_PATH = 'templates.json'
 const THEMES_FILE_PATH = 'themes.json'
 const IMAGES_DIRECTORY_PATH = 'images'
 const TEMPLATE_IMAGES_DIRECTORY_PATH = 'template-images'
-const CANVAS_BUNDLE_FILE_EXTENSION = 'linkhub.zip'
+const CANVAS_BUNDLE_FILE_EXTENSION = 'linkhaven.zip'
 
 const CanvasBundleImageScopeSchema = z.enum(['workspace-referenced', 'gallery'])
 

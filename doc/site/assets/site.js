@@ -1,7 +1,7 @@
-// LinkHub documentation: theme toggle, mobile navigation, search, TOC.
+// Linkhaven documentation: theme toggle, mobile navigation, search, TOC.
 ;(() => {
   const root = document.documentElement
-  const THEME_KEY = 'linkhub-docs-theme'
+  const THEME_KEY = 'linkhaven-docs-theme'
 
   // ── Theme ─────────────────────────────────────────────────
   document.querySelector('.theme-toggle')?.addEventListener('click', () => {

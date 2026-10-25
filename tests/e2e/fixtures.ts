@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-export const APP_TITLE = 'LinkHub'
+export const APP_TITLE = 'Linkhaven'
 export const QUICK_ADD_BUTTON = 'button[name="quick-add-toggle"]'
 export const CANVAS_TEST_ID = 'infinite-canvas'
 

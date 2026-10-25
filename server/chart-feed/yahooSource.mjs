@@ -5,7 +5,7 @@
 
 const YAHOO_CHART_URL = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 const YAHOO_SEARCH_URL = 'https://query2.finance.yahoo.com/v1/finance/search'
-const USER_AGENT = 'Mozilla/5.0 (LinkHub chart feed)'
+const USER_AGENT = 'Mozilla/5.0 (Linkhaven chart feed)'
 const DAY_SECONDS = 86400
 
 /** Range → Yahoo query. 3Y has no Yahoo range keyword, so it uses periods. */

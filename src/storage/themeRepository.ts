@@ -1,12 +1,12 @@
 import { ThemeDocumentSchema, type ThemeDocument } from '../contracts/theme'
-import { openLinkHubDb, STORAGE_STORES } from './db'
+import { openLinkhavenDb, STORAGE_STORES } from './db'
 
 function toSerializableTheme(theme: ThemeDocument) {
   return JSON.parse(JSON.stringify(theme))
 }
 
 export async function listThemes() {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const rawThemes = (await db.getAll(STORAGE_STORES.theme)) as unknown[]
 
   return rawThemes
@@ -19,7 +19,7 @@ export async function listThemes() {
 }
 
 export async function getTheme(themeId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const raw = await db.get(STORAGE_STORES.theme, themeId)
 
   if (!raw) {
@@ -32,13 +32,13 @@ export async function getTheme(themeId: string) {
 }
 
 export async function putTheme(theme: ThemeDocument) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
 
   await db.put(STORAGE_STORES.theme, toSerializableTheme(theme), theme.id)
 }
 
 export async function deleteTheme(themeId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction([STORAGE_STORES.theme], 'readwrite')
 
   await transaction.objectStore(STORAGE_STORES.theme).delete(themeId)

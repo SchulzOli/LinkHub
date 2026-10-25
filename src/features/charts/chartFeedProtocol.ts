@@ -1,7 +1,7 @@
 import { CHART_RANGES, type ChartRange } from '../../contracts/chartNode'
 
 /**
- * LinkHub chart feed protocol (v1). JSON messages, identical for WebSocket
+ * Linkhaven chart feed protocol (v1). JSON messages, identical for WebSocket
  * and Server-Sent Events. Points are `[epochMillis, value]`.
  *
  * WebSocket, client → server:

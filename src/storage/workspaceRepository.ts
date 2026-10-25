@@ -11,7 +11,7 @@ import {
   type WorkspaceSummary,
 } from '../contracts/workspaceDirectory'
 import { createId } from '../utils/id'
-import { openLinkHubDb, STORAGE_STORES } from './db'
+import { openLinkhavenDb, STORAGE_STORES } from './db'
 import { ensureLatestWorkspace } from './storageMigrations'
 
 const FALLBACK_ACTIVE_WORKSPACE_KEY = 'linkhub.workspace'
@@ -148,7 +148,7 @@ function normalizeWorkspaceDirectory(
 
 async function loadStoredWorkspaceRecord(workspaceId: string) {
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     const raw = await db.get(STORAGE_STORES.workspace, workspaceId)
 
     return raw ? ensureLatestWorkspace(raw) : null
@@ -173,7 +173,7 @@ export async function loadWorkspaceDirectory() {
   const seedWorkspace = await loadSeedWorkspace()
 
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     const stored = await db.get(
       STORAGE_STORES.workspaceMetadata,
       WORKSPACE_DIRECTORY_KEY,
@@ -281,7 +281,7 @@ export function getWorkspaceSnapshotByteSize(workspace: Workspace) {
 
 export async function saveWorkspace(workspace: Workspace) {
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     await db.put(STORAGE_STORES.workspace, workspace, workspace.id)
   } catch {
     // Last-known-good in localStorage sichern, damit der nächste
@@ -327,7 +327,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
   }
 
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     await db.put(
       STORAGE_STORES.workspaceMetadata,
       stamped,
@@ -340,7 +340,7 @@ export async function saveWorkspaceDirectory(directory: WorkspaceDirectory) {
 
 export async function deleteWorkspaceRecord(workspaceId: string) {
   try {
-    const db = await openLinkHubDb()
+    const db = await openLinkhavenDb()
     const transaction = db.transaction(STORAGE_STORES.workspace, 'readwrite')
 
     await transaction.objectStore(STORAGE_STORES.workspace).delete(workspaceId)

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createDefaultWorkspace } from '../../../src/contracts/workspace'
 import { createWorkspaceSummary } from '../../../src/contracts/workspaceDirectory'
-import { openLinkHubDb, STORAGE_STORES } from '../../../src/storage/db'
+import { openLinkhavenDb, STORAGE_STORES } from '../../../src/storage/db'
 import {
   createWorkspaceRecord,
   loadWorkspace,
@@ -14,7 +14,7 @@ import {
 const itWithIndexedDb = typeof indexedDB === 'undefined' ? it.skip : it
 
 async function clearAllStores() {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const names = Object.values(STORAGE_STORES)
   const transaction = db.transaction(names, 'readwrite')
 
@@ -100,7 +100,7 @@ describe('workspace repository', () => {
 
       // Seed a legacy directory (missing `interactionMode`) directly into IDB,
       // simulating a pre-2026 persisted directory.
-      const db = await openLinkHubDb()
+      const db = await openLinkhavenDb()
       await db.put(
         STORAGE_STORES.workspaceMetadata,
         {

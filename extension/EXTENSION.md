@@ -1,6 +1,6 @@
-# LinkHub Browser Extension
+# Linkhaven Browser Extension
 
-Use LinkHub as your new tab page in Chrome, Edge, and Firefox.
+Use Linkhaven as your new tab page in Chrome, Edge, and Firefox.
 
 ## Local Development
 
@@ -30,13 +30,13 @@ This builds the app with relative paths and packages everything into `dist-exten
 
 ### Icons
 
-`public/linkhub-mark.svg` is the source for:
+`public/linkhaven-mark.svg` is the source for:
 
 - the web favicon
 - the extension PNG icons in `extension/icons/`
 - the app symbol used inside the UI
 
-The extension PNGs are committed to the repository. If the mark changes, update the files in `extension/icons/` so they stay in sync with `public/linkhub-mark.svg`, then rebuild the extension:
+The extension PNGs are committed to the repository. If the mark changes, update the files in `extension/icons/` so they stay in sync with `public/linkhaven-mark.svg`, then rebuild the extension:
 
 ```bash
 npm run build:extension
@@ -151,7 +151,7 @@ npm run deploy:dry
 
 This writes `dist-extension.zip` with the built files at the archive root (no
 shell, PowerShell or `zip` binary needed). Without store credentials the
-script stops after the ZIP. Rename it to `linkhub-firefox.zip` if you upload by hand.
+script stops after the ZIP. Rename it to `linkhaven-firefox.zip` if you upload by hand.
 
 Important:
 
@@ -170,7 +170,7 @@ Important:
 1. Create or sign in to an account at https://addons.mozilla.org/en-US/developers/
 2. Choose **Submit a New Add-on**
 3. For a public listing, choose **Listed**
-4. Upload `linkhub-firefox.zip`
+4. Upload `linkhaven-firefox.zip`
 5. Fill out the store listing
 
 Typical listing fields:
@@ -191,7 +191,7 @@ For smoother Firefox review, prepare the following:
 
 Suggested privacy wording:
 
-> LinkHub stores user data locally in the browser on the current device. It does not send workspace data, templates, themes, or images to external servers.
+> Linkhaven stores user data locally in the browser on the current device. It does not send workspace data, templates, themes, or images to external servers.
 
 ### 6. Source archive for AMO reviewers
 
@@ -200,7 +200,7 @@ Because the extension is bundled with Vite, AMO reviewers may ask for source cod
 Recommended approach:
 
 ```bash
-git archive --format=zip -o linkhub-source.zip HEAD
+git archive --format=zip -o linkhaven-source.zip HEAD
 ```
 
 That gives you a clean source archive from tracked files only, without `node_modules` and without `dist-extension`.
@@ -231,7 +231,7 @@ For this project, the extension package itself is already in good shape:
 
 - `manifest_version: 3` is already in place
 - the required extension icons are present in `extension/icons/`
-- the extension has a narrow purpose: replace the new tab page with LinkHub
+- the extension has a narrow purpose: replace the new tab page with Linkhaven
 - the manifest currently requests no extra high-risk permissions
 
 What is still needed before a Chrome release:
@@ -252,7 +252,7 @@ Before each Chrome Web Store submission:
 
 1. Ensure `extension/icons/` contains the final committed PNG set
 2. Run the Release workflow with the new version (it sets `"version"` in `extension/manifest.json`)
-3. Confirm the extension still has a single clear purpose: LinkHub as the browser new tab page
+3. Confirm the extension still has a single clear purpose: Linkhaven as the browser new tab page
 4. Re-check that no unnecessary permissions were added to the manifest
 
 Current manifest characteristics:
@@ -281,7 +281,7 @@ npm run deploy:dry
 
 This writes `dist-extension.zip` with the built files at the archive root (no
 shell, PowerShell or `zip` binary needed). Without store credentials the
-script stops after the ZIP. Rename it to `linkhub-chrome.zip` if you upload by hand.
+script stops after the ZIP. Rename it to `linkhaven-chrome.zip` if you upload by hand.
 
 Important:
 
@@ -315,7 +315,7 @@ Prepare these materials before submission:
 - screenshots that show the actual new-tab experience
 - privacy policy URL
 
-Recommended positioning for LinkHub:
+Recommended positioning for Linkhaven:
 
 - Category: `Functionality & UI` or `Workflow & Planning`
 - Single purpose statement: replace the browser new tab page with a personal link canvas
@@ -324,9 +324,9 @@ Recommended positioning for LinkHub:
 
 Chrome requires the Privacy section in the dashboard to accurately describe user data handling.
 
-For LinkHub, the intended disclosure should stay aligned with the actual behavior:
+For Linkhaven, the intended disclosure should stay aligned with the actual behavior:
 
-> LinkHub stores user data locally in the browser on the current device. It does not send workspace data, templates, themes, or images to external servers.
+> Linkhaven stores user data locally in the browser on the current device. It does not send workspace data, templates, themes, or images to external servers.
 
 Chrome's policy requires a privacy policy when a product handles user data, and Chrome explicitly states that this still applies when the data is stored only locally.
 
@@ -336,7 +336,7 @@ For that reason, this repository keeps the policy at `public/privacy/index.html`
 
 1. Create or sign in to an account at https://chrome.google.com/webstore/devconsole
 2. Pay the one-time developer registration fee if the account is new
-3. If the Chrome Web Store item does not exist yet, click **Add new item**, upload `linkhub-chrome.zip`, and save the draft
+3. If the Chrome Web Store item does not exist yet, click **Add new item**, upload `linkhaven-chrome.zip`, and save the draft
 4. Complete **Store Listing**, **Privacy**, and **Distribution** for the item
 5. In the Chrome Developer Dashboard, open **Account** and copy the **Publisher ID**
 6. Open the Chrome Web Store item and copy the extension ID from the item page or store URL

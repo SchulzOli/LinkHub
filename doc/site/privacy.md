@@ -1,13 +1,13 @@
 ---
 title: Privacy and data
-description: What LinkHub stores, where, and which network requests it makes.
+description: What Linkhaven stores, where, and which network requests it makes.
 order: 6
 section: Guide
 ---
 
 # Privacy and data
 
-LinkHub is local-first. There is no account, no LinkHub server, no analytics
+Linkhaven is local-first. There is no account, no Linkhaven server, no analytics
 and no advertising.
 
 ## Stored in your browser
@@ -15,7 +15,7 @@ and no advertising.
 IndexedDB holds the workspaces, images, templates and themes; localStorage
 keeps a small snapshot of the active workspace. Statistics are computed from
 data that stays on the device. Nothing is synced. To move a board, export a
-`.linkhub.zip` bundle and import it elsewhere.
+`.linkhaven.zip` bundle and import it elsewhere.
 
 Details: [Storage](storage.html).
 
@@ -32,4 +32,4 @@ Details: [Storage](storage.html).
 None of these requests carry your board content, templates, themes, images or
 statistics.
 
-The full policy: [LinkHub privacy policy](privacy/).
+The full policy: [Linkhaven privacy policy](privacy/).

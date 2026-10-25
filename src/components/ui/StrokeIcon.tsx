@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 /**
- * Base for LinkHub's icon set: 24px grid, 1.75px round strokes, no fills,
+ * Base for Linkhaven's icon set: 24px grid, 1.75px round strokes, no fills,
  * so action, taskbar and chart icons read as one family.
  */
 export function StrokeIcon({
