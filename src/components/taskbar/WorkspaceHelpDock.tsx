@@ -23,6 +23,7 @@ type PrivacySection = {
 
 const REPOSITORY_URL = 'https://github.com/SchulzOli/Linkhaven'
 const FEEDBACK_URL = 'https://github.com/SchulzOli/Linkhaven/issues'
+const SUPPORT_URL = 'https://www.buymeacoffee.com/SchulzOli'
 
 const keyboardShortcuts: readonly ShortcutRow[] = [
   {
@@ -288,6 +289,17 @@ export function WorkspaceHelpDock({ interactionMode }: WorkspaceHelpDockProps) {
                       target="_blank"
                     >
                       <span>View repository</span>
+                      <span className={styles.linkIcon}>
+                        <LinkSymbol />
+                      </span>
+                    </a>
+                    <a
+                      className={styles.linkRow}
+                      href={SUPPORT_URL}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <span>Buy me a coffee</span>
                       <span className={styles.linkIcon}>
                         <LinkSymbol />
                       </span>

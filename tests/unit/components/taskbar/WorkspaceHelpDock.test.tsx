@@ -31,6 +31,9 @@ describe('WorkspaceHelpDock', () => {
       screen.getByRole('link', { name: 'View repository' }),
     ).toHaveAttribute('href', 'https://github.com/SchulzOli/Linkhaven')
     expect(
+      screen.getByRole('link', { name: 'Buy me a coffee' }),
+    ).toHaveAttribute('href', 'https://www.buymeacoffee.com/SchulzOli')
+    expect(
       screen.getByRole('button', { name: 'Privacy policy' }),
     ).toBeInTheDocument()
   })

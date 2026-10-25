@@ -351,7 +351,7 @@ function layout({ title, description, body, nav, toc, slug, prev, next }) {
   </main>
 </div>
 <footer class="footer">
-  <p>Linkhaven is open source under the MIT license. <a href="${repoUrl}" rel="noopener">Source</a> · <a href="privacy/">Privacy policy</a> · <a href="${repoUrl}/issues" rel="noopener">Feedback</a></p>
+  <p>Linkhaven is open source under the MIT license. <a href="${repoUrl}" rel="noopener">Source</a> · <a href="privacy/">Privacy policy</a> · <a href="${repoUrl}/issues" rel="noopener">Feedback</a> · <a href="https://www.buymeacoffee.com/SchulzOli" rel="noopener">Buy me a coffee</a></p>
 </footer>
 <script src="assets/site.js" defer></script>
 </body>
