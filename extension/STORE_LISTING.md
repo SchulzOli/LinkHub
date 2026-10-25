@@ -120,6 +120,8 @@ Out of the box the extension makes no network requests and needs no server: it i
 
 - Auto dashboard (optional, off by default): builds a workspace from the pages the user opens most. It can read the browser's top sites and history only after the user turns on that source and grants the optional `topSites` / `history` permission; this data is processed locally. If the user also turns on "AI arrangement" and enters their own Anthropic API key, the titles and URLs of the candidate pages are sent to the Anthropic API (https://api.anthropic.com) to group them.
 
+- Device sync (optional, off by default): exchanges workspaces, themes and images with a WebDAV folder the user enters (e.g. their own Nextcloud). Everything is encrypted on the device (AES-GCM, key derived from the user's sync passphrase) before upload. Access to that server's address is requested via the optional host permission when the user presses Connect, and released on Disconnect.
+
 Apart from the optional AI arrangement above, no workspace content, statistics or personal data are sent anywhere. The extension requests no permissions at install time (`history` and `topSites` are optional and requested only from the Auto dashboard settings), has no content scripts and loads no remote code.
 
 ### Build environment
@@ -172,8 +174,8 @@ Important behavior:
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers.
-- With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
-- The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard.
+- With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
+- The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard. The optional host permission is requested only for the one sync server address the user enters for device sync.
 
 If the reviewer wants to validate the packaged build, use:
 

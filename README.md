@@ -48,6 +48,12 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 - Sources: link opens on your own cards, and in the extension the browser's top sites and history (optional permissions, asked for once, read locally)
 - With **AI arrangement** also on, Claude groups the pages using your own Anthropic API key; only page titles and URLs are sent
 
+### Device sync and apps (optional)
+
+- Turn on **Device sync** under **Menu → Privacy** to keep workspaces, themes and images in step across devices through a WebDAV folder you own (Nextcloud, a NAS, …); no Linkhaven server involved
+- End-to-end encrypted with your own sync passphrase; the server only sees ciphertext
+- Besides the browser extension, Linkhaven runs as a native app on Windows, macOS, Linux, Android and iOS (Tauri); see [doc/APP.md](doc/APP.md)
+
 ### Charts and news feeds
 
 - Chart nodes plot a time series from a WebSocket or SSE feed: ranges from 1D to Max, price or % change, moving averages, log scale, CSV export
@@ -174,6 +180,15 @@ Firefox:
 
 To release, run **Actions → Release** with the new version and the stores to publish to; details in [extension/EXTENSION.md](extension/EXTENSION.md#releasing).
 
+## Desktop and Mobile App
+
+```bash
+npm run app:dev     # app window with hot reload (needs Rust and the Tauri prerequisites)
+npm run app:build   # installers in src-tauri/target/release/bundle/
+```
+
+Android and iOS builds, signing and device sync setup are described in [doc/APP.md](doc/APP.md).
+
 ## Storage and Privacy
 
 Linkhaven is local-first.
@@ -182,11 +197,12 @@ Linkhaven is local-first.
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
 - Out of the box Linkhaven is a pure link dashboard that makes no network requests and needs no server: no browser permissions, no charts or feeds, no icon lookups, no AI
-- Every feature that uses the network or reads browser data is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement
+- Every feature that uses the network or reads browser data is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync
 - With **Website icons** on, creating a link card fetches the site's `/favicon.ico` once and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback
 - Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
 - News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
+- **Device sync** talks only to the WebDAV folder you enter, and encrypts everything on the device first
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
 For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/Linkhaven/privacy/](https://schulzoli.github.io/Linkhaven/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
@@ -194,6 +210,7 @@ For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privac
 ## Documentation
 
 - [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
+- [doc/APP.md](doc/APP.md) for the desktop and mobile app and device sync
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
 - [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy
