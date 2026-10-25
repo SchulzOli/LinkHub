@@ -1,6 +1,17 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-test('starts fully local and turns each network feature on separately', async ({
+import { dismissVisibleEditPanels } from './fixtures'
+
+async function addLink(page: Page, url: string, title: string) {
+  await page.getByRole('button', { name: 'Add link' }).click()
+  await page.getByLabel('Link URL').fill(url)
+  await page.getByLabel('Link title').fill(title)
+  await page.getByRole('button', { name: 'Create' }).click()
+  await expect(page.getByTestId('card-edit-panel')).toBeVisible()
+  await dismissVisibleEditPanels(page)
+}
+
+test('works as a pure, fully local link dashboard out of the box', async ({
   page,
 }) => {
   const requests: string[] = []
@@ -9,49 +20,39 @@ test('starts fully local and turns each network feature on separately', async ({
   page.on('request', (request) => requests.push(request.url()))
   await page.goto('/')
 
-  // Off by default: nothing that would reach the network can be added.
-  await expect(page.getByRole('button', { name: 'Add chart' })).toBeDisabled()
+  // Only link, group and image tools: no chart or feed buttons.
+  await expect(page.getByRole('button', { name: 'Add link' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add chart' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add news feed' })).toHaveCount(
+    0,
+  )
+
+  // A link card shows its letter: no icon is fetched from anywhere.
+  await addLink(page, 'offline.example.com', 'Offline')
   await expect(
-    page.getByRole('button', { name: 'Add news feed' }),
-  ).toBeDisabled()
+    page
+      .getByTestId(/link-card-/)
+      .filter({ hasText: 'Offline' })
+      .getByTestId('card-image-placeholder'),
+  ).toBeVisible()
 
   await page.getByRole('button', { name: 'Open menu' }).click()
   await page.getByRole('tab', { name: 'Privacy' }).click()
   await expect(page.getByTestId('privacy-summary')).toHaveText('Fully local')
-  await expect(page.getByTestId('privacy-status-googleFavicons')).toContainText(
-    'Off',
-  )
-  await expect(page.getByTestId('privacy-status-chartsAndFeeds')).toContainText(
-    'Off · no connections',
-  )
-  await expect(page.getByTestId('privacy-status-linkCheck')).toContainText(
-    'Off',
-  )
+
+  for (const key of [
+    'siteFavicons',
+    'googleFavicons',
+    'chartsAndFeeds',
+    'linkCheck',
+  ]) {
+    await expect(page.getByTestId(`privacy-status-${key}`)).toContainText('Off')
+  }
 
   await page.getByRole('tab', { name: 'Data' }).click()
   await expect(page.getByTestId('check-links')).toBeDisabled()
 
-  await page.getByRole('tab', { name: 'Privacy' }).click()
-  await page.getByLabel('Charts and news feeds').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 3 on')
-  await expect(page.getByTestId('privacy-status-chartsAndFeeds')).toContainText(
-    'On',
-  )
-  await page.getByLabel('Link check').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 3 on')
-  await page.keyboard.press('Escape')
-
-  await expect(page.getByRole('button', { name: 'Add chart' })).toBeEnabled()
-
-  // The choice survives a reload.
-  await page.reload()
-  await page.getByRole('button', { name: 'Open menu' }).click()
-  await page.getByRole('tab', { name: 'Privacy' }).click()
-  await expect(page.getByLabel('Charts and news feeds')).toBeChecked()
-  await expect(page.getByLabel('Link check')).toBeChecked()
-  await expect(page.getByLabel('Google favicons')).not.toBeChecked()
-
-  // Only the app itself was loaded: no third-party host was contacted.
+  // Only the app itself was loaded: no other host was contacted.
   const appOrigin = new URL(page.url()).origin
 
   expect(
@@ -61,25 +62,63 @@ test('starts fully local and turns each network feature on separately', async ({
   ).toEqual([])
 })
 
-test('shows the letter placeholder when a site has no favicon and Google is off', async ({
+test('turns each network feature on separately and keeps the choice', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await page.getByRole('tab', { name: 'Privacy' }).click()
+
+  await page.getByLabel('Charts and news feeds').check()
+  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 4 on')
+  await expect(page.getByTestId('privacy-status-chartsAndFeeds')).toContainText(
+    'On',
+  )
+  await page.getByLabel('Link check').check()
+  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 4 on')
+  await page.keyboard.press('Escape')
+
+  await expect(page.getByRole('button', { name: 'Add chart' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Add news feed' }),
+  ).toBeVisible()
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await page.getByRole('tab', { name: 'Privacy' }).click()
+  await expect(page.getByLabel('Charts and news feeds')).toBeChecked()
+  await expect(page.getByLabel('Link check')).toBeChecked()
+  await expect(page.getByLabel('Website icons')).not.toBeChecked()
+  await expect(page.getByLabel('Google favicons')).not.toBeChecked()
+})
+
+test('loads website icons only after they are turned on', async ({
   page,
   context,
 }) => {
-  await context.route('https://nofavicon.example.com/**', (route) =>
+  // Answered locally, so no real request leaves the test run.
+  await context.route('https://en.wikipedia.org/**', (route) =>
     route.fulfill({ status: 404, body: '' }),
   )
   await page.goto('/')
+  await addLink(page, 'en.wikipedia.org', 'Wiki')
 
-  await page.getByRole('button', { name: 'Add link' }).click()
-  await page.getByLabel('Link URL').fill('nofavicon.example.com')
-  await page.getByLabel('Link title').fill('No icon')
-  await page.getByRole('button', { name: 'Create' }).click()
+  const card = page.getByTestId(/link-card-/).filter({ hasText: 'Wiki' })
 
-  const image = page
-    .getByTestId(/link-card-/)
-    .filter({ hasText: 'No icon' })
-    .locator('img')
-    .first()
+  // Off: only the letter, no image element that could load anything.
+  await expect(card.getByTestId('card-image-placeholder')).toBeVisible()
+  await expect(card.getByTestId('card-image')).toHaveCount(0)
 
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  await page.getByRole('tab', { name: 'Privacy' }).click()
+  await page.getByLabel('Website icons').check()
+  await page.keyboard.press('Escape')
+
+  // On: the card tries the site's icon; this one has none and Google is
+  // off, so it ends on its letter again.
+  const image = card.getByTestId('card-image')
+
+  await expect(image).toHaveCount(1)
   await expect(image).toHaveAttribute('src', /^data:/)
+  await expect(card.getByTestId('card-image-placeholder')).toHaveCount(0)
 })

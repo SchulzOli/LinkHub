@@ -74,7 +74,7 @@ Drag, group, resize and style link cards on a zoomable infinite board — and pu
 Pan, zoom and navigate freely. Snap-to-grid keeps everything aligned. Multi-select, copy, paste, undo and a format painter let you work fast.
 
 **Link Cards**
-Create cards from any URL; favicons are fetched once and cached locally. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
+Create cards from any URL; with website icons turned on, favicons are fetched once and cached locally. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
 
 **Groups**
 Collect cards in collapsible groups and nest groups inside groups. Collapsing a group hides everything inside it, including charts and feeds.
@@ -111,9 +111,9 @@ Linkhaven is a new-tab override extension. It replaces the browser new tab page 
 
 The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account, sign-in, or remote sync service is involved.
 
-Network requests made by the extension. Google favicons, chart and news feed nodes, and Check Links are each off by default and only work after the user turns them on in Menu → Privacy:
+Out of the box the extension makes no network requests and needs no server: it is a pure, local link dashboard. Every request below belongs to a feature that is off by default and only works after the user turns it on in Menu → Privacy:
 
-- Favicons: when the user creates a link card, the extension loads `https://<site>/favicon.ico` and caches the icon locally. Only with "Google favicons" turned on does it fall back to Google's public favicon service (https://www.google.com/s2/favicons).
+- Website icons: when the user creates a link card, the extension loads `https://<site>/favicon.ico` and caches the icon locally. With "Google favicons" also on, it falls back to Google's public favicon service (https://www.google.com/s2/favicons). With both off, cards show a letter or an image the user uploaded.
 - Chart nodes (optional, user-added): connect to the WebSocket or SSE feed URL set on the node. The default is `ws://127.0.0.1:8787/feed`, a server the user runs locally from the open-source repository.
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
@@ -170,7 +170,7 @@ Important behavior:
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers.
-- During normal use the only automatic network request is the favicon lookup from the site itself when a user creates a link card. Google favicons, chart and news feed nodes, and Check Links are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
+- With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, and Check Links are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
 - The extension does not inject scripts into websites and does not require elevated browsing permissions.
 
 If the reviewer wants to validate the packaged build, use:
@@ -213,9 +213,9 @@ Your Linkhaven data stays isolated to the browser profile and device where you u
 
 ### External requests
 
-Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
+Out of the box Linkhaven makes no network requests. Website icons, Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
 
-- Favicons: when you create a link card, Linkhaven loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
+- Website icons: when you create a link card, Linkhaven loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
 - Chart nodes connect to the feed server address set on the chart (by default a server on your own computer).
 - News feed nodes load the RSS or Atom addresses you add, through the feed proxy set on the node (by default on your own computer) or directly. With "Images" on, article images load from the news sites.
 - Check Links sends a HEAD request to each link card's address when you start it.

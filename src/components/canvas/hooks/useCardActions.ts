@@ -12,7 +12,7 @@ import { isPlacementBlockedByOccupiedItem } from '../../../features/groups/group
 import { createLinkCard } from '../../../features/links/linkCreation'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
 import { applySnap } from '../../../features/placement/snapEngine'
-import { resolveFaviconsOfflineOnly } from '../../../state/useNetworkFeaturesStore'
+import { resolveFaviconSources } from '../../../state/useNetworkFeaturesStore'
 import type { AutoEditTarget } from '../../../state/workspaceStoreTypes'
 
 import type { CardFrame, PlacementFrames } from './usePlacementFrames'
@@ -132,9 +132,7 @@ export function useCardActions({
         try {
           const hostname = new URL(card.url).hostname
           const blob = await fetchFaviconBlob(hostname, () =>
-            resolveFaviconsOfflineOnly(
-              workspace.appearance.faviconsOfflineOnly,
-            ),
+            resolveFaviconSources(workspace.appearance.faviconsOfflineOnly),
           )
 
           if (!blob) {

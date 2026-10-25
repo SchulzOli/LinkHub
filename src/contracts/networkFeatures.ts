@@ -6,6 +6,8 @@ import { z } from 'zod'
  * user turns it on. All are off by default.
  */
 export const NetworkFeaturesSchema = z.object({
+  /** Load each card's icon from its own site (`/favicon.ico`). */
+  siteFavicons: z.boolean(),
   /** Ask Google's favicon service for icons a site doesn't serve itself. */
   googleFavicons: z.boolean(),
   /** Chart nodes (price feed) and news feed nodes (RSS proxy). */
@@ -18,6 +20,7 @@ export type NetworkFeatures = z.infer<typeof NetworkFeaturesSchema>
 export type NetworkFeatureKey = keyof NetworkFeatures
 
 export const DEFAULT_NETWORK_FEATURES: NetworkFeatures = {
+  siteFavicons: false,
   googleFavicons: false,
   chartsAndFeeds: false,
   linkCheck: false,
@@ -44,3 +47,8 @@ export function coerceNetworkFeatures(value: unknown): NetworkFeatures {
     ]),
   ) as NetworkFeatures
 }
+
+/** Where a card's icon may come from; neither = a letter, never a request. */
+export type FaviconSources = { site: boolean; google: boolean }
+
+export const NO_FAVICON_SOURCES: FaviconSources = { site: false, google: false }

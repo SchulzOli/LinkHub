@@ -17,6 +17,7 @@ type PrivacyPanelProps = {
 }
 
 const FEATURE_LABELS: Record<NetworkFeatureKey, string> = {
+  siteFavicons: 'Website icons',
   googleFavicons: 'Google favicons',
   chartsAndFeeds: 'Charts and news feeds',
   linkCheck: 'Link check',
@@ -59,11 +60,19 @@ export function PrivacyPanel({ menuId, tabListId }: PrivacyPanelProps) {
     status: ReactNode
   }> = [
     {
+      key: 'siteFavicons',
+      description:
+        'Loads each card’s icon from its own website (/favicon.ico). Icons you uploaded always show.',
+      status: features.siteFavicons
+        ? `On · may contact the sites of ${plural(workspace.cards.length, 'card')}`
+        : 'Off · cards show a letter or your own image',
+    },
+    {
       key: 'googleFavicons',
       description:
         'Asks www.google.com for the icon when a site doesn’t serve one itself.',
       status: !features.googleFavicons
-        ? 'Off · icons come from each site itself, or a letter'
+        ? 'Off · Google is never contacted'
         : workspaceOfflineOnly
           ? 'On, but this workspace is set to “Favicons offline-only”'
           : 'On · may contact www.google.com',

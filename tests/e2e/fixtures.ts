@@ -96,7 +96,10 @@ export async function openGroupEditor(
 export async function enableNetworkFeatures(
   page: Page,
   features: Partial<
-    Record<'googleFavicons' | 'chartsAndFeeds' | 'linkCheck', boolean>
+    Record<
+      'siteFavicons' | 'googleFavicons' | 'chartsAndFeeds' | 'linkCheck',
+      boolean
+    >
   >,
 ) {
   await page.addInitScript((value) => {

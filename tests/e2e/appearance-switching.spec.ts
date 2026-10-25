@@ -2,7 +2,11 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { SURFACE_SHADOW_STYLE_LABELS } from '../../src/features/appearance/surfaceEffects'
 import { moveCardIntoGroupBody } from './dragHelpers'
-import { dismissVisibleEditPanels, openGroupEditor } from './fixtures'
+import {
+  dismissVisibleEditPanels,
+  enableNetworkFeatures,
+  openGroupEditor,
+} from './fixtures'
 
 const OFF_SHADOW_LABEL = SURFACE_SHADOW_STYLE_LABELS.none
 const SHORT_SHADOW_LABEL = SURFACE_SHADOW_STYLE_LABELS.short
@@ -58,6 +62,8 @@ async function applyBuiltInTheme(page: Page, themeName: string) {
 test('persists selected theme, color mode and default card size settings', async ({
   page,
 }) => {
+  // Checks the card icon too, so turn on website icons (off by default).
+  await enableNetworkFeatures(page, { siteFavicons: true })
   await page.goto('/')
 
   await page.getByRole('button', { name: 'Open menu' }).click()
