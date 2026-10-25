@@ -97,6 +97,7 @@ export const LinkCardView = memo(function LinkCardView({
                 alt=""
                 className={`${styles.favicon} ${viewModel.usesEdgeToEdgeCardImage ? styles.faviconImageSource : styles.faviconIconSource}`}
                 data-testid="card-image"
+                key={`${viewModel.resolvedCardImageUrl}|${faviconSources.site}|${faviconSources.google}`}
                 draggable={false}
                 loading="lazy"
                 src={viewModel.resolvedCardImageUrl}
