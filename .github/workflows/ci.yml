@@ -37,7 +37,7 @@ jobs:
       - name: Upload app build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linkhub-app-dist
+          name: linkhaven-app-dist
           path: dist
           if-no-files-found: error
 
@@ -47,7 +47,7 @@ jobs:
       - name: Upload extension build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linkhub-extension-dist
+          name: linkhaven-extension-dist
           path: dist-extension
           if-no-files-found: error
 

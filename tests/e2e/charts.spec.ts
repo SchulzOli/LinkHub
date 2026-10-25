@@ -18,7 +18,7 @@ type Subscribe = {
 }
 
 /**
- * In-test feed server speaking the LinkHub chart feed protocol. Every
+ * In-test feed server speaking the Linkhaven chart feed protocol. Every
  * subscribe gets a small deterministic snapshot; `tick` pushes live points.
  */
 async function mockChartFeed(page: Page) {

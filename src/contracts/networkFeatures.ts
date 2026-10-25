@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /**
- * App-wide switches for every feature that talks to the network. LinkHub
+ * App-wide switches for every feature that talks to the network. Linkhaven
  * works fully offline; each feature here only contacts anything once the
  * user turns it on. All are off by default.
  */

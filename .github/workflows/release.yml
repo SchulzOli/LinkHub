@@ -187,11 +187,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          (cd dist && zip -qr "../linkhub-app-$TAG.zip" .)
-          (cd dist-extension && zip -qr "../linkhub-extension-$TAG.zip" .)
+          (cd dist && zip -qr "../linkhaven-app-$TAG.zip" .)
+          (cd dist-extension && zip -qr "../linkhaven-extension-$TAG.zip" .)
           gh release create "$TAG" \
-            "linkhub-app-$TAG.zip" "linkhub-extension-$TAG.zip" \
-            --verify-tag --title "LinkHub $TAG" --generate-notes
+            "linkhaven-app-$TAG.zip" "linkhaven-extension-$TAG.zip" \
+            --verify-tag --title "Linkhaven $TAG" --generate-notes
 
   publish:
     name: publish (${{ matrix.store }})

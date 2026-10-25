@@ -66,7 +66,7 @@ The promotional tiles are rendered from `extension/store-assets/promo-tile.html`
 
 ## Description
 
-LinkHub replaces your browser new tab page with a visual canvas for everything you open every day.
+Linkhaven replaces your browser new tab page with a visual canvas for everything you open every day.
 
 Drag, group, resize and style link cards on a zoomable infinite board — and put live charts and news feeds right next to them. Every link has a place: no folders, no clutter, just a spatial layout you design yourself.
 
@@ -83,7 +83,7 @@ Collect cards in collapsible groups and nest groups inside groups. Collapsing a 
 Chart nodes plot a time series from a WebSocket or Server-Sent Events feed: ranges from one day to all time, price or percent change, moving averages, log scale and CSV export. Charts inside a group follow the group's settings, and any chart can keep its own. An optional open-source feed server for market data ships with the source code.
 
 **News Feeds**
-Feed nodes merge several RSS or Atom feeds into one list. Filter by words, sort by date, source or title, limit to a time window, and switch sources on or off. Each article opens in a new tab. Paste a website address and LinkHub finds its feed.
+Feed nodes merge several RSS or Atom feeds into one list. Filter by words, sort by date, source or title, limit to a time window, and switch sources on or off. Each article opens in a new tab. Paste a website address and Linkhaven finds its feed.
 
 **Pictures**
 Drop images onto the canvas as picture nodes and manage them in a built-in gallery.
@@ -95,7 +95,7 @@ Six built-in themes — Excalidraw, Blueprint, Minimal, Nord, Sunset and Neon �
 Save selected cards, groups, pictures, charts and feeds as reusable templates with preview thumbnails, and insert them on any board.
 
 **Workspaces, Import & Export**
-Create, rename, reorder and switch between boards from the workspace rail. Export a board with its images, templates and themes as one .linkhub.zip file and import it anywhere.
+Create, rename, reorder and switch between boards from the workspace rail. Export a board with its images, templates and themes as one .linkhaven.zip file and import it anywhere.
 
 **Statistics**
 See link opens, canvas opens and storage use per board — computed and kept on your device.
@@ -107,7 +107,7 @@ No account. No cloud sync. No analytics. No ads. Your boards stay in your browse
 
 ## Notes to Reviewer
 
-LinkHub is a new-tab override extension. It replaces the browser new tab page with a local-first link canvas application.
+Linkhaven is a new-tab override extension. It replaces the browser new tab page with a local-first link canvas application.
 
 The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account, sign-in, or remote sync service is involved.
 
@@ -153,7 +153,7 @@ The AMO linter warnings about innerHTML (React DOM, html-to-image) and Function 
 
 ### Notes for Certification (Edge)
 
-LinkHub is a new-tab override extension. After installation, open a new tab to launch the app.
+Linkhaven is a new-tab override extension. After installation, open a new tab to launch the app.
 
 How to test:
 
@@ -184,11 +184,11 @@ npm run build:extension
 
 ## Privacy Policy
 
-This policy applies to the LinkHub browser extension and to hosted web builds of LinkHub that use the same local-first storage model.
+This policy applies to the Linkhaven browser extension and to hosted web builds of Linkhaven that use the same local-first storage model.
 
-### What LinkHub stores
+### What Linkhaven stores
 
-LinkHub may store the content you create or import directly inside your browser so the app can function between sessions.
+Linkhaven may store the content you create or import directly inside your browser so the app can function between sessions.
 
 - Workspaces and workspace names
 - Link cards, groups, pictures, chart and news feed nodes (feed addresses and display settings), layout positions, and board settings
@@ -199,14 +199,14 @@ LinkHub may store the content you create or import directly inside your browser 
 
 ### Where that data is stored
 
-LinkHub stores data locally in browser-managed storage on the current device, including browser storage mechanisms such as IndexedDB and local storage when required for the product to work.
+Linkhaven stores data locally in browser-managed storage on the current device, including browser storage mechanisms such as IndexedDB and local storage when required for the product to work.
 
-Your LinkHub data stays isolated to the browser profile and device where you use it, unless you explicitly export it yourself.
+Your Linkhaven data stays isolated to the browser profile and device where you use it, unless you explicitly export it yourself.
 
-### What LinkHub does not do
+### What Linkhaven does not do
 
 - It does not require an account or sign-in.
-- It does not upload your workspace content or local usage statistics to LinkHub servers.
+- It does not upload your workspace content or local usage statistics to Linkhaven servers.
 - It does not include third-party advertising.
 - It does not use third-party analytics or behavioral tracking.
 - It does not sell or share your workspace data with external parties.
@@ -215,7 +215,7 @@ Your LinkHub data stays isolated to the browser profile and device where you use
 
 Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
 
-- Favicons: when you create a link card, LinkHub loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
+- Favicons: when you create a link card, Linkhaven loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
 - Chart nodes connect to the feed server address set on the chart (by default a server on your own computer).
 - News feed nodes load the RSS or Atom addresses you add, through the feed proxy set on the node (by default on your own computer) or directly. With "Images" on, article images load from the news sites.
 - Check Links sends a HEAD request to each link card's address when you start it.
@@ -224,20 +224,20 @@ None of these requests upload your canvas content, templates, themes, imported f
 
 ### Imports and exports
 
-If you choose to export data, LinkHub creates files on your device only when you explicitly trigger the export action. If you choose to import data, LinkHub reads the file you selected so it can restore that content into local browser storage.
+If you choose to export data, Linkhaven creates files on your device only when you explicitly trigger the export action. If you choose to import data, Linkhaven reads the file you selected so it can restore that content into local browser storage.
 
-These import and export actions are user-initiated. LinkHub does not perform automatic cloud backup or remote synchronization.
+These import and export actions are user-initiated. Linkhaven does not perform automatic cloud backup or remote synchronization.
 
 ### Browser and store providers
 
-Your browser vendor, extension store provider, or hosting provider may collect their own operational, telemetry, or transaction data under their own policies. That data handling is outside the LinkHub application itself.
+Your browser vendor, extension store provider, or hosting provider may collect their own operational, telemetry, or transaction data under their own policies. That data handling is outside the Linkhaven application itself.
 
 ### Changes to this policy
 
-If LinkHub's data handling changes materially, this page should be updated before or at the same time as the corresponding product release.
+If Linkhaven's data handling changes materially, this page should be updated before or at the same time as the corresponding product release.
 
 ### Contact
 
-For privacy-related questions, use the contact information provided in the LinkHub store listing, project repository, or release page where LinkHub is distributed.
+For privacy-related questions, use the contact information provided in the Linkhaven store listing, project repository, or release page where Linkhaven is distributed.
 
 Last updated: 2026-10-04

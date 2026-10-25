@@ -1,16 +1,16 @@
 import { useId } from 'react'
 
-type LinkHubMarkProps = {
+type LinkhavenMarkProps = {
   className?: string
   color?: string
   title?: string
 }
 
-export function LinkHubMark({
+export function LinkhavenMark({
   className,
   color = 'currentColor',
   title,
-}: LinkHubMarkProps) {
+}: LinkhavenMarkProps) {
   const titleId = useId().replace(/:/g, '')
 
   return (

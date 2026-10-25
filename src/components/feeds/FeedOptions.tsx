@@ -254,8 +254,8 @@ export function FeedOptions(props: {
           </label>
           <p className={controlStyles.hint}>
             Most news sites block direct browser requests (CORS). The proxy from
-            npm run feed:news fetches feeds for LinkHub. Leave it empty only for
-            feeds that allow cross-origin requests.
+            npm run feed:news fetches feeds for Linkhaven. Leave it empty only
+            for feeds that allow cross-origin requests.
           </p>
           <div className={controlStyles.actions}>
             <button

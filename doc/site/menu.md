@@ -27,7 +27,7 @@ Blueprint, Minimal, Nord, Sunset and Neon. Each tile shows a small preview of
 the canvas in that theme.
 
 - **Save current** stores the active look as your own theme.
-- **Import** reads a `.linkhub-theme.json` file. Your own themes can be
+- **Import** reads a `.linkhaven-theme.json` file. Your own themes can be
   exported and deleted.
 - **Customize** opens the token editor: every color, radius and the font,
   separately for light and dark.
@@ -64,7 +64,7 @@ Computed on your device from the active board:
 
 - **Manage workspaces**: rename, reorder and delete boards (edit mode).
 - **Backup**: export the board with the image gallery, templates and themes
-  as one `.linkhub.zip`; import a bundle as a new workspace or to replace the
+  as one `.linkhaven.zip`; import a bundle as a new workspace or to replace the
   current one. See [Storage](storage.html#canvas-bundle-import-and-export).
 - **Maintenance**: **Check Links** sends a `HEAD` request to every card URL
   and marks cards whose site does not answer within 5 seconds.

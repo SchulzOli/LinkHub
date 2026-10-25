@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LinkHub",
+  "name": "Linkhaven",
   "version": "1.0.3",
   "description": "Your new tab as a link canvas: links, groups, live charts and news feeds, stored locally.",
   "icons": {
@@ -19,9 +19,7 @@
       "id": "linkhub@extension",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
+        "required": ["none"]
       }
     }
   }

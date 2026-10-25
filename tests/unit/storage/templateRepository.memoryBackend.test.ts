@@ -4,9 +4,9 @@ import type { ImageAsset } from '../../../src/contracts/imageAsset'
 import type { TemplateDocument } from '../../../src/contracts/template'
 import type { StoredImageAssetRecord } from '../../../src/storage/imageRepository'
 import {
-  registerLinkHubStorageBackend,
+  registerLinkhavenStorageBackend,
   STORAGE_STORES,
-  type LinkHubStorageBackend,
+  type LinkhavenStorageBackend,
 } from '../../../src/storage/storageBackend'
 import {
   deleteTemplate,
@@ -16,7 +16,7 @@ import {
   putTemplate,
 } from '../../../src/storage/templateRepository'
 
-function createInMemoryBackend(): LinkHubStorageBackend {
+function createInMemoryBackend(): LinkhavenStorageBackend {
   const stores = new Map<string, Map<string, unknown>>()
 
   for (const name of Object.values(STORAGE_STORES)) {
@@ -112,7 +112,7 @@ function createRecord(imageId: string): StoredImageAssetRecord {
 
 describe('templateRepository (in-memory backend)', () => {
   it('persists a template with its image blobs and returns records on read', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     const template = createTemplate('t-1', '2026-04-02T00:00:00.000Z', [
       'img-1',
@@ -134,7 +134,7 @@ describe('templateRepository (in-memory backend)', () => {
   })
 
   it('lists templates sorted by updatedAt descending', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     await putTemplate({
       template: createTemplate('older', '2026-01-01T00:00:00.000Z'),
@@ -151,14 +151,14 @@ describe('templateRepository (in-memory backend)', () => {
   })
 
   it('returns null / empty for missing templates', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     expect(await getTemplate('missing')).toBeNull()
     expect(await getTemplateImageRecords('missing')).toEqual([])
   })
 
   it('prunes image assets/blobs on overwrite and deletes them on delete', async () => {
-    registerLinkHubStorageBackend(createInMemoryBackend())
+    registerLinkhavenStorageBackend(createInMemoryBackend())
 
     await putTemplate({
       template: createTemplate('t-1', '2026-04-01T00:00:00.000Z', [

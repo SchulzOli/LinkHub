@@ -12,7 +12,7 @@ export function createThemeFileName(theme: ThemeDocument): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
-  return `${slug}.linkhub-theme.json`
+  return `${slug}.linkhaven-theme.json`
 }
 
 export async function importThemeFromFile(

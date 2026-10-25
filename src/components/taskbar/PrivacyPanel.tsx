@@ -102,7 +102,7 @@ export function PrivacyPanel({ menuId, tabListId }: PrivacyPanelProps) {
     >
       <div className={panelStyles.stack} data-testid="privacy-panel">
         <PanelSection
-          description="LinkHub keeps everything on this device. These are the only features that use the network, and each stays off until you turn it on. No tracking, no analytics, no AI."
+          description="Linkhaven keeps everything on this device. These are the only features that use the network, and each stays off until you turn it on. No tracking, no analytics, no AI."
           meta={
             <span data-testid="privacy-summary">
               {enabledCount === 0

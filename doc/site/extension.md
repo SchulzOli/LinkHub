@@ -1,6 +1,6 @@
 ---
 title: Browser extension
-description: Build, load, package and publish the LinkHub extension.
+description: Build, load, package and publish the Linkhaven extension.
 order: 7
 section: Develop
 ---

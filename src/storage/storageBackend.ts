@@ -12,40 +12,40 @@ export const STORAGE_STORES = {
   workspace: 'workspace',
 } as const
 
-export type LinkHubStoreName =
+export type LinkhavenStoreName =
   (typeof STORAGE_STORES)[keyof typeof STORAGE_STORES]
 
-export type LinkHubDb = Pick<
+export type LinkhavenDb = Pick<
   IDBPDatabase<unknown>,
   'get' | 'getAll' | 'put' | 'transaction'
 >
 
-export type LinkHubTransaction = Pick<
+export type LinkhavenTransaction = Pick<
   IDBPTransaction<unknown, string[], 'readwrite'>,
   'done' | 'objectStore'
 >
 
-export type LinkHubObjectStore = Pick<
+export type LinkhavenObjectStore = Pick<
   IDBPObjectStore<unknown, string[], string, 'readwrite'>,
   'delete' | 'getAllKeys' | 'put'
 >
 
-export type LinkHubStorageBackend = {
+export type LinkhavenStorageBackend = {
   kind: string
-  openDatabase: () => Promise<LinkHubDb>
+  openDatabase: () => Promise<LinkhavenDb>
 }
 
-let activeStorageBackend: LinkHubStorageBackend | null = null
+let activeStorageBackend: LinkhavenStorageBackend | null = null
 
-export function registerLinkHubStorageBackend(
-  storageBackend: LinkHubStorageBackend,
+export function registerLinkhavenStorageBackend(
+  storageBackend: LinkhavenStorageBackend,
 ) {
   activeStorageBackend = storageBackend
 }
 
-export function getLinkHubStorageBackend() {
+export function getLinkhavenStorageBackend() {
   if (!activeStorageBackend) {
-    throw new Error('No LinkHub storage backend has been registered.')
+    throw new Error('No Linkhaven storage backend has been registered.')
   }
 
   return activeStorageBackend

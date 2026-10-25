@@ -1,6 +1,6 @@
 # Canvas Engine
 
-The LinkHub canvas has two independent parts:
+The Linkhaven canvas has two independent parts:
 
 | Part         | Folder         | Built on                                                                       | Required     |
 | ------------ | -------------- | ------------------------------------------------------------------------------ | ------------ |

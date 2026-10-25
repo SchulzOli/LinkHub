@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * LinkHub news feed proxy.
+ * Linkhaven news feed proxy.
  *
  * Most RSS/Atom feeds don't send CORS headers, so a browser page can't read
  * them. This proxy fetches a feed server-side and returns it unchanged with
- * `access-control-allow-origin: *`. LinkHub parses the XML itself.
+ * `access-control-allow-origin: *`. Linkhaven parses the XML itself.
  *
  *   GET http://127.0.0.1:8788/rss?url=<feed url>
  *   GET http://127.0.0.1:8788/health
@@ -86,5 +86,5 @@ const server = createServer((request, response) => {
 })
 
 server.listen(PORT, HOST, () => {
-  console.log(`LinkHub news feed proxy on http://${HOST}:${PORT}/rss?url=…`)
+  console.log(`Linkhaven news feed proxy on http://${HOST}:${PORT}/rss?url=…`)
 })

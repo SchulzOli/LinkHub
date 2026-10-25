@@ -121,7 +121,7 @@ export const useNetworkFeaturesStore = create<NetworkFeaturesState>(
   }),
 )
 
-// Every open LinkHub tab follows a change made in any of them.
+// Every open Linkhaven tab follows a change made in any of them.
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
     if (event.key === NETWORK_FEATURES_STORAGE_KEY || event.key === null) {

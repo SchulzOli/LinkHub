@@ -2,7 +2,7 @@ import {
   TemplateDocumentSchema,
   type TemplateDocument,
 } from '../contracts/template'
-import { openLinkHubDb, STORAGE_STORES } from './db'
+import { openLinkhavenDb, STORAGE_STORES } from './db'
 import type { StoredImageAssetRecord } from './imageRepository'
 
 function createTemplateImageStoreKey(templateId: string, imageId: string) {
@@ -14,7 +14,7 @@ function toSerializableTemplate(template: TemplateDocument) {
 }
 
 async function getTemplateImageBlob(templateId: string, imageId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
 
   return (
     ((await db.get(
@@ -25,7 +25,7 @@ async function getTemplateImageBlob(templateId: string, imageId: string) {
 }
 
 export async function listTemplates() {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const rawTemplates = (await db.getAll(STORAGE_STORES.template)) as unknown[]
 
   return rawTemplates
@@ -38,7 +38,7 @@ export async function listTemplates() {
 }
 
 export async function getTemplate(templateId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const rawTemplate = await db.get(STORAGE_STORES.template, templateId)
 
   if (!rawTemplate) {
@@ -82,7 +82,7 @@ export async function putTemplate(input: {
   template: TemplateDocument
 }) {
   const serializableTemplate = toSerializableTemplate(input.template)
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [
       STORAGE_STORES.template,
@@ -139,7 +139,7 @@ export async function putTemplate(input: {
 }
 
 export async function deleteTemplate(templateId: string) {
-  const db = await openLinkHubDb()
+  const db = await openLinkhavenDb()
   const transaction = db.transaction(
     [
       STORAGE_STORES.template,

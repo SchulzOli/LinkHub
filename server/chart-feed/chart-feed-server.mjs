@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * LinkHub chart feed server.
+ * Linkhaven chart feed server.
  *
- * Streams real market data to LinkHub chart nodes using the LinkHub chart
+ * Streams real market data to Linkhaven chart nodes using the Linkhaven chart
  * feed protocol (doc/CHART_FEED.md) over both transports:
  *   WebSocket  ws://127.0.0.1:8787/feed
  *   SSE        http://127.0.0.1:8787/sse?symbol=AAPL&range=1Y&live=1
@@ -292,6 +292,6 @@ wss.on('connection', (socket) => {
 })
 
 server.listen(PORT, HOST, () => {
-  console.log(`LinkHub chart feed on ws://${HOST}:${PORT}/feed`)
+  console.log(`Linkhaven chart feed on ws://${HOST}:${PORT}/feed`)
   console.log(`                  and http://${HOST}:${PORT}/sse`)
 })

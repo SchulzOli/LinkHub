@@ -38,7 +38,7 @@ describe('news feed proxy', () => {
     expect(isPrivateAddress('2a00:1450::1')).toBe(false)
   })
 
-  it('serves only LinkHub origins', () => {
+  it('serves only Linkhaven origins', () => {
     for (const origin of [
       'http://127.0.0.1:4173',
       'http://localhost:5173',

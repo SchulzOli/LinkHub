@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes how LinkHub persists multi-workspace state, gallery images, templates, custom themes, and local usage statistics in the browser today.
+This document describes how Linkhaven persists multi-workspace state, gallery images, templates, custom themes, and local usage statistics in the browser today.
 
 The implementation deliberately separates structured records from binary payloads:
 
@@ -15,13 +15,13 @@ That keeps workspace documents compact, allows fast local snapshots, and avoids 
 
 ## Storage Backends
 
-LinkHub currently uses two browser-local persistence layers.
+Linkhaven currently uses two browser-local persistence layers.
 
 ### IndexedDB
 
 IndexedDB is the primary persistent store.
 
-- Database name: `linkhub`
+- Database name: `linkhub` (the app's former name; storage keys, document formats and the Firefox add-on id keep it so existing data and installs carry over to Linkhaven)
 - Version: `5`
 - Stores:
   - `workspace`
@@ -80,7 +80,7 @@ Implementation:
 
 ### Workspace directory
 
-LinkHub no longer persists a single default board only. It keeps a workspace directory that tracks:
+Linkhaven no longer persists a single default board only. It keeps a workspace directory that tracks:
 
 - `activeWorkspaceId`
 - `interactionMode`
@@ -105,7 +105,7 @@ On application startup:
 3. IndexedDB is used for the workspace directory and stored workspace records when available, with localStorage directory metadata as the fallback path.
 4. For the active workspace only, the latest `linkhub.workspace` localStorage snapshot is preferred when it matches the active workspace id because it may be newer than the last IndexedDB write.
 5. Loaded workspace documents are normalized through migrations before hydration.
-6. After hydration, LinkHub records a local canvas-open event for the Statistics view.
+6. After hydration, Linkhaven records a local canvas-open event for the Statistics view.
 
 Load orchestration:
 
@@ -218,7 +218,7 @@ Format resolution:
 
 Image deletion is usage-aware.
 
-Before deletion, LinkHub checks whether an image is still referenced by:
+Before deletion, Linkhaven checks whether an image is still referenced by:
 
 - picture nodes
 - link-card image overrides
@@ -271,7 +271,7 @@ Current built-in theme set:
 - Sunset
 - Neon
 
-Custom theme exports use `.linkhub-theme.json`.
+Custom theme exports use `.linkhaven-theme.json`.
 
 Implementation:
 
@@ -282,7 +282,7 @@ Implementation:
 
 ## Canvas Bundle Import And Export
 
-LinkHub can export and import the current canvas as a ZIP bundle.
+Linkhaven can export and import the current canvas as a ZIP bundle.
 
 ### Bundle structure
 
@@ -297,7 +297,7 @@ The current bundle layout contains:
 
 Current bundle file extension:
 
-- `.linkhub.zip`
+- `.linkhaven.zip`
 
 ### Export behavior
 
@@ -376,7 +376,7 @@ Current migration responsibilities include:
 
 Implementation: [../src/storage/storageMigrations.ts](../src/storage/storageMigrations.ts)
 
-If a workspace cannot be loaded cleanly, LinkHub falls back to a fresh default
+If a workspace cannot be loaded cleanly, Linkhaven falls back to a fresh default
 workspace rather than crashing.
 
 ## Store-Level Responsibilities
@@ -424,7 +424,7 @@ The repositories share a consistent module style, but `workspaceRepository` is i
 ### Conventions
 
 - Each repository is a module of plain async functions, not a class.
-- All data access goes through `openLinkHubDb()` from `db.ts`.
+- All data access goes through `openLinkhavenDb()` from `db.ts`.
 - Workspace, template, and theme writes serialize plain JSON records before writing to IndexedDB. `imageRepository` instead normalizes image metadata and stores blobs in a separate object store.
 - Workspace reads normalize persisted data through `ensureLatestWorkspace()`. Template and theme list operations validate stored records with Zod and drop invalid entries. `imageRepository` returns the stored image metadata directly.
 - Repositories that own multiple object stores use a single IndexedDB transaction when deleting related records.
@@ -450,7 +450,7 @@ The current implementation has a few intentional boundaries.
 
 ## Practical Summary
 
-If you need to reason about storage in LinkHub, use this model:
+If you need to reason about storage in Linkhaven, use this model:
 
 - Workspace equals canvas structure and settings.
 - Image assets equals reusable binary resources plus metadata.

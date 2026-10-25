@@ -13,7 +13,7 @@ describe('WorkspaceHelpDock', () => {
     await user.click(screen.getByRole('button', { name: 'Open help panel' }))
 
     expect(
-      screen.getByRole('dialog', { name: 'LinkHub help' }),
+      screen.getByRole('dialog', { name: 'Linkhaven help' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('workspace-help-dialog')).toBeInTheDocument()
     expect(screen.getByText('Edit mode')).toBeInTheDocument()
@@ -47,7 +47,7 @@ describe('WorkspaceHelpDock', () => {
       screen.getByRole('dialog', { name: 'Privacy policy' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('workspace-privacy-dialog')).toBeInTheDocument()
-    expect(screen.getByText('What LinkHub stores')).toBeInTheDocument()
+    expect(screen.getByText('What Linkhaven stores')).toBeInTheDocument()
     expect(
       screen.queryByRole('link', { name: 'Open standalone policy page' }),
     ).not.toBeInTheDocument()

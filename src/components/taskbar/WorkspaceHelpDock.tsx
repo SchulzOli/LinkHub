@@ -81,9 +81,9 @@ const canvasGestures: readonly ShortcutRow[] = [
 const privacySections: readonly PrivacySection[] = [
   {
     paragraphs: [
-      'LinkHub is a local-first application. It stores your workspace data in your browser on the current device so workspaces, themes, templates, images, imported bundles, and local usage insights remain available between sessions.',
+      'Linkhaven is a local-first application. It stores your workspace data in your browser on the current device so workspaces, themes, templates, images, imported bundles, and local usage insights remain available between sessions.',
     ],
-    title: 'What LinkHub stores',
+    title: 'What Linkhaven stores',
   },
   {
     bullets: [
@@ -95,26 +95,26 @@ const privacySections: readonly PrivacySection[] = [
       'Import and export metadata required to restore your data correctly',
     ],
     paragraphs: [
-      'Depending on the features you use, LinkHub may store the following content locally in browser-managed storage such as IndexedDB and local storage:',
+      'Depending on the features you use, Linkhaven may store the following content locally in browser-managed storage such as IndexedDB and local storage:',
     ],
     title: 'Data categories',
   },
   {
     bullets: [
       'No account or sign-in is required',
-      'No workspace content is uploaded to LinkHub servers',
+      'No workspace content is uploaded to Linkhaven servers',
       'No third-party advertising is included',
       'No behavioral tracking or third-party analytics are used; local usage stats stay on device',
       'No workspace data is sold or shared with outside parties',
     ],
     paragraphs: [
-      'LinkHub does not perform cloud sync or remote backup by itself. Imports and exports only happen when you explicitly trigger them.',
+      'Linkhaven does not perform cloud sync or remote backup by itself. Imports and exports only happen when you explicitly trigger them.',
     ],
-    title: 'What LinkHub does not do',
+    title: 'What Linkhaven does not do',
   },
   {
     paragraphs: [
-      "When you create a link card, LinkHub loads the site's favicon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. Favicons offline-only turns the Google fallback off.",
+      "When you create a link card, Linkhaven loads the site's favicon once (from the site, then Google's public favicon service as a fallback) and keeps it locally. Favicons offline-only turns the Google fallback off.",
       'Chart nodes connect only to the feed server set on the chart. News feed nodes load your feeds through the proxy set on the node, or directly when it is cleared; by default both are optional servers on your own computer. With Images on, article images load from the news sites. Check Links sends a HEAD request to each card URL when you start it.',
       'None of these requests upload your canvas content, templates, themes, imported bundles, gallery images, or usage statistics.',
     ],
@@ -122,7 +122,7 @@ const privacySections: readonly PrivacySection[] = [
   },
   {
     paragraphs: [
-      'Browser vendors, extension stores, and any hosting platform you choose may collect their own operational or transaction data under their own policies. That handling is outside the LinkHub application itself.',
+      'Browser vendors, extension stores, and any hosting platform you choose may collect their own operational or transaction data under their own policies. That handling is outside the Linkhaven application itself.',
     ],
     title: 'Store and browser providers',
   },
@@ -194,10 +194,10 @@ export function WorkspaceHelpDock({ interactionMode }: WorkspaceHelpDockProps) {
   const isOpen = activePanel !== null
   const isPrivacyOpen = activePanel === 'privacy'
 
-  const title = isPrivacyOpen ? 'Privacy policy' : 'LinkHub help'
+  const title = isPrivacyOpen ? 'Privacy policy' : 'Linkhaven help'
   const eyebrow = isPrivacyOpen ? 'Privacy' : 'Help'
   const description = isPrivacyOpen
-    ? 'This in-app policy summary matches the local-first storage model used by LinkHub.'
+    ? 'This in-app policy summary matches the local-first storage model used by Linkhaven.'
     : 'Shortcuts, canvas controls, feedback links, and privacy information in one responsive window.'
 
   return (
@@ -254,7 +254,7 @@ export function WorkspaceHelpDock({ interactionMode }: WorkspaceHelpDockProps) {
                 {interactionMode === 'edit' ? 'Edit mode' : 'View mode'}
               </span>
               <p>
-                Keyboard shortcuts are active while LinkHub is in edit mode.
+                Keyboard shortcuts are active while Linkhaven is in edit mode.
                 Canvas gestures remain available regardless of mode.
               </p>
             </div>
