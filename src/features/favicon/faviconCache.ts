@@ -137,55 +137,37 @@ export async function storeFaviconAsImageAsset(
   }
 }
 
-/**
- * Generates a placeholder initial-chip character from a URL / title / hostname.
- */
-export function getFaviconPlaceholderLetter(input: string): string {
+function readHostname(input: string) {
   const trimmed = input.trim()
 
-  if (!trimmed) {
-    return '?'
-  }
-
-  // Try to extract the first letter of the hostname (excluding www)
   try {
-    const url = new URL(
-      trimmed.startsWith('http') ? trimmed : `https://${trimmed}`,
-    )
-    const cleanHost = url.hostname.replace(/^www\./, '')
-    return cleanHost.charAt(0).toUpperCase()
+    return new URL(
+      /^[a-z][a-z\d+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`,
+    ).hostname.replace(/^www\./, '')
   } catch {
-    // Fall back to first character of the input
-    return trimmed.charAt(0).toUpperCase()
+    return trimmed.toLowerCase()
   }
 }
 
-/**
- * Creates a data-URI for a simple coloured circle with the initial letter.
- * Used as ultimate fallback when no favicon can be loaded.
- */
-export function createPlaceholderDataUrl(letter: string): string {
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 128
-  const ctx = canvas.getContext('2d')
+/** A stable hue per site, so different sites get different colours. */
+function hueForHostname(hostname: string) {
+  let hash = 2166136261
 
-  if (!ctx) {
-    return ''
+  for (const char of hostname) {
+    hash ^= char.codePointAt(0) ?? 0
+    hash = Math.imul(hash, 16777619)
   }
 
-  // Draw a coloured circle
-  ctx.beginPath()
-  ctx.arc(64, 64, 64, 0, Math.PI * 2)
-  ctx.fillStyle = '#64748b'
-  ctx.fill()
+  return (hash >>> 0) % 360
+}
 
-  // Draw the letter
-  ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 48px sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(letter, 64, 64)
+/**
+ * The picture a link card shows until it has an icon: a globe on a tile
+ * coloured from the site's name. Drawn here, so it never loads anything.
+ */
+export function createDefaultLinkImageDataUrl(url: string): string {
+  const hue = hueForHostname(readHostname(url))
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 46% 58%)"/><stop offset="1" stop-color="hsl(${(hue + 38) % 360} 44% 42%)"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/><g fill="none" stroke="#fff" stroke-opacity=".92" stroke-width="2.6" stroke-linecap="round"><circle cx="32" cy="32" r="16"/><ellipse cx="32" cy="32" rx="6.8" ry="16"/><path d="M16.5 27.5h31M16.5 36.5h31"/></g></svg>`
 
-  return canvas.toDataURL('image/png', 0.9)
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }

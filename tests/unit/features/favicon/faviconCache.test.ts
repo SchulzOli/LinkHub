@@ -9,9 +9,8 @@ import {
 } from 'vitest'
 
 import {
-  createPlaceholderDataUrl,
+  createDefaultLinkImageDataUrl,
   fetchFaviconBlob,
-  getFaviconPlaceholderLetter,
 } from '../../../../src/features/favicon/faviconCache'
 
 // ─── Mock canvas (jsdom lacks CanvasRenderingContext2D and toDataURL) ─────
@@ -219,69 +218,34 @@ describe('fetchFaviconBlob', () => {
   })
 })
 
-// ─── Tests for getFaviconPlaceholderLetter ─────────────────────────────────
+// ─── Tests for createDefaultLinkImageDataUrl ──────────────────────────────
 
-describe('getFaviconPlaceholderLetter', () => {
-  it('extracts the first letter of the hostname (excluding www)', () => {
-    expect(getFaviconPlaceholderLetter('https://example.com')).toBe('E')
-    expect(getFaviconPlaceholderLetter('https://www.google.com')).toBe('G')
-    expect(getFaviconPlaceholderLetter('https://github.com')).toBe('G')
+describe('createDefaultLinkImageDataUrl', () => {
+  function decode(dataUrl: string) {
+    return decodeURIComponent(dataUrl.replace('data:image/svg+xml,', ''))
+  }
+
+  it('draws a picture without loading anything', () => {
+    const dataUrl = createDefaultLinkImageDataUrl('https://example.com/page')
+
+    expect(dataUrl.startsWith('data:image/svg+xml,')).toBe(true)
+    expect(decode(dataUrl)).toContain('<svg')
+    expect(decode(dataUrl)).not.toMatch(/href=|https?:\/\/(?!www\.w3\.org)/)
   })
 
-  it('handles URLs without protocol by assuming https', () => {
-    expect(getFaviconPlaceholderLetter('example.com/page')).toBe('E')
+  it('gives each site its own, stable colour', () => {
+    expect(createDefaultLinkImageDataUrl('https://www.github.com/a')).toBe(
+      createDefaultLinkImageDataUrl('github.com/b'),
+    )
+    expect(createDefaultLinkImageDataUrl('github.com')).not.toBe(
+      createDefaultLinkImageDataUrl('gitlab.com'),
+    )
   })
 
-  it('falls back to the first character for unparseable input', () => {
-    expect(getFaviconPlaceholderLetter('')).toBe('?')
-    expect(getFaviconPlaceholderLetter('   ')).toBe('?')
-    expect(getFaviconPlaceholderLetter('      ')).toBe('?')
-  })
-
-  it('returns uppercase letter', () => {
-    expect(getFaviconPlaceholderLetter('localhost:3000')).toBe('L')
-    expect(getFaviconPlaceholderLetter('192.168.1.1')).toBe('1')
-  })
-})
-
-// ─── Tests for createPlaceholderDataUrl ────────────────────────────────────
-
-describe('createPlaceholderDataUrl', () => {
-  it('returns a valid data URL for a given letter', () => {
-    const dataUrl = createPlaceholderDataUrl('G')
-
-    expect(dataUrl).toMatch(/^data:image\/png;base64,/)
-    expect(dataUrl.length).toBeGreaterThan(100)
-  })
-
-  it('works with single letters and numbers', () => {
-    const dataUrlA = createPlaceholderDataUrl('A')
-    const dataUrl1 = createPlaceholderDataUrl('1')
-
-    expect(dataUrlA).toMatch(/^data:image\/png/)
-    expect(dataUrl1).toMatch(/^data:image\/png/)
-  })
-
-  it('returns empty string when canvas context is unavailable', () => {
-    const mockGetContext = HTMLCanvasElement.prototype.getContext as ReturnType<
-      typeof vi.fn
-    >
-    mockGetContext.mockReturnValueOnce(null)
-
-    const result = createPlaceholderDataUrl('X')
-
-    expect(result).toBe('')
-
-    mockGetContext.mockReturnValue({
-      beginPath: vi.fn(),
-      arc: vi.fn(),
-      fill: vi.fn(),
-      fillStyle: '',
-      font: '',
-      textAlign: '',
-      textBaseline: '',
-      fillText: vi.fn(),
-      canvas: { width: 128, height: 128 },
-    })
+  it('still draws one for an empty or odd address', () => {
+    expect(createDefaultLinkImageDataUrl('')).toContain('data:image/svg+xml,')
+    expect(createDefaultLinkImageDataUrl('not a url')).toContain(
+      'data:image/svg+xml,',
+    )
   })
 })

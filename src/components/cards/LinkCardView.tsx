@@ -12,10 +12,7 @@ import styles from './LinkCard.module.css'
 import type { LinkCard as LinkCardModel } from '../../contracts/linkCard'
 import type { FaviconSources } from '../../contracts/networkFeatures'
 import type { SurfaceShadowStyle } from '../../contracts/surfaceEffects'
-import {
-  createPlaceholderDataUrl,
-  getFaviconPlaceholderLetter,
-} from '../../features/favicon/faviconCache'
+import { createDefaultLinkImageDataUrl } from '../../features/favicon/faviconCache'
 import type { ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
@@ -78,13 +75,9 @@ export const LinkCardView = memo(function LinkCardView({
 }: LinkCardViewProps) {
   const linkClassName = toLinkClassName(viewModel.linkClassName)
 
-  const placeholderLetter = useMemo(
-    () => getFaviconPlaceholderLetter(card.url),
-    [card.url],
-  )
   const placeholderDataUrl = useMemo(
-    () => createPlaceholderDataUrl(placeholderLetter),
-    [placeholderLetter],
+    () => createDefaultLinkImageDataUrl(card.url),
+    [card.url],
   )
 
   const content = (
@@ -113,15 +106,11 @@ export const LinkCardView = memo(function LinkCardView({
                   }
 
                   const showPlaceholder = () => {
-                    if (placeholderDataUrl) {
-                      image.src = placeholderDataUrl
-                    } else {
-                      image.style.visibility = 'hidden'
-                    }
+                    image.src = placeholderDataUrl
                   }
 
                   // Fallbacks, each only while its source is allowed: the
-                  // site's own favicon.ico, then Google; then the letter.
+                  // site's own favicon.ico, then Google; then the default picture.
                   let fallbacks: string[] = []
 
                   try {
@@ -157,12 +146,16 @@ export const LinkCardView = memo(function LinkCardView({
                 }}
               />
             ) : (
-              <div
-                className={styles.placeholder}
+              <img
+                alt=""
+                className={`${styles.favicon} ${styles.faviconIconSource}`}
                 data-testid="card-image-placeholder"
-              >
-                {placeholderLetter}
-              </div>
+                draggable={false}
+                src={placeholderDataUrl}
+                onDragStart={(event) => {
+                  event.preventDefault()
+                }}
+              />
             )}
             {viewModel.showCardTitle ? (
               <div className={styles.titleOverlay}>
