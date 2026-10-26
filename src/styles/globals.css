@@ -182,6 +182,8 @@ select:focus-visible {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
+  /* Touch panning and pinch zoom are the canvas's own (useCanvasTouchGestures). */
+  touch-action: none;
   cursor: default;
   background-color: var(--bg-canvas);
 }

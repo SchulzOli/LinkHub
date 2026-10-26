@@ -79,6 +79,34 @@ const canvasGestures: readonly ShortcutRow[] = [
   },
 ] as const
 
+const touchGestures: readonly ShortcutRow[] = [
+  {
+    action: 'Pan the canvas',
+    combo: ['One finger', 'Drag'],
+  },
+  {
+    action: 'Zoom the canvas',
+    combo: ['Two fingers', 'Pinch'],
+  },
+  {
+    action: 'Zoom in, or back to 100 %',
+    combo: ['Double tap'],
+  },
+  {
+    action: 'Move a card in edit mode',
+    combo: ['Drag the card'],
+  },
+] as const
+
+/** Phones and tablets: show finger gestures instead of mouse controls. */
+function prefersTouch() {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches
+  )
+}
+
 const privacySections: readonly PrivacySection[] = [
   {
     paragraphs: [
@@ -266,7 +294,10 @@ export function WorkspaceHelpDock({ interactionMode }: WorkspaceHelpDockProps) {
                 rows={keyboardShortcuts}
               />
               <div className={styles.sideColumn}>
-                <ShortcutTable label="Canvas controls" rows={canvasGestures} />
+                <ShortcutTable
+                  label="Canvas controls"
+                  rows={prefersTouch() ? touchGestures : canvasGestures}
+                />
 
                 <section className={styles.sectionBlock}>
                   <p className={styles.sectionLabel}>Links</p>

@@ -48,6 +48,7 @@ import {
 } from './CanvasActionsContext'
 import { useCanvasFileDrop } from './hooks/useCanvasFileDrop'
 import { useCanvasPanZoom } from './hooks/useCanvasPanZoom'
+import { useCanvasTouchGestures } from './hooks/useCanvasTouchGestures'
 import { useMarqueeSelection } from './hooks/useMarqueeSelection'
 
 type InfiniteCanvasProps = {
@@ -196,6 +197,13 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
       interactionMode,
       onPanViewport,
     })
+
+  useCanvasTouchGestures({
+    canvasRef,
+    viewport,
+    interactionMode,
+    onPanViewport,
+  })
 
   const {
     isFileDropActive,

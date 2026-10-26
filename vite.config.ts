@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig } from 'vite'
 
-import { pwaServiceWorker } from './scripts/pwaServiceWorker'
+import { pwaServiceWorker } from './scripts/pwaServiceWorker.ts'
 
 // Match the Firefox add-on minimum version and the Chromium equivalents for extension builds.
 const extensionBuildTarget = ['chrome109', 'edge109', 'firefox109']
