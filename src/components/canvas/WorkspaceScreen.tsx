@@ -182,6 +182,7 @@ export function WorkspaceScreen() {
     handleUpdatePicture,
     placeChartAtViewportCenter,
     placeFeedAtViewportCenter,
+    placeNoteAtViewportCenter,
     placePictureAssetAtViewportCenter,
     placePictureAssetsAtCanvasPoint,
   } = useCanvasActions({
@@ -505,6 +506,7 @@ export function WorkspaceScreen() {
         onCreateGroup={createGroupAtViewportCenter}
         onCreateChart={placeChartAtViewportCenter}
         onCreateFeed={placeFeedAtViewportCenter}
+        onCreateNote={placeNoteAtViewportCenter}
         onCreateWorkspace={() => {
           void createWorkspace()
         }}

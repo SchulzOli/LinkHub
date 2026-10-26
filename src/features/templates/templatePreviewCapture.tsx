@@ -28,6 +28,7 @@ import {
   type CanvasEntityBundle,
 } from '../canvas/entityBundle'
 import { resolveCardFaviconUrl } from '../links/urlValidation'
+import { getNoteStrokePath } from '../notes/noteGeometry'
 
 export const TEMPLATE_PREVIEW_WIDTH = 320
 export const TEMPLATE_PREVIEW_HEIGHT = 120
@@ -374,6 +375,34 @@ function PreviewPicture(props: {
                 fill={withAlpha(tokens.accent, 0.35)}
               />
             </g>
+          ))}
+        </svg>
+      ) : picture.type === 'note' ? (
+        // The note's own drawing, in its own coordinates.
+        <svg
+          aria-hidden="true"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          preserveAspectRatio="xMinYMin slice"
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        >
+          {picture.strokes.map((stroke) => (
+            <path
+              d={getNoteStrokePath(stroke)}
+              fill={stroke.color === 'ink' ? tokens.textPrimary : stroke.color}
+              key={stroke.id}
+            />
+          ))}
+          {picture.texts.map((text) => (
+            <text
+              fill={text.color === 'ink' ? tokens.textPrimary : text.color}
+              fontFamily="'Caveat Variable', cursive"
+              fontSize={text.fontSize}
+              key={text.id}
+              x={text.x}
+              y={text.y + text.fontSize * 0.9}
+            >
+              {text.text.split('\n')[0]}
+            </text>
           ))}
         </svg>
       ) : imageUrl ? (

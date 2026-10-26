@@ -41,6 +41,7 @@ import { LinkCardContainer as LinkCard } from '../cards/LinkCardContainer'
 import { ChartNode } from '../charts/ChartNode'
 import { FeedNode } from '../feeds/FeedNode'
 import { GroupFrameContainer as GroupFrame } from '../groups/GroupFrameContainer'
+import { NoteNode } from '../notes/NoteNode'
 import { PictureNode } from '../pictures/PictureNode'
 import {
   useCanvasEditActions,
@@ -357,6 +358,15 @@ export const InfiniteCanvas = memo(function InfiniteCanvas({
             <ChartNode
               key={picture.id}
               chart={picture}
+              guide={placementGuide}
+              isSelected={selectedPictureIdSet.has(picture.id)}
+              interactionMode={interactionMode}
+              viewport={viewport}
+            />
+          ) : picture.type === 'note' ? (
+            <NoteNode
+              key={picture.id}
+              note={picture}
               guide={placementGuide}
               isSelected={selectedPictureIdSet.has(picture.id)}
               interactionMode={interactionMode}

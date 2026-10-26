@@ -144,3 +144,37 @@ test('a drag across a card in view mode scrolls instead of opening it', async ({
   expect(opened).toBe(false)
   expect((await card.boundingBox())!.x).toBeCloseTo(box.x + 50, 0)
 })
+
+test('draws in a note with one finger', async ({ page }) => {
+  await page.getByRole('button', { name: 'Add note' }).click()
+
+  const pad = page.getByTestId('note-pad')
+  const box = (await pad.boundingBox())!
+  const fingers = await touch(page)
+  const before = await page.getByTestId('note-stroke').count()
+
+  await fingers.gesture(
+    [{ x: box.x + 20, y: box.y + 30 }],
+    [{ x: box.x + 120, y: box.y + 80 }],
+  )
+
+  await expect(page.getByTestId('note-stroke')).toHaveCount(before + 1)
+})
+
+test('types in a note after a double tap', async ({ page }) => {
+  await page.getByRole('button', { name: 'Add note' }).click()
+
+  const box = (await page.getByTestId('note-pad').boundingBox())!
+  const fingers = await touch(page)
+  const spot = { x: box.x + 40, y: box.y + 60 }
+
+  await fingers.tap(spot)
+  await fingers.tap(spot)
+  await expect(page.getByTestId('note-text-input')).toBeVisible()
+  await page.keyboard.type('Hi')
+  await page.getByTestId('note-text-input').blur()
+  await expect(page.getByTestId('note-text')).toHaveText('Hi')
+  // The two taps were for typing, not dots.
+  await page.waitForTimeout(400)
+  await expect(page.getByTestId('note-stroke')).toHaveCount(0)
+})

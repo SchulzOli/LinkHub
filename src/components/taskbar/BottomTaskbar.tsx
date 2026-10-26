@@ -12,6 +12,7 @@ import {
   AddChartIcon,
   AddFeedIcon,
   AddGroupIcon,
+  AddNoteIcon,
   ImageGalleryIcon,
   UploadImageIcon,
 } from './TaskbarIcons'
@@ -25,6 +26,7 @@ type BottomTaskbarProps = {
   onCreateGroup: () => void
   onCreateChart: () => void
   onCreateFeed: () => void
+  onCreateNote: () => void
   onCreateWorkspace: () => void
   onSelectWorkspace: (workspaceId: string) => void
   onToggleInteractionMode: () => void
@@ -50,6 +52,7 @@ export function BottomTaskbar({
   onCreateGroup,
   onCreateChart,
   onCreateFeed,
+  onCreateNote,
   onCreateWorkspace,
   onToggleInteractionMode,
   onToggleQuickAdd,
@@ -290,6 +293,17 @@ export function BottomTaskbar({
               >
                 <span aria-hidden="true" className={styles.modeIcon}>
                   <ImageGalleryIcon className={styles.modeSvg} />
+                </span>
+              </button>
+              <button
+                aria-label="Add note"
+                className={styles.modeButton}
+                onClick={onCreateNote}
+                title="Add note"
+                type="button"
+              >
+                <span aria-hidden="true" className={styles.modeIcon}>
+                  <AddNoteIcon className={styles.modeSvg} />
                 </span>
               </button>
               {/* Pure link dashboard until charts and feeds are turned on

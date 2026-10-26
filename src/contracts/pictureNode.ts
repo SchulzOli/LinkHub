@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { ChartNodeSchema, coerceChartNode, type ChartNode } from './chartNode'
 import { coerceFeedNode, FeedNodeSchema, type FeedNode } from './feedNode'
 import { CardSizeSchema, coerceCardSize, DEFAULT_CARD_SIZE } from './linkCard'
+import { coerceNoteNode, NoteNodeSchema, type NoteNode } from './noteNode'
 
 export const ImagePictureNodeSchema = z.object({
   id: z.string().min(1),
@@ -20,15 +21,17 @@ export type ImagePictureNode = z.infer<typeof ImagePictureNodeSchema>
 /**
  * Free-floating canvas nodes (no `groupId`; group membership follows their
  * bounds). `picture` = image, `chart` = streamed time-series chart,
- * `feed` = RSS/Atom news list.
+ * `feed` = RSS/Atom news list, `note` = sketch pad with freehand strokes
+ * and text.
  */
 export const PictureNodeSchema = z.discriminatedUnion('type', [
   ImagePictureNodeSchema,
   ChartNodeSchema,
   FeedNodeSchema,
+  NoteNodeSchema,
 ])
 
-export type PictureNode = ImagePictureNode | ChartNode | FeedNode
+export type PictureNode = ImagePictureNode | ChartNode | FeedNode | NoteNode
 
 export function isImagePictureNode(
   node: PictureNode,
@@ -44,6 +47,10 @@ export function isFeedNode(node: PictureNode): node is FeedNode {
   return node.type === 'feed'
 }
 
+export function isNoteNode(node: PictureNode): node is NoteNode {
+  return node.type === 'note'
+}
+
 export function coercePictureNode(value: unknown): PictureNode | null {
   if (typeof value !== 'object' || value === null) {
     return null
@@ -55,6 +62,10 @@ export function coercePictureNode(value: unknown): PictureNode | null {
 
   if ((value as { type?: unknown }).type === 'feed') {
     return coerceFeedNode(value)
+  }
+
+  if ((value as { type?: unknown }).type === 'note') {
+    return coerceNoteNode(value)
   }
 
   const candidate = value as Partial<ImagePictureNode> & {

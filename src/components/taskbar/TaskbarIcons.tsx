@@ -59,6 +59,17 @@ export function ImageGalleryIcon({ className }: IconProps) {
   )
 }
 
+/** Add note: a sheet with a scribble. */
+export function AddNoteIcon({ className }: IconProps) {
+  return (
+    <StrokeIcon className={className}>
+      <path d="M13.5 20.5H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7" />
+      <path d="M7.5 13c1.5-3 3-3 3.5-1s1.5 2 3.5-1.5" />
+      <path d="M18 15.5v5M15.5 18h5" />
+    </StrokeIcon>
+  )
+}
+
 /** Add news feed: RSS waves with a plus. */
 export function AddFeedIcon({ className }: IconProps) {
   return (

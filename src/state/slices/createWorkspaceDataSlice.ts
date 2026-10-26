@@ -624,6 +624,20 @@ export const createWorkspaceDataSlice: StateCreator<
         ),
       ),
     })),
+  updateNote: (noteId, updates) =>
+    set((state) => ({
+      ...commitWorkspaceChange(
+        state,
+        replacePictures(
+          state.workspace,
+          state.workspace.pictures.map((node) =>
+            node.id === noteId && node.type === 'note'
+              ? { ...node, ...updates, updatedAt: new Date().toISOString() }
+              : node,
+          ),
+        ),
+      ),
+    })),
   setChartSetting: (chartId, key, value) =>
     set((state) => ({
       ...commitWorkspaceChange(

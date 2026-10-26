@@ -8,6 +8,7 @@ import { createChartNode } from '../../../features/charts/chartCreation'
 import { createFeedNode } from '../../../features/feeds/feedCreation'
 import { isPlacementBlockedByOccupiedItem } from '../../../features/groups/groupLayout'
 import { createPictureNode } from '../../../features/images/pictureCreation'
+import { createNoteNode } from '../../../features/notes/noteGeometry'
 import { screenPointToCanvas } from '../../../features/placement/canvasMath'
 import {
   addItemToOccupancyIndex,
@@ -157,6 +158,16 @@ export function usePictureActions({
     )
   }, [placeNodesAtCanvasPoint, viewport])
 
+  const placeNoteAtViewportCenter = useCallback(() => {
+    placeNodesAtCanvasPoint(
+      [createNoteNode({ position: { x: 0, y: 0 } })],
+      screenPointToCanvas(
+        { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+        viewport,
+      ),
+    )
+  }, [placeNodesAtCanvasPoint, viewport])
+
   const placePictureAssetAtViewportCenter = useCallback(
     (asset: Pick<ImageAsset, 'height' | 'id' | 'width'>) => {
       placePictureAssetsAtCanvasPoint(
@@ -289,6 +300,7 @@ export function usePictureActions({
     handleUpdatePicture,
     placeChartAtViewportCenter,
     placeFeedAtViewportCenter,
+    placeNoteAtViewportCenter,
     placePictureAssetAtViewportCenter,
     placePictureAssetsAtCanvasPoint,
   }

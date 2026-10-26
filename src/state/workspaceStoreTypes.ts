@@ -11,6 +11,7 @@ import type {
 } from '../contracts/chartNode'
 import type { FeedNode } from '../contracts/feedNode'
 import type { CardSize, LinkCard } from '../contracts/linkCard'
+import type { NoteNode } from '../contracts/noteNode'
 import type { PictureNode } from '../contracts/pictureNode'
 import type { PlacementGuide } from '../contracts/placementGuide'
 import type {
@@ -88,6 +89,8 @@ export type ChartUpdateFields = Partial<
 export type FeedUpdateFields = Partial<
   Pick<FeedNode, 'title' | 'sources' | 'proxyUrl'>
 > & { settings?: Partial<FeedNode['settings']> }
+
+export type NoteUpdateFields = Partial<Pick<NoteNode, 'strokes' | 'texts'>>
 
 export type CardBatchUpdate = {
   cardId: string
@@ -222,6 +225,8 @@ export type WorkspaceDataState = {
   updateChart: (chartId: string, updates: ChartUpdateFields) => void
   /** `settings` is merged into the feed's current settings. */
   updateFeed: (feedId: string, updates: FeedUpdateFields) => void
+  /** Replaces a note's strokes and/or texts (one undo step). */
+  updateNote: (noteId: string, updates: NoteUpdateFields) => void
   /** Sets (or clears with `undefined`) one setting on a single chart. */
   setChartSetting: <K extends ChartSettingKey>(
     chartId: string,

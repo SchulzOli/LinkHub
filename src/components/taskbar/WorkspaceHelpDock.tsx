@@ -77,6 +77,10 @@ const canvasGestures: readonly ShortcutRow[] = [
     action: 'Create a marquee selection in edit mode',
     combo: ['Drag on empty canvas'],
   },
+  {
+    action: 'Draw in a note; type where you double-click',
+    combo: ['Drag', 'Double-click'],
+  },
 ] as const
 
 const touchGestures: readonly ShortcutRow[] = [
@@ -95,6 +99,10 @@ const touchGestures: readonly ShortcutRow[] = [
   {
     action: 'Move a card in edit mode',
     combo: ['Drag the card'],
+  },
+  {
+    action: 'Draw in a note; type where you double-tap',
+    combo: ['One finger', 'Double tap'],
   },
 ] as const
 

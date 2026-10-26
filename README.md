@@ -40,6 +40,7 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 - Override favicons with uploaded gallery images
 - Organize content inside collapsible groups and nested groups
 - Drop images onto the canvas as standalone picture nodes
+- Add notes: sketch freehand with mouse, pen or finger in an Excalidraw-like hand-drawn style, and double-click to type handwritten text
 - Collapsing a group hides every node inside it, including charts and feeds
 
 ### Auto dashboard (optional)
