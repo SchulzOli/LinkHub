@@ -49,6 +49,11 @@ export const DEFAULT_CARD_SHOW_IMAGE = true
 export const LinkCardSchema = z.object({
   id: z.string().min(1),
   url: z.url(),
+  /**
+   * Optional second address on the local network (e.g. an IP at home). A
+   * click opens it when it answers, else `url`.
+   */
+  localUrl: z.url().optional(),
   title: z.string().trim(),
   faviconUrl: z.string(),
   faviconOverrideImageId: z.string().min(1).optional(),

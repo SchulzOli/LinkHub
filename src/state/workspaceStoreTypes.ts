@@ -60,6 +60,7 @@ export type CardUpdateFields = Partial<
     LinkCard,
     | 'title'
     | 'url'
+    | 'localUrl'
     | 'faviconUrl'
     | 'faviconOverrideImageId'
     | 'size'

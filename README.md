@@ -36,6 +36,7 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 ### Content and organization
 
 - Create link cards from URLs; website icons load on request (Menu → Privacy), otherwise cards show a letter or your own image
+- Give a card an optional local link (e.g. `http://192.168.1.10:8123` next to `https://home.example.com`): a click opens it when it answers, otherwise the main link
 - Resize cards from 2x2 up to 12x12 grid cells
 - Override favicons with uploaded gallery images
 - Organize content inside collapsible groups and nested groups

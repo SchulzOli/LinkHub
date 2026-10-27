@@ -36,6 +36,7 @@ import {
 import { coerceWorkspaceAnalytics } from '../contracts/workspaceAnalytics'
 import { getDefaultCardColorPresetMap } from '../features/appearance/cardColorPalette'
 import { APPEARANCE_STYLE_PRESETS } from '../features/appearance/stylePresets'
+import { normalizeLocalUrl } from '../features/links/localFirstLink'
 
 function coerceStyleTokens(
   raw: unknown,
@@ -212,6 +213,12 @@ function migrateAppearance(rawAppearance: unknown): AppearanceProfile {
   }
 }
 
+function coerceLocalUrl(value: unknown) {
+  return typeof value === 'string'
+    ? (normalizeLocalUrl(value) ?? undefined)
+    : undefined
+}
+
 function migrateCards(rawCards: unknown): LinkCard[] {
   if (!Array.isArray(rawCards)) {
     return []
@@ -258,6 +265,7 @@ function migrateCards(rawCards: unknown): LinkCard[] {
           (card as { groupId?: string }).groupId
             ? (card as { groupId?: string }).groupId
             : undefined,
+        localUrl: coerceLocalUrl((card as { localUrl?: unknown }).localUrl),
         faviconOverrideImageId:
           typeof (card as { faviconOverrideImageId?: unknown })
             .faviconOverrideImageId === 'string' &&

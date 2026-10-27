@@ -30,6 +30,10 @@ import {
 import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
 import {
+  normalizeLocalUrl,
+  openLocalFirst,
+} from '../../features/links/localFirstLink'
+import {
   createFaviconUrl,
   normalizeUrl,
   resolveCardFaviconUrl,
@@ -98,6 +102,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const [isEditing, setIsEditing] = useState(false)
   const [titleDraft, setTitleDraft] = useState(card.title)
   const [urlDraft, setUrlDraft] = useState(card.url)
+  const [localUrlDraft, setLocalUrlDraft] = useState(card.localUrl ?? '')
   const [widthDraft, setWidthDraft] = useState(String(card.size.columns))
   const [heightDraft, setHeightDraft] = useState(String(card.size.rows))
   const [cornerRadiusDraft, setCornerRadiusDraft] = useState(
@@ -287,6 +292,24 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     [card.id, onUpdate, appearance.faviconsOfflineOnly],
   )
 
+  const commitLocalUrlDraft = useCallback(
+    (nextDraft: string) => {
+      setLocalUrlDraft(nextDraft)
+
+      if (!nextDraft.trim()) {
+        onUpdate(card.id, { localUrl: undefined })
+        return
+      }
+
+      const normalized = normalizeLocalUrl(nextDraft)
+
+      if (normalized) {
+        onUpdate(card.id, { localUrl: normalized })
+      }
+    },
+    [card.id, onUpdate],
+  )
+
   const commitSizeDrafts = useCallback(
     (nextWidthDraft: string, nextHeightDraft: string) => {
       setWidthDraft(nextWidthDraft)
@@ -344,6 +367,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const handleOpenEditor = useCallback(() => {
     setTitleDraft(card.title)
     setUrlDraft(card.url)
+    setLocalUrlDraft(card.localUrl ?? '')
     setWidthDraft(String(card.size.columns))
     setHeightDraft(String(card.size.rows))
     setCornerRadiusDraft(
@@ -625,22 +649,52 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     React.MouseEventHandler<HTMLAnchorElement>
   >(
     (event) => {
-      if (!event.defaultPrevented && event.button === 0) {
-        handleRecordLinkOpen()
+      if (event.defaultPrevented || event.button !== 0) {
+        return
+      }
+
+      handleRecordLinkOpen()
+
+      // With a local link: check it first, then open local or remote.
+      // Modifier clicks keep the browser's own handling of the main URL.
+      if (
+        card.localUrl &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        event.preventDefault()
+        void openLocalFirst({
+          url: card.url,
+          localUrl: card.localUrl,
+          newTab: viewModel.openLinkInNewTab,
+        })
       }
     },
-    [handleRecordLinkOpen],
+    [card.localUrl, card.url, handleRecordLinkOpen, viewModel.openLinkInNewTab],
   )
 
   const handleViewAuxClick = useCallback<
     React.MouseEventHandler<HTMLAnchorElement>
   >(
     (event) => {
-      if (!event.defaultPrevented && event.button === 1) {
-        handleRecordLinkOpen()
+      if (event.defaultPrevented || event.button !== 1) {
+        return
+      }
+
+      handleRecordLinkOpen()
+
+      if (card.localUrl) {
+        event.preventDefault()
+        void openLocalFirst({
+          url: card.url,
+          localUrl: card.localUrl,
+          newTab: true,
+        })
       }
     },
-    [handleRecordLinkOpen],
+    [card.localUrl, card.url, handleRecordLinkOpen],
   )
 
   const handleRequestImageOverride = useCallback(() => {
@@ -773,6 +827,10 @@ export const LinkCardContainer = memo(function LinkCardContainer({
           surfaceTransparencyDraft={surfaceTransparencyDraft}
           titleDraft={titleDraft}
           urlDraft={urlDraft}
+          localUrlDraft={localUrlDraft}
+          localUrlInvalid={
+            localUrlDraft.trim() !== '' && !normalizeLocalUrl(localUrlDraft)
+          }
           widthDraft={widthDraft}
           onClose={handleCloseEditor}
           onCopyFormat={handleCopyFormat}
@@ -807,12 +865,17 @@ export const LinkCardContainer = memo(function LinkCardContainer({
           onSurfaceTransparencyChange={handleSurfaceTransparencyChange}
           onTitleChange={handleTitleChange}
           onUrlChange={commitUrlDraft}
+          onLocalUrlChange={commitLocalUrlDraft}
           onWheelCapture={handleOverlayWheelCapture}
           onWidthChange={handleWidthChange}
         />
       ) : null}
       <LinkCardUrlTooltip
-        displayUrl={viewModel.displayUrl}
+        displayUrl={
+          card.localUrl
+            ? `${viewModel.displayUrl} · local ${card.localUrl.replace(/\/$/, '')}`
+            : viewModel.displayUrl
+        }
         isEditMode={isEditMode}
         isVisible={isUrlTooltipVisible}
         style={urlTooltipStyle}

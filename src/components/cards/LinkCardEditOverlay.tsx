@@ -52,6 +52,8 @@ type LinkCardEditOverlayProps = {
   surfaceTransparencyDraft: SurfaceTransparency
   titleDraft: string
   urlDraft: string
+  localUrlDraft: string
+  localUrlInvalid: boolean
   widthDraft: string
   onClose: () => void
   onCopyFormat: () => void
@@ -74,6 +76,7 @@ type LinkCardEditOverlayProps = {
   onSurfaceTransparencyChange: (value: SurfaceTransparency) => void
   onTitleChange: (value: string) => void
   onUrlChange: (value: string) => void
+  onLocalUrlChange: (value: string) => void
   onWheelCapture: WheelEventHandler<HTMLDivElement>
   onWidthChange: (value: string) => void
 }
@@ -97,6 +100,8 @@ export function LinkCardEditOverlay({
   surfaceTransparencyDraft,
   titleDraft,
   urlDraft,
+  localUrlDraft,
+  localUrlInvalid,
   widthDraft,
   onClose,
   onCopyFormat,
@@ -119,6 +124,7 @@ export function LinkCardEditOverlay({
   onSurfaceTransparencyChange,
   onTitleChange,
   onUrlChange,
+  onLocalUrlChange,
   onWheelCapture,
   onWidthChange,
 }: LinkCardEditOverlayProps) {
@@ -181,6 +187,29 @@ export function LinkCardEditOverlay({
               Enter a valid http or https URL.
             </p>
           ) : null}
+          <label className={panelStyles.field}>
+            <span className={panelStyles.fieldLabel}>
+              Local link (optional)
+            </span>
+            <input
+              aria-label={`Edit local url for ${card.id}`}
+              placeholder="http://192.168.1.10:8123"
+              value={localUrlDraft}
+              onChange={(event) => {
+                onLocalUrlChange(event.target.value)
+              }}
+            />
+          </label>
+          {localUrlInvalid ? (
+            <p className={editPanelStyles.error}>
+              Enter a local address such as 192.168.1.10:8123.
+            </p>
+          ) : (
+            <p className={panelStyles.rowHint}>
+              Opened instead of the URL above whenever it answers, e.g. at home;
+              otherwise the URL above opens.
+            </p>
+          )}
         </div>
         <SettingRow
           hint={
