@@ -32,6 +32,7 @@ import {
   releaseSyncServerAccess,
   requestSyncServerAccess,
 } from '../features/sync/syncPlatform'
+import type { SyncScope } from '../features/sync/syncScope'
 import {
   createWebDavTransport,
   normalizeSyncFolderUrl,
@@ -67,11 +68,14 @@ type ConnectInput = {
   password: string
   passphrase: string
   deviceName: string
+  /** Which workspaces this device syncs; all when missing. */
+  scope?: SyncScope
 }
 
 type ConnectServerInput = {
   serverUrl: string
   deviceName: string
+  scope?: SyncScope
 } & ({ mode: 'create' } | { mode: 'join'; code: string })
 
 type SyncState = {
@@ -82,6 +86,10 @@ type SyncState = {
   syncCode: string | null
   /** The server sync's devices; null until loaded. */
   devices: SyncDeviceInfo[] | null
+  /** Every workspace in the sync as of the last sync, for choosing. */
+  remoteWorkspaces: Array<{ id: string; name: string }>
+  /** Which workspaces this device syncs; syncs right away. */
+  setScope: (scope: SyncScope) => Promise<void>
   load: () => Promise<SyncConnection | null>
   /** Connects to a WebDAV folder with a passphrase. */
   connect: (input: ConnectInput) => Promise<boolean>
@@ -254,7 +262,12 @@ export const useSyncStore = create<SyncState>((set, get) => {
     await clearSyncConnection()
     loadPromise = null
     session = null
-    set({ connection: null, syncCode: null, devices: null })
+    set({
+      connection: null,
+      syncCode: null,
+      devices: null,
+      remoteWorkspaces: [],
+    })
   }
 
   const showKeyring = (current: ServerSyncSession) =>
@@ -266,6 +279,7 @@ export const useSyncStore = create<SyncState>((set, get) => {
     status: { kind: 'idle', message: '' },
     syncCode: null,
     devices: null,
+    remoteWorkspaces: [],
     load: () => {
       loadPromise ??= loadSyncConnection()
         .catch(() => null)
@@ -345,6 +359,7 @@ export const useSyncStore = create<SyncState>((set, get) => {
         password: input.password,
         deviceId: createId(),
         deviceName: input.deviceName.trim() || DEFAULT_SYNC_DEVICE_NAME,
+        ...(input.scope ? { scope: input.scope } : {}),
       }
 
       try {
@@ -430,6 +445,7 @@ export const useSyncStore = create<SyncState>((set, get) => {
           deviceId: created.deviceId,
           deviceToken: created.deviceToken,
           deviceName,
+          ...(input.scope ? { scope: input.scope } : {}),
         }
 
         await saveDeviceKey(created.privateKey)
@@ -487,6 +503,9 @@ export const useSyncStore = create<SyncState>((set, get) => {
           )
           let base = await loadSyncBase()
           let totals = { received: 0, sent: 0, conflicts: 0 }
+          const scope = connection.scope
+          const copyIds: string[] = []
+          let remoteWorkspaces = get().remoteWorkspaces
 
           // A second round uploads conflict copies made in the first.
           for (let round = 0; round < 2; round += 1) {
@@ -495,10 +514,14 @@ export const useSyncStore = create<SyncState>((set, get) => {
               cipher,
               base,
               deviceId: connection.deviceId,
+              scope,
             })
 
             base = result.base
+            remoteWorkspaces = result.remoteWorkspaces
             await saveSyncBase(base)
+
+            copyIds.push(...result.conflictCopyIds)
             totals = {
               received: totals.received + result.received,
               sent: totals.sent + result.sent,
@@ -510,11 +533,25 @@ export const useSyncStore = create<SyncState>((set, get) => {
             }
           }
 
-          const next = { ...connection, lastSyncAt: new Date().toISOString() }
+          // The scope may have changed meanwhile; build on the latest.
+          const latest = get().connection ?? connection
+          const next: SyncConnection = {
+            ...latest,
+            lastSyncAt: new Date().toISOString(),
+          }
+
+          // A conflict copy of a chosen workspace syncs like the original.
+          if (next.scope?.mode === 'chosen' && copyIds.length > 0) {
+            next.scope = {
+              mode: 'chosen',
+              workspaceIds: [...next.scope.workspaceIds, ...copyIds],
+            }
+          }
 
           await saveSyncConnection(next)
           set({
             connection: next,
+            remoteWorkspaces,
             status: {
               kind: totals.conflicts > 0 ? 'warning' : 'success',
               message: describeResult(totals),
@@ -550,6 +587,20 @@ export const useSyncStore = create<SyncState>((set, get) => {
       })
 
       return syncPromise
+    },
+    setScope: async (scope) => {
+      const { connection } = get()
+
+      if (!connection) {
+        return
+      }
+
+      const next = { ...connection, scope }
+
+      // Shown at once; stored and synced right after.
+      set({ connection: next })
+      await saveSyncConnection(next)
+      await get().sync()
     },
     loadDevices: async () => {
       const { connection } = get()

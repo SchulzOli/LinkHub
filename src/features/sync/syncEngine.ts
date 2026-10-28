@@ -22,6 +22,11 @@ import {
   type SyncBase,
   type SyncRecordMap,
 } from './syncMerge'
+import {
+  listRemoteWorkspaces,
+  scopeSyncRecords,
+  type SyncScope,
+} from './syncScope'
 import { SyncWriteConflictError, type SyncTransport } from './webdavTransport'
 
 /**
@@ -162,6 +167,10 @@ export type SyncResult = {
   /** True when another sync should follow (conflict copies to upload). */
   again: boolean
   base: SyncBase
+  /** Every workspace in the sync, also those this device leaves out. */
+  remoteWorkspaces: Array<{ id: string; name: string }>
+  /** Conflict copies made here (new workspaces). */
+  conflictCopyIds: string[]
 }
 
 export async function runSyncOnce(input: {
@@ -170,6 +179,8 @@ export async function runSyncOnce(input: {
   cipher: SyncCipher
   base: SyncBase
   deviceId: string
+  /** Which workspaces this device syncs; all by default. */
+  scope?: SyncScope
 }): Promise<SyncResult> {
   const { transport, cipher, deviceId } = input
 
@@ -177,7 +188,16 @@ export async function runSyncOnce(input: {
     const activeHashAtStart = await hashActiveWorkspace()
     const local = await collectLocalSyncRecords()
     const remote = await readRemoteState(transport, cipher)
-    const plan = mergeSyncRecords(local, remote.records, input.base)
+    const scoped = scopeSyncRecords(
+      input.scope,
+      local,
+      remote.records,
+      input.base,
+    )
+    const plan = mergeSyncRecords(scoped.local, scoped.remote, scoped.base)
+
+    // What this device leaves out goes back to the server unchanged.
+    plan.remote = { ...scoped.outside, ...plan.remote }
     const remoteChanged =
       plan.pushRemote.length > 0 || plan.deleteRemote.length > 0
 
@@ -230,7 +250,7 @@ export async function runSyncOnce(input: {
       throw error
     }
 
-    const skipped = await applyRemoteSyncRecords({
+    const { skipped, copies } = await applyRemoteSyncRecords({
       plan,
       local,
       remote: plan.remote,
@@ -277,6 +297,8 @@ export async function runSyncOnce(input: {
       conflicts: plan.conflictCopies.length,
       again: plan.conflictCopies.length > 0 || skipped.length > 0,
       base,
+      remoteWorkspaces: listRemoteWorkspaces(plan.remote),
+      conflictCopyIds: copies,
     }
   }
 }

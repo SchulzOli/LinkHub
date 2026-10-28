@@ -77,6 +77,16 @@ lose every device and the code, the data can't be recovered.
   the same passphrase on every device. It is never stored or uploaded and
   can't be recovered.
 
+### Only some workspaces on a device
+
+A work computer doesn't have to get everything. Before you join, turn on
+**Only workspaces I choose**: the device then receives nothing until you
+tick workspaces under **Workspaces on this device** in the Sync tab. Only
+ticked workspaces (and the images they use) are sent and received there;
+the device's other workspaces stay on it, and nothing is deleted on either
+side. You can switch an existing device between **All workspaces** and
+**Only chosen** at any time.
+
 What syncs: workspaces, their order, custom themes and uploaded images.
 What stays on each device: the view position, usage statistics, the Auto
 dashboard, and all settings in Menu → Privacy.

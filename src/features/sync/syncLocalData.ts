@@ -181,12 +181,14 @@ export type ApplyRemoteInput = {
 /**
  * Writes the merge result into this device's storage and the open app.
  * Returns the keys it skipped (the open workspace was edited meanwhile),
- * so their base stays unchanged and the next sync looks at them again.
+ * so their base stays unchanged and the next sync looks at them again,
+ * and the ids of the conflict copies it made.
  */
 export async function applyRemoteSyncRecords(
   input: ApplyRemoteInput,
-): Promise<string[]> {
+): Promise<{ skipped: string[]; copies: string[] }> {
   const skipped: string[] = []
+  const copies: string[] = []
   const { plan, remote, local } = input
   const now = new Date().toISOString()
   const activeNow = await hashActiveWorkspace()
@@ -215,6 +217,7 @@ export async function applyRemoteSyncRecords(
     })
 
     await saveWorkspace(copy)
+    copies.push(copy.id)
     useWorkspaceStore.setState((state) => ({
       workspaceSummaries: [
         ...state.workspaceSummaries,
@@ -331,7 +334,7 @@ export async function applyRemoteSyncRecords(
 
   await applyWorkspaceOrder(remote[DIRECTORY_KEY]?.data)
 
-  return skipped
+  return { skipped, copies }
 }
 
 /** Puts the workspace list in the synced order; local-only ones go last. */

@@ -6,12 +6,20 @@ import {
   DEFAULT_SYNC_SERVER_URL,
   normalizeSyncServerUrl,
 } from '../../features/sync/serverTransport'
+import type { SyncScope } from '../../features/sync/syncScope'
+import { useAutoDashboardStore } from '../../state/useAutoDashboardStore'
 import {
   DEFAULT_SYNC_DEVICE_NAME,
   useSyncStore,
 } from '../../state/useSyncStore'
+import { useWorkspaceStore } from '../../state/useWorkspaceStore'
 import type { SyncConnection } from '../../storage/syncRepository'
-import { PanelSection, SettingRow, StatusMessage } from '../ui/panel/Panel'
+import {
+  PanelSection,
+  SettingRow,
+  StatusMessage,
+  Switch,
+} from '../ui/panel/Panel'
 import panelStyles from '../ui/panel/Panel.module.css'
 import styles from './OptionsMenu.module.css'
 
@@ -32,6 +40,30 @@ function formatLastSync(value: string | undefined) {
     : `Last sync ${date.toLocaleString()}`
 }
 
+/** "Only the workspaces I choose", set before the first sync. */
+function ChooseWorkspacesRow({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <SettingRow
+      hint="For a work computer, say: this device gets no workspace until you pick one after connecting, and its own workspaces stay on it."
+      label="Only workspaces I choose"
+    >
+      <Switch
+        ariaLabel="Only workspaces I choose"
+        checked={checked}
+        onChange={onChange}
+      />
+    </SettingRow>
+  )
+}
+
+const CHOOSE_LATER: SyncScope = { mode: 'chosen', workspaceIds: [] }
+
 function WebDavConnectForm() {
   const connect = useSyncStore((state) => state.connect)
   const busy = useSyncStore((state) => state.status.kind === 'busy')
@@ -40,6 +72,7 @@ function WebDavConnectForm() {
   const [password, setPassword] = useState('')
   const [passphrase, setPassphrase] = useState('')
   const [deviceName, setDeviceName] = useState(DEFAULT_SYNC_DEVICE_NAME)
+  const [chooseOnly, setChooseOnly] = useState(false)
   const passphraseTooShort = passphrase.length > 0 && passphrase.length < 10
 
   const handleSubmit = (event: FormEvent) => {
@@ -49,14 +82,19 @@ function WebDavConnectForm() {
       return
     }
 
-    void connect({ url, username, password, passphrase, deviceName }).then(
-      (connected) => {
-        if (connected) {
-          setPassword('')
-          setPassphrase('')
-        }
-      },
-    )
+    void connect({
+      url,
+      username,
+      password,
+      passphrase,
+      deviceName,
+      scope: chooseOnly ? CHOOSE_LATER : undefined,
+    }).then((connected) => {
+      if (connected) {
+        setPassword('')
+        setPassphrase('')
+      }
+    })
   }
 
   return (
@@ -132,6 +170,7 @@ function WebDavConnectForm() {
             value={deviceName}
           />
         </label>
+        <ChooseWorkspacesRow checked={chooseOnly} onChange={setChooseOnly} />
         <div className={panelStyles.actions}>
           <button
             className={`${panelStyles.button} ${panelStyles.buttonPrimary}`}
@@ -199,6 +238,8 @@ function ServerConnectForm() {
   const [ownUrl, setOwnUrl] = useState('')
   const [deviceName, setDeviceName] = useState(DEFAULT_SYNC_DEVICE_NAME)
   const [code, setCode] = useState('')
+  const [chooseOnly, setChooseOnly] = useState(false)
+  const scope = chooseOnly ? CHOOSE_LATER : undefined
   const choice = choices.find((entry) => entry.id === choiceId) ?? choices[0]
   const serverUrl = choice.id === 'own' ? ownUrl : choice.url
   const ready = serverUrl.trim() !== '' && !busy
@@ -207,7 +248,7 @@ function ServerConnectForm() {
     event.preventDefault()
 
     if (ready && code.trim()) {
-      void connectServer({ mode: 'join', serverUrl, deviceName, code })
+      void connectServer({ mode: 'join', serverUrl, deviceName, code, scope })
     }
   }
 
@@ -273,6 +314,7 @@ function ServerConnectForm() {
             value={deviceName}
           />
         </label>
+        <ChooseWorkspacesRow checked={chooseOnly} onChange={setChooseOnly} />
       </PanelSection>
 
       <PanelSection
@@ -286,7 +328,20 @@ function ServerConnectForm() {
             data-testid="sync-create"
             disabled={!ready}
             onClick={() =>
-              void connectServer({ mode: 'create', serverUrl, deviceName })
+              void connectServer({
+                mode: 'create',
+                serverUrl,
+                deviceName,
+                // The new sync starts with the open workspace.
+                scope: chooseOnly
+                  ? {
+                      mode: 'chosen',
+                      workspaceIds: [
+                        useWorkspaceStore.getState().activeWorkspaceId,
+                      ],
+                    }
+                  : undefined,
+              })
             }
             type="button"
           >
@@ -432,6 +487,104 @@ function DeviceList() {
   )
 }
 
+/** Which workspaces this device syncs: all, or the ones ticked here. */
+function WorkspaceScopeSection({ connection }: { connection: SyncConnection }) {
+  const setScope = useSyncStore((state) => state.setScope)
+  const busy = useSyncStore((state) => state.status.kind === 'busy')
+  const remoteWorkspaces = useSyncStore((state) => state.remoteWorkspaces)
+  const localWorkspaces = useWorkspaceStore((state) => state.workspaceSummaries)
+  const autoWorkspaceId = useAutoDashboardStore(
+    (state) => state.settings.workspaceId,
+  )
+  const scope = connection.scope ?? { mode: 'all' as const }
+  const chosen = new Set(scope.mode === 'chosen' ? scope.workspaceIds : [])
+  const localIds = new Set(localWorkspaces.map((workspace) => workspace.id))
+  const remoteIds = new Set(remoteWorkspaces.map((workspace) => workspace.id))
+  const rows = [
+    ...localWorkspaces.filter((workspace) => workspace.id !== autoWorkspaceId),
+    ...remoteWorkspaces.filter((workspace) => !localIds.has(workspace.id)),
+  ]
+
+  const toggle = (id: string, on: boolean) => {
+    const ids = scope.mode === 'chosen' ? scope.workspaceIds : []
+
+    void setScope({
+      mode: 'chosen',
+      workspaceIds: on
+        ? [...new Set([...ids, id])]
+        : ids.filter((other) => other !== id),
+    })
+  }
+
+  return (
+    <PanelSection
+      description="A work computer can sync just its work workspace: workspaces you don't tick are neither sent nor received here, and nothing is deleted anywhere."
+      meta={
+        scope.mode === 'all'
+          ? 'All'
+          : `${scope.workspaceIds.filter((id) => localIds.has(id) || remoteIds.has(id)).length} chosen`
+      }
+      title="Workspaces on this device"
+    >
+      <div
+        aria-label="Workspaces to sync"
+        className={panelStyles.segmented}
+        role="group"
+      >
+        <button
+          aria-pressed={scope.mode === 'all'}
+          className={panelStyles.segment}
+          disabled={busy}
+          onClick={() => void setScope({ mode: 'all' })}
+          type="button"
+        >
+          All workspaces
+        </button>
+        <button
+          aria-pressed={scope.mode === 'chosen'}
+          className={panelStyles.segment}
+          disabled={busy}
+          onClick={() =>
+            scope.mode === 'chosen'
+              ? undefined
+              : void setScope({
+                  mode: 'chosen',
+                  workspaceIds: rows
+                    .filter((row) => localIds.has(row.id))
+                    .map((row) => row.id),
+                })
+          }
+          type="button"
+        >
+          Only chosen
+        </button>
+      </div>
+      {scope.mode === 'chosen'
+        ? rows.map((workspace) => (
+            <SettingRow
+              hint={
+                !localIds.has(workspace.id)
+                  ? 'On your other devices'
+                  : !remoteIds.has(workspace.id)
+                    ? 'Only on this device'
+                    : undefined
+              }
+              key={workspace.id}
+              label={workspace.name}
+            >
+              <Switch
+                ariaLabel={`Sync ${workspace.name}`}
+                checked={chosen.has(workspace.id)}
+                disabled={busy}
+                onChange={(on) => toggle(workspace.id, on)}
+              />
+            </SettingRow>
+          ))
+        : null}
+    </PanelSection>
+  )
+}
+
 function ConnectedView({ connection }: { connection: SyncConnection }) {
   const status = useSyncStore((state) => state.status)
   const sync = useSyncStore((state) => state.sync)
@@ -477,6 +630,8 @@ function ConnectedView({ connection }: { connection: SyncConnection }) {
           </div>
         </SettingRow>
       </PanelSection>
+
+      <WorkspaceScopeSection connection={connection} />
 
       {isServer ? <DeviceList /> : null}
 

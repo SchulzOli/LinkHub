@@ -6,6 +6,7 @@ import {
   type SyncKeyring,
 } from '../features/sync/syncKeys'
 import type { SyncBase } from '../features/sync/syncMerge'
+import type { SyncScope } from '../features/sync/syncScope'
 
 /**
  * Device sync keeps its own small database, apart from the workspace data:
@@ -23,6 +24,8 @@ type SyncConnectionBase = {
   deviceId: string
   deviceName: string
   lastSyncAt?: string
+  /** Which workspaces this device syncs; missing means all. */
+  scope?: SyncScope
 }
 
 /** A WebDAV folder (stored before `provider` existed: no field). */
