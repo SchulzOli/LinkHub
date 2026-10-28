@@ -71,6 +71,7 @@ test('sets up device sync from Privacy and the Sync tab', async ({
   await menu.getByRole('tab', { name: 'Privacy' }).click()
   await page.getByLabel('Device sync').check()
   await menu.getByRole('tab', { name: 'Sync' }).click()
+  await page.getByRole('button', { name: 'WebDAV folder' }).click()
 
   await page.getByLabel('WebDAV folder address').fill(FOLDER)
   await page.getByLabel('Sync user name').fill('me')

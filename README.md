@@ -52,8 +52,8 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 
 ### Device sync and apps (optional)
 
-- Turn on **Device sync** under **Menu → Privacy** to keep workspaces, themes and images in step across devices through a WebDAV folder you own (Nextcloud, a NAS, …); no Linkhaven server involved
-- End-to-end encrypted with your own sync passphrase; the server only sees ciphertext
+- Turn on **Device sync** under **Menu → Privacy** to keep workspaces, themes and images in step across devices: through a Linkhaven server with a sync code (no account), or through a WebDAV folder you own (Nextcloud, a NAS, …)
+- End-to-end encrypted on the device; the server only stores data it can't read
 - Besides the browser extension, Linkhaven installs as a web app (PWA) on phones, tablets and computers and works offline: [schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/); see [doc/APP.md](doc/APP.md)
 
 ### Charts and news feeds
@@ -182,6 +182,14 @@ Firefox:
 
 To release, run **Actions → Release** with the new version and the stores to publish to; details in [extension/EXTENSION.md](extension/EXTENSION.md#releasing).
 
+## Linkhaven Server
+
+```bash
+npm run server   # device sync, news feed proxy and chart feed on http://127.0.0.1:8790
+```
+
+The same server runs locally or as the public sync service (Docker + automatic HTTPS); see [doc/SERVER.md](doc/SERVER.md).
+
 ## Web App (PWA)
 
 ```bash
@@ -203,7 +211,7 @@ Linkhaven is local-first.
 - Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
 - News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it
-- **Device sync** talks only to the WebDAV folder you enter, and encrypts everything on the device first
+- **Device sync** talks only to the sync server or WebDAV folder you choose, and encrypts everything on the device first
 - No account, remote sync requirement, or third-party analytics or behavioral tracking is built into the app
 
 For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privacy policy is published at [schulzoli.github.io/Linkhaven/privacy/](https://schulzoli.github.io/Linkhaven/privacy/) and ships in the app at [public/privacy/index.html](public/privacy/index.html).
@@ -212,6 +220,7 @@ For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privac
 
 - [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
 - [doc/APP.md](doc/APP.md) for the web app (PWA) and device sync
+- [doc/SERVER.md](doc/SERVER.md) for the Linkhaven server (sync, feed proxy, charts) and how to host it
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol
 - [doc/NEWS_FEED.md](doc/NEWS_FEED.md) for news feed nodes and the feed proxy

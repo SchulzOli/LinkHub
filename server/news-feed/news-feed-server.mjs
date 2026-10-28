@@ -12,6 +12,7 @@
  *   npm run feed:news            (PORT / HOST env vars override defaults)
  */
 import { createServer } from 'node:http'
+import { pathToFileURL } from 'node:url'
 
 import { FeedProxyError, fetchFeed } from './fetchFeed.mjs'
 import { isAllowedOrigin } from './origins.mjs'
@@ -24,17 +25,13 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body))
 }
 
-const server = createServer((request, response) => {
-  // Fixed base: the Host header is untrusted and only path + query matter.
-  // A malformed request-target (e.g. "//[") must not crash the server.
-  let url
-
-  try {
-    url = new URL(request.url ?? '/', 'http://localhost')
-  } catch {
-    response.writeHead(400, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ error: 'Malformed request URL' }))
-    return
+/**
+ * Handles `/rss` (and nothing else). Returns false for other paths, so the
+ * combined Linkhaven server (server/linkhaven-server.mjs) can mount it.
+ */
+export function handleNewsRequest(request, response, url) {
+  if (url.pathname !== '/rss') {
+    return false
   }
 
   const origin = request.headers.origin
@@ -47,23 +44,18 @@ const server = createServer((request, response) => {
   } else if (origin) {
     // A browser page from another site: refuse instead of fetching for it.
     sendJson(response, 403, { error: 'Origin not allowed' })
-    return
+    return true
   }
 
   if (request.method === 'OPTIONS') {
     response.writeHead(204)
     response.end()
-    return
+    return true
   }
 
-  if (url.pathname === '/health') {
-    sendJson(response, 200, { ok: true })
-    return
-  }
-
-  if (url.pathname !== '/rss' || request.method !== 'GET') {
+  if (request.method !== 'GET') {
     sendJson(response, 404, { error: 'Use GET /rss?url=<feed url>' })
-    return
+    return true
   }
 
   const target = url.searchParams.get('url') ?? ''
@@ -83,8 +75,45 @@ const server = createServer((request, response) => {
       console.warn(`[news] ${target}: ${error.message}`)
       sendJson(response, status, { error: error.message })
     })
-})
 
-server.listen(PORT, HOST, () => {
-  console.log(`Linkhaven news feed proxy on http://${HOST}:${PORT}/rss?url=…`)
-})
+  return true
+}
+
+/** The request's path and query; null for a malformed request-target. */
+export function parseRequestUrl(request) {
+  // Fixed base: the Host header is untrusted and only path + query matter.
+  // A malformed request-target (e.g. "//[") must not crash the server.
+  try {
+    return new URL(request.url ?? '/', 'http://localhost')
+  } catch {
+    return null
+  }
+}
+
+function startStandalone() {
+  const server = createServer((request, response) => {
+    const url = parseRequestUrl(request)
+
+    if (!url) {
+      sendJson(response, 400, { error: 'Malformed request URL' })
+      return
+    }
+
+    if (url.pathname === '/health') {
+      sendJson(response, 200, { ok: true })
+      return
+    }
+
+    if (!handleNewsRequest(request, response, url)) {
+      sendJson(response, 404, { error: 'Use GET /rss?url=<feed url>' })
+    }
+  })
+
+  server.listen(PORT, HOST, () => {
+    console.log(`Linkhaven news feed proxy on http://${HOST}:${PORT}/rss?url=…`)
+  })
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  startStandalone()
+}

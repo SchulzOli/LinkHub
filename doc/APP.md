@@ -40,7 +40,20 @@ to GitHub Pages under `app/` on every push to `main`.
 ## Device sync
 
 Device sync is off by default. Turn it on under **Menu → Privacy → Device
-sync**, then set it up in the **Sync** tab with:
+sync**, then set it up in the **Sync** tab. There are two ways:
+
+### Through a Linkhaven server (no account)
+
+On the first device choose **Create sync**. Linkhaven shows a **sync code**
+(`lh1-…`) and a QR code under "Add a device"; enter it on each other device
+with **Join**. The code is all a device needs: the server address comes
+prefilled once the public server is set up, or you run your own
+(`npm run server`, see [SERVER.md](SERVER.md)). Everything is encrypted on
+the device with a key from the code; the server stores only data it can't
+read. Keep the code safe: anyone with it can read and change your synced
+workspaces, and without it they can't be recovered.
+
+### Through your own WebDAV folder
 
 - **WebDAV folder address**: a folder you own. In Nextcloud: Files →
   Settings (bottom left) → WebDAV shows the address; add a folder name such
@@ -63,16 +76,16 @@ after a change, and every five minutes while it is open. When two devices
 change the same workspace before syncing, the newer change wins and the
 other one is kept as a workspace named "… (conflict)".
 
-The folder holds `linkhaven-sync.json` (the salt and a check value, not
+A WebDAV folder holds `linkhaven-sync.json` (the salt and a check value, not
 secret), `state.bin` (everything else, encrypted) and `images/` (one
 encrypted file per image).
 
 ### In the extension
 
-The extension asks for access to the sync server's address when you press
+The extension asks for access to the sync server's or folder's address when you press
 Connect, and gives it back when you disconnect. No server setup is needed.
 
-### In the web app: allow it on the server (CORS)
+### WebDAV in the web app: allow it on the server (CORS)
 
 A web page may only talk to another server when that server allows it.
 WebDAV servers don't by default, so the web app needs this once on the

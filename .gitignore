@@ -12,6 +12,8 @@ dist
 dist-ssr
 dist-extension
 dist-pwa
+# Linkhaven server data (npm run server)
+/data
 *.local
 
 # Editor directories and files

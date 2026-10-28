@@ -157,6 +157,10 @@ jobs:
         run: |
           npm run build
           npm run build:extension
+        env:
+          # The public sync server offered in the Sync tab (repository
+          # variable; empty = users enter a server themselves).
+          VITE_SYNC_SERVER_URL: ${{ vars.SYNC_SERVER_URL }}
 
       # Saved before anything is pushed, for the store jobs.
       - name: Keep extension build for the stores

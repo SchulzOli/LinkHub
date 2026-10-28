@@ -11,6 +11,7 @@
  *   npm run feed:charts            (PORT / HOST env vars override defaults)
  */
 import { createServer } from 'node:http'
+import { pathToFileURL } from 'node:url'
 
 import { WebSocketServer } from 'ws'
 
@@ -154,26 +155,16 @@ function startStream({ symbol, range, live, send }) {
   }
 }
 
-const server = createServer((request, response) => {
-  // Fixed base: the Host header is untrusted and only path + query matter.
-  // A malformed request-target (e.g. "//[") must not crash the server.
-  let url
-
-  try {
-    url = new URL(request.url ?? '/', 'http://localhost')
-  } catch {
-    response.writeHead(400, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ error: 'Malformed request URL' }))
-    return
+/**
+ * Handles `/search` and `/sse`; returns false for other paths, so the
+ * combined Linkhaven server (server/linkhaven-server.mjs) can mount it.
+ */
+export function handleChartRequest(request, response, url) {
+  if (url.pathname !== '/search' && url.pathname !== '/sse') {
+    return false
   }
 
   response.setHeader('access-control-allow-origin', '*')
-
-  if (url.pathname === '/health') {
-    response.writeHead(200, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ ok: true, ranges: SUPPORTED_RANGES }))
-    return
-  }
 
   if (url.pathname === '/search') {
     const query = url.searchParams.get('q')?.trim() ?? ''
@@ -193,13 +184,7 @@ const server = createServer((request, response) => {
         response.writeHead(502, { 'content-type': 'application/json' })
         response.end(JSON.stringify({ results: [], error: error.message }))
       })
-    return
-  }
-
-  if (url.pathname !== '/sse') {
-    response.writeHead(404, { 'content-type': 'text/plain' })
-    response.end('Use /sse?symbol=…&range=… or a WebSocket on /feed')
-    return
+    return true
   }
 
   const symbol = url.searchParams.get('symbol')?.trim().toUpperCase() ?? ''
@@ -220,7 +205,7 @@ const server = createServer((request, response) => {
   if (invalid) {
     send({ type: 'error', message: invalid })
     response.end()
-    return
+    return true
   }
 
   const stop = startStream({ symbol, range, live, send })
@@ -230,68 +215,110 @@ const server = createServer((request, response) => {
     clearInterval(keepAlive)
     stop()
   })
-})
 
-const wss = new WebSocketServer({ server, path: '/feed' })
+  return true
+}
 
-wss.on('connection', (socket) => {
-  const streams = new Map()
+/** Live chart streams over a WebSocket on `/feed`. */
+export function attachChartSockets(server) {
+  const wss = new WebSocketServer({ server, path: '/feed' })
 
-  const sendFor = (id) => (message) => {
-    if (socket.readyState === socket.OPEN) {
-      socket.send(JSON.stringify({ ...message, id }))
-    }
-  }
+  wss.on('connection', (socket) => {
+    const streams = new Map()
 
-  socket.on('message', (raw) => {
-    let message
-
-    try {
-      message = JSON.parse(String(raw))
-    } catch {
-      return
+    const sendFor = (id) => (message) => {
+      if (socket.readyState === socket.OPEN) {
+        socket.send(JSON.stringify({ ...message, id }))
+      }
     }
 
-    if (message?.type === 'unsubscribe' && typeof message.id === 'string') {
+    socket.on('message', (raw) => {
+      let message
+
+      try {
+        message = JSON.parse(String(raw))
+      } catch {
+        return
+      }
+
+      if (message?.type === 'unsubscribe' && typeof message.id === 'string') {
+        streams.get(message.id)?.()
+        streams.delete(message.id)
+        return
+      }
+
+      if (message?.type !== 'subscribe' || typeof message.id !== 'string') {
+        return
+      }
+
+      const symbol = String(message.symbol ?? '')
+        .trim()
+        .toUpperCase()
+      const range = String(message.range ?? '1Y')
+      const send = sendFor(message.id)
+      const invalid = validateRequest(symbol, range)
+
       streams.get(message.id)?.()
-      streams.delete(message.id)
-      return
-    }
 
-    if (message?.type !== 'subscribe' || typeof message.id !== 'string') {
-      return
-    }
+      if (invalid) {
+        send({ type: 'error', message: invalid })
+        return
+      }
 
-    const symbol = String(message.symbol ?? '')
-      .trim()
-      .toUpperCase()
-    const range = String(message.range ?? '1Y')
-    const send = sendFor(message.id)
-    const invalid = validateRequest(symbol, range)
+      streams.set(
+        message.id,
+        startStream({ symbol, range, live: message.live !== false, send }),
+      )
+    })
 
-    streams.get(message.id)?.()
+    socket.on('close', () => {
+      for (const stop of streams.values()) {
+        stop()
+      }
 
-    if (invalid) {
-      send({ type: 'error', message: invalid })
-      return
-    }
-
-    streams.set(
-      message.id,
-      startStream({ symbol, range, live: message.live !== false, send }),
-    )
+      streams.clear()
+    })
   })
 
-  socket.on('close', () => {
-    for (const stop of streams.values()) {
-      stop()
+  return wss
+}
+
+function startStandalone() {
+  const server = createServer((request, response) => {
+    let url
+
+    // Fixed base: the Host header is untrusted and only path + query matter.
+    // A malformed request-target (e.g. "//[") must not crash the server.
+    try {
+      url = new URL(request.url ?? '/', 'http://localhost')
+    } catch {
+      response.writeHead(400, { 'content-type': 'application/json' })
+      response.end(JSON.stringify({ error: 'Malformed request URL' }))
+      return
     }
 
-    streams.clear()
-  })
-})
+    if (url.pathname === '/health') {
+      response.writeHead(200, {
+        'access-control-allow-origin': '*',
+        'content-type': 'application/json',
+      })
+      response.end(JSON.stringify({ ok: true, ranges: SUPPORTED_RANGES }))
+      return
+    }
 
-server.listen(PORT, HOST, () => {
-  console.log(`Linkhaven chart feed on ws://${HOST}:${PORT}/feed`)
-  console.log(`                  and http://${HOST}:${PORT}/sse`)
-})
+    if (!handleChartRequest(request, response, url)) {
+      response.writeHead(404, { 'content-type': 'text/plain' })
+      response.end('Use /sse?symbol=…&range=… or a WebSocket on /feed')
+    }
+  })
+
+  attachChartSockets(server)
+  server.listen(PORT, HOST, () => {
+    console.log(`Linkhaven chart feed on ws://${HOST}:${PORT}/feed`)
+    console.log(`                  and http://${HOST}:${PORT}/sse`)
+  })
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  startStandalone()
+}

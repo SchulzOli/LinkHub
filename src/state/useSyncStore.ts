@@ -1,9 +1,21 @@
 import { create } from 'zustand'
 
+import {
+  createServerTransport,
+  normalizeSyncServerUrl,
+} from '../features/sync/serverTransport'
+import {
+  createSyncSecret,
+  deriveSyncVaultAccess,
+  formatSyncCode,
+  parseSyncCode,
+  SyncCodeError,
+} from '../features/sync/syncCode'
 import { SyncDecryptError } from '../features/sync/syncCrypto'
 import {
   connectSyncFolder,
   runSyncOnce,
+  SYNC_STATE_PATH,
   SyncFormatError,
   SyncPassphraseError,
 } from '../features/sync/syncEngine'
@@ -43,15 +55,24 @@ type ConnectInput = {
   deviceName: string
 }
 
+type ConnectServerInput = {
+  serverUrl: string
+  deviceName: string
+} & ({ mode: 'create' } | { mode: 'join'; code: string })
+
 type SyncState = {
   loaded: boolean
   connection: SyncConnection | null
   status: SyncStatus
   load: () => Promise<SyncConnection | null>
+  /** Connects to a WebDAV folder with a passphrase. */
   connect: (input: ConnectInput) => Promise<boolean>
+  /** Creates a new sync on a Linkhaven server, or joins one with its code. */
+  connectServer: (input: ConnectServerInput) => Promise<boolean>
   /** Syncs now; does nothing while sync is off or not set up. */
   sync: () => Promise<void>
-  disconnect: () => Promise<void>
+  /** `deleteServerData`: also remove the vault from a Linkhaven server. */
+  disconnect: (options?: { deleteServerData?: boolean }) => Promise<void>
 }
 
 let loadPromise: Promise<SyncConnection | null> | null = null
@@ -67,6 +88,10 @@ function describeError(error: unknown) {
     error instanceof SyncFormatError ||
     error instanceof SyncHttpError
   ) {
+    return error.message
+  }
+
+  if (error instanceof SyncCodeError) {
     return error.message
   }
 
@@ -102,6 +127,15 @@ function describeResult(result: {
 }
 
 async function createTransport(connection: SyncConnection) {
+  if (connection.provider === 'server') {
+    return createServerTransport({
+      serverUrl: connection.url,
+      vaultId: connection.vaultId,
+      token: connection.token,
+      fetch: await getSyncFetch(),
+    })
+  }
+
   return createWebDavTransport({
     url: connection.url,
     username: connection.username,
@@ -180,6 +214,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     })
 
     const connection: SyncConnection = {
+      provider: 'webdav',
       url,
       username: input.username.trim(),
       password: input.password,
@@ -203,6 +238,93 @@ export const useSyncStore = create<SyncState>((set, get) => ({
           message: created
             ? 'Sync folder set up. Use the same passphrase on your other devices.'
             : 'Connected to the sync folder.',
+        },
+      })
+    } catch (error) {
+      set({ status: { kind: 'error', message: describeError(error) } })
+      return false
+    }
+
+    await get().sync()
+
+    return true
+  },
+  connectServer: async (input) => {
+    let serverUrl: string
+    let secret: Uint8Array
+
+    try {
+      serverUrl = normalizeSyncServerUrl(input.serverUrl)
+      secret =
+        input.mode === 'create' ? createSyncSecret() : parseSyncCode(input.code)
+    } catch (error) {
+      set({
+        status: {
+          kind: 'error',
+          message:
+            error instanceof SyncCodeError
+              ? error.message
+              : 'That is not a valid server address.',
+        },
+      })
+      return false
+    }
+
+    // Before anything async: the browser only asks from a click.
+    if (!(await requestSyncServerAccess(serverUrl))) {
+      set({
+        status: {
+          kind: 'error',
+          message: 'Access to the sync server was not granted.',
+        },
+      })
+      return false
+    }
+
+    set({ status: { kind: 'busy', message: 'Connecting to the sync server…' } })
+
+    try {
+      const access = await deriveSyncVaultAccess(secret)
+      const connection: SyncConnection = {
+        provider: 'server',
+        url: serverUrl,
+        vaultId: access.vaultId,
+        token: access.token,
+        code: formatSyncCode(secret),
+        deviceId: createId(),
+        deviceName: input.deviceName.trim() || DEFAULT_SYNC_DEVICE_NAME,
+      }
+
+      if (input.mode === 'join') {
+        // A typo would otherwise quietly start a new, empty sync.
+        const existing = await (
+          await createTransport(connection)
+        ).read(SYNC_STATE_PATH)
+
+        if (!existing) {
+          set({
+            status: {
+              kind: 'error',
+              message:
+                'There is no sync for this code on this server. Check the code and the server address.',
+            },
+          })
+          return false
+        }
+      }
+
+      await saveSyncKey(access.key)
+      await saveSyncBase({})
+      await saveSyncConnection(connection)
+      loadPromise = Promise.resolve(connection)
+      set({
+        connection,
+        status: {
+          kind: 'success',
+          message:
+            input.mode === 'create'
+              ? 'Sync created. Add your other devices with the sync code.'
+              : 'Joined the sync.',
         },
       })
     } catch (error) {
@@ -292,10 +414,25 @@ export const useSyncStore = create<SyncState>((set, get) => ({
 
     return syncPromise
   },
-  disconnect: async () => {
+  disconnect: async (options = {}) => {
     const { connection } = get()
 
+    if (connection?.provider === 'server' && options.deleteServerData) {
+      try {
+        await createServerTransport({
+          serverUrl: connection.url,
+          vaultId: connection.vaultId,
+          token: connection.token,
+          fetch: await getSyncFetch(),
+        }).destroyVault()
+      } catch (error) {
+        set({ status: { kind: 'error', message: describeError(error) } })
+        return
+      }
+    }
+
     await clearSyncConnection()
+    loadPromise = null
 
     if (connection) {
       await releaseSyncServerAccess(connection.url)
@@ -305,8 +442,9 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       connection: null,
       status: {
         kind: 'idle',
-        message:
-          'Disconnected. Your data stays on this device and in the sync folder.',
+        message: options.deleteServerData
+          ? 'Disconnected and deleted the synced data from the server. Your data stays on this device.'
+          : 'Disconnected. Your data stays on this device and on the server.',
       },
     })
   },

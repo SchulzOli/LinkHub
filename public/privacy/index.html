@@ -324,14 +324,19 @@
               back.
             </li>
             <li>
-              <strong>Device sync.</strong> With <em>Device sync</em> on and a
-              sync folder set up, Linkhaven exchanges your workspaces, custom
-              themes and uploaded images with the WebDAV folder you enter (for
-              example in your own Nextcloud). Everything is encrypted on your
-              device with a key derived from your sync passphrase before it is
-              uploaded; the server only stores ciphertext and the public salt.
-              The passphrase is never stored or sent. Your WebDAV login is kept
-              only on your device. Linkhaven itself runs no sync server.
+              <strong>Device sync.</strong> With <em>Device sync</em> on and set
+              up, Linkhaven exchanges your workspaces, custom themes and
+              uploaded images either with a Linkhaven sync server or with a
+              WebDAV folder you enter (for example in your own Nextcloud).
+              Everything is encrypted on your device before it is uploaded, with
+              a key from your sync code or sync passphrase; neither is ever
+              sent. A Linkhaven sync server stores only these encrypted files, a
+              random vault id, a hash of the access token derived from your
+              code, file sizes and the times of the last changes. It keeps no
+              access logs and cannot tell whose data it holds. Vaults no device
+              used for 12 months are deleted, and "Disconnect and delete server
+              data" removes yours at once. Your WebDAV login is kept only on
+              your device.
             </li>
           </ul>
           <p class="note">

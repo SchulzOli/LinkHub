@@ -1,0 +1,11 @@
+node_modules
+server/node_modules
+dist
+dist-extension
+dist-pwa
+site
+coverage
+test-results
+playwright-report
+data
+.git

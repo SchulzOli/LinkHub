@@ -1,0 +1,15 @@
+{
+  "name": "linkhaven-server",
+  "private": true,
+  "description": "Linkhaven server: device sync, news feed proxy and chart feed",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node linkhaven-server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}

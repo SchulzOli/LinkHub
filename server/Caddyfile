@@ -1,0 +1,5 @@
+{$LINKHAVEN_DOMAIN} {
+	encode gzip
+	# No access logs: the server never records who synced what.
+	reverse_proxy linkhaven:8790
+}

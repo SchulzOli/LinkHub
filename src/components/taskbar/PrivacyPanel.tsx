@@ -124,9 +124,9 @@ export function PrivacyPanel({ menuId, tabListId }: PrivacyPanelProps) {
     {
       key: 'deviceSync',
       description:
-        'Keeps workspaces, themes and images in step across your devices through a WebDAV folder you choose (Nextcloud, a NAS, …). Everything is encrypted here first.',
+        'Keeps workspaces, themes and images in step across your devices through a Linkhaven sync server or a WebDAV folder you choose. Everything is encrypted here first.',
       status: features.deviceSync
-        ? 'On · connects only to your sync folder, set it up in the Sync tab'
+        ? 'On · connects only to the sync server or folder you set up in the Sync tab'
         : 'Off · nothing leaves this device',
     },
   ]

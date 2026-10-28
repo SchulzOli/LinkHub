@@ -5,21 +5,40 @@ import type { SyncBase } from '../features/sync/syncMerge'
 /**
  * Device sync keeps its own small database, apart from the workspace data:
  * the connection, the derived encryption key (a non-extractable CryptoKey,
- * so the passphrase itself is never stored) and the hashes of the last
- * sync. None of it is ever exported or synced.
+ * so a WebDAV passphrase is never stored) and the hashes of the last sync.
+ * For a Linkhaven server the sync code is kept too, to add more devices.
+ * None of it is ever exported or synced.
  */
 
 const DB_NAME = 'linkhaven-sync'
 const STORE = 'kv'
 
-export type SyncConnection = {
-  url: string
-  username: string
-  password: string
+type SyncConnectionBase = {
   deviceId: string
   deviceName: string
   lastSyncAt?: string
 }
+
+/** A WebDAV folder (stored before `provider` existed: no field). */
+export type WebDavSyncConnection = SyncConnectionBase & {
+  provider?: 'webdav'
+  url: string
+  username: string
+  password: string
+}
+
+/** A Linkhaven server; everything comes from the sync code. */
+export type ServerSyncConnection = SyncConnectionBase & {
+  provider: 'server'
+  /** The server's base address. */
+  url: string
+  vaultId: string
+  token: string
+  /** Kept so it can be shown again to add another device. */
+  code: string
+}
+
+export type SyncConnection = WebDavSyncConnection | ServerSyncConnection
 
 type SyncDbValue = SyncConnection | CryptoKey | SyncBase
 

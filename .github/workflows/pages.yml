@@ -41,6 +41,10 @@ jobs:
 
       - name: Build web app into site/app
         run: npm run build:pwa -- --outDir site/app
+        env:
+          # The public sync server offered in the Sync tab (repository
+          # variable; empty = users enter a server themselves).
+          VITE_SYNC_SERVER_URL: ${{ vars.SYNC_SERVER_URL }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

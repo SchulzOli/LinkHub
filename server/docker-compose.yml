@@ -1,0 +1,38 @@
+# Linkhaven server behind Caddy, which gets and renews the HTTPS
+# certificate automatically. See doc/SERVER.md.
+#
+#   LINKHAVEN_DOMAIN=sync.example.com docker compose -f server/docker-compose.yml up -d
+services:
+  linkhaven:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    environment:
+      TRUST_PROXY: 'on'
+      # The public instance: sync only. Set to 'on' to offer them too.
+      NEWS_PROXY: ${NEWS_PROXY:-off}
+      CHARTS: ${CHARTS:-off}
+      SYNC_MAX_VAULT_MB: ${SYNC_MAX_VAULT_MB:-100}
+      SYNC_IDLE_DAYS: ${SYNC_IDLE_DAYS:-365}
+      LINKHAVEN_ALLOWED_ORIGINS: ${LINKHAVEN_ALLOWED_ORIGINS:-}
+    volumes:
+      - linkhaven-data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      LINKHAVEN_DOMAIN: ${LINKHAVEN_DOMAIN:?Set LINKHAVEN_DOMAIN, e.g. sync.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - linkhaven
+
+volumes:
+  linkhaven-data:
+  caddy-data:

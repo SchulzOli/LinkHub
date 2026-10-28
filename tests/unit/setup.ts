@@ -23,7 +23,10 @@ function createMemoryStorage(): Storage {
   }
 }
 
-for (const name of ['localStorage', 'sessionStorage'] as const) {
+// Server tests run in the node environment, without a window.
+for (const name of typeof window === 'undefined'
+  ? []
+  : (['localStorage', 'sessionStorage'] as const)) {
   let usable: boolean
   try {
     usable = typeof window[name]?.clear === 'function'
