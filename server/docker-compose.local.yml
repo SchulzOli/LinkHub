@@ -1,0 +1,28 @@
+# Linkhaven on your own computer or home network, without a domain:
+# web app, sync, news feeds and charts in one container on port 8790.
+#
+#   docker compose -f server/docker-compose.local.yml up -d
+#
+# Open http://localhost:8790 on this computer. Other devices need HTTPS
+# (browsers only allow encryption and offline mode on secure pages): put
+# it behind your reverse proxy or Tailscale, see doc/SELF_HOSTING.md.
+services:
+  linkhaven:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${LINKHAVEN_PORT:-8790}:8790'
+    environment:
+      WEB_APP: ${WEB_APP:-on}
+      NEWS_PROXY: ${NEWS_PROXY:-on}
+      CHARTS: ${CHARTS:-on}
+      TRUST_PROXY: ${TRUST_PROXY:-off}
+      SYNC_IDLE_DAYS: ${SYNC_IDLE_DAYS:-0}
+      LINKHAVEN_ALLOWED_ORIGINS: ${LINKHAVEN_ALLOWED_ORIGINS:-}
+    volumes:
+      - linkhaven-data:/data
+
+volumes:
+  linkhaven-data:

@@ -59,6 +59,23 @@ const repoUrl = 'https://github.com/SchulzOli/Linkhaven'
 /** doc/*.md files published as reference pages. */
 const REFERENCE_PAGES = [
   {
+    file: 'doc/APP.md',
+    slug: 'web-app-and-sync',
+    title: 'Web app and sync',
+    description: 'Install the web app and keep devices in sync.',
+    section: 'Guide',
+    order: 3,
+  },
+  {
+    file: 'doc/SELF_HOSTING.md',
+    slug: 'self-hosting',
+    title: 'Self-hosting',
+    description:
+      'Run Linkhaven with sync, feeds and charts on your own server.',
+    section: 'Guide',
+    order: 4,
+  },
+  {
     file: 'doc/CHART_FEED.md',
     slug: 'charts',
     title: 'Charts',
@@ -89,6 +106,14 @@ const REFERENCE_PAGES = [
     description: 'Camera, grid and the optional card effects.',
     section: 'Develop',
     order: 9,
+  },
+  {
+    file: 'doc/SERVER.md',
+    slug: 'server',
+    title: 'Linkhaven server',
+    description: 'Configuration, limits and the sync protocol.',
+    section: 'Develop',
+    order: 10,
   },
 ]
 

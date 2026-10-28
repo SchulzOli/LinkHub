@@ -54,6 +54,7 @@ Linkhaven is a local-first infinite canvas for bookmarks, images, live charts, n
 
 - Turn on **Device sync** under **Menu → Privacy** to keep workspaces, themes and images in step across devices: through a Linkhaven server with a sync code (no account), or through a WebDAV folder you own (Nextcloud, a NAS, …)
 - End-to-end encrypted on the device; the server only stores data it can't read
+- Self-host everything (web app, sync, news feeds, charts) in one Docker container: [doc/SELF_HOSTING.md](doc/SELF_HOSTING.md)
 - Besides the browser extension, Linkhaven installs as a web app (PWA) on phones, tablets and computers and works offline: [schulzoli.github.io/Linkhaven/app/](https://schulzoli.github.io/Linkhaven/app/); see [doc/APP.md](doc/APP.md)
 
 ### Charts and news feeds
@@ -138,6 +139,8 @@ npm run build
 | `npm run dev`             | Start the Vite development server         |
 | `npm run build`           | Type-check and build the production app   |
 | `npm run preview`         | Preview the production build locally      |
+| `npm run server`          | Start the Linkhaven server                |
+| `npm run selfhost`        | Build the web app and serve it with sync  |
 | `npm run feed:charts`     | Start the reference chart feed server     |
 | `npm run feed:news`       | Start the RSS/Atom feed proxy             |
 | `npm run docs:build`      | Build the documentation site into `site/` |
@@ -190,6 +193,16 @@ npm run server   # device sync, news feed proxy and chart feed on http://127.0.0
 
 The same server runs locally or as the public sync service (Docker + automatic HTTPS); see [doc/SERVER.md](doc/SERVER.md).
 
+### Self-hosting
+
+One container serves the web app together with sync, the news feed proxy and charts; opened from there, the app uses it without any setup:
+
+```bash
+LINKHAVEN_DOMAIN=links.example.com SELF_HOSTED=on docker compose -f server/docker-compose.yml up -d --build
+```
+
+At home without a domain, with Tailscale or your own reverse proxy: see [doc/SELF_HOSTING.md](doc/SELF_HOSTING.md).
+
 ## Web App (PWA)
 
 ```bash
@@ -220,6 +233,7 @@ For deeper persistence details, see [doc/STORAGE.md](doc/STORAGE.md). The privac
 
 - [Documentation website](https://schulzoli.github.io/Linkhaven/), built from `doc/` by `npm run docs:build`
 - [doc/APP.md](doc/APP.md) for the web app (PWA) and device sync
+- [doc/SELF_HOSTING.md](doc/SELF_HOSTING.md) to run all of Linkhaven on your own server
 - [doc/SERVER.md](doc/SERVER.md) for the Linkhaven server (sync, feed proxy, charts) and how to host it
 - [doc/STORAGE.md](doc/STORAGE.md) for persistence, bundle, and migration details
 - [doc/CHART_FEED.md](doc/CHART_FEED.md) for chart nodes and the feed protocol

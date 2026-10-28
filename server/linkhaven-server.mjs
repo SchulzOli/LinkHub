@@ -8,6 +8,7 @@
  *   /rss         news feed proxy (RSS/Atom without CORS)
  *   /feed /sse /search   chart feed (live market data)
  *   /health
+ *   /            the web app, when a build is there (self-hosting)
  *
  *   npm run server
  *
@@ -16,12 +17,14 @@
  *   SYNC [on], SYNC_DATA_DIR [./data], SYNC_MAX_VAULT_MB [100],
  *   SYNC_MAX_FILE_MB [25], SYNC_IDLE_DAYS [365]
  *   NEWS_PROXY [on], CHARTS [on]
+ *   WEB_APP [on], WEB_APP_DIR [./web next to this file, else ../dist-pwa]
  *   LINKHAVEN_ALLOWED_ORIGINS  extra web app origins, comma-separated
  *   TRUST_PROXY [off]  use X-Forwarded-For (behind Caddy/nginx) for limits
  */
+import { existsSync } from 'node:fs'
 import { createServer } from 'node:http'
-import { resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
   attachChartSockets,
@@ -31,8 +34,18 @@ import {
   handleNewsRequest,
   parseRequestUrl,
 } from './news-feed/news-feed-server.mjs'
-import { isLinkhavenOrigin, parseOriginList } from './origins.mjs'
+import { isLinkhavenOrigin, isSameOrigin, parseOriginList } from './origins.mjs'
 import { createSyncHandler } from './sync/syncHandler.mjs'
+import { createWebAppHandler } from './webApp.mjs'
+
+const SERVER_DIR = dirname(fileURLToPath(import.meta.url))
+
+/** The Docker image puts the build in ./web; in the repository it's dist-pwa. */
+function defaultWebAppDir() {
+  const bundled = resolve(SERVER_DIR, 'web')
+
+  return existsSync(bundled) ? bundled : resolve(SERVER_DIR, '../dist-pwa')
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -57,12 +70,16 @@ export function readServerConfig(env = process.env) {
     charts: flag(env.CHARTS, true),
     extraOrigins: parseOriginList(env.LINKHAVEN_ALLOWED_ORIGINS),
     trustProxy: flag(env.TRUST_PROXY, false),
+    webApp: flag(env.WEB_APP, true),
+    webAppDir: env.WEB_APP_DIR ? resolve(env.WEB_APP_DIR) : defaultWebAppDir(),
   }
 }
 
 export function createLinkhavenServer(config = readServerConfig()) {
-  const isAllowedOrigin = (origin) =>
-    isLinkhavenOrigin(origin, config.extraOrigins)
+  // The web app served by this server itself is always allowed.
+  const isAllowedOrigin = (origin, request) =>
+    isLinkhavenOrigin(origin, config.extraOrigins) ||
+    isSameOrigin(origin, request)
   const sync = config.sync
     ? createSyncHandler({
         dataDir: config.dataDir,
@@ -72,6 +89,16 @@ export function createLinkhavenServer(config = readServerConfig()) {
         trustProxy: config.trustProxy,
       })
     : null
+  const webApp = config.webApp
+    ? createWebAppHandler({
+        dir: config.webAppDir,
+        services: {
+          sync: config.sync,
+          newsProxy: config.newsProxy,
+          charts: config.charts,
+        },
+      })
+    : Promise.resolve(null)
 
   const server = createServer(async (request, response) => {
     const url = parseRequestUrl(request)
@@ -94,6 +121,7 @@ export function createLinkhavenServer(config = readServerConfig()) {
             sync: Boolean(sync),
             newsProxy: config.newsProxy,
             charts: config.charts,
+            webApp: Boolean(await webApp),
           },
         }),
       )
@@ -110,6 +138,12 @@ export function createLinkhavenServer(config = readServerConfig()) {
       }
 
       if (config.charts && handleChartRequest(request, response, url)) {
+        return
+      }
+
+      const serveWebApp = await webApp
+
+      if (serveWebApp && (await serveWebApp(request, response, url))) {
         return
       }
     } catch (error) {
@@ -163,7 +197,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
 
   server.listen(config.port, config.host, () => {
     const base = `http://${config.host}:${config.port}`
+    const hasWebApp = config.webApp && existsSync(config.webAppDir)
     const parts = [
+      hasWebApp ? `web app ${base}/ (from ${config.webAppDir})` : null,
       config.sync ? `sync ${base}/sync/v1 (data in ${config.dataDir})` : null,
       config.newsProxy ? `news proxy ${base}/rss` : null,
       config.charts ? `charts ws://${config.host}:${config.port}/feed` : null,

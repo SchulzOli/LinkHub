@@ -30,3 +30,31 @@ export function isLinkhavenOrigin(origin, extra = []) {
     extra.includes(origin)
   )
 }
+
+/**
+ * A page served by this server itself (a self-hosted web app). Browsers
+ * send Origin on same-origin writes too. They also say Sec-Fetch-Site:
+ * same-origin, which no page can fake; that holds even behind a proxy that
+ * rewrites Host. Older browsers: compare Origin with the Host header.
+ */
+export function isSameOrigin(origin, request) {
+  if (!origin) {
+    return false
+  }
+
+  if (request?.headers?.['sec-fetch-site'] === 'same-origin') {
+    return true
+  }
+
+  const host = request?.headers?.host
+
+  if (!host) {
+    return false
+  }
+
+  try {
+    return new URL(origin).host === host
+  } catch {
+    return false
+  }
+}

@@ -51,6 +51,9 @@ jobs:
           path: dist-extension
           if-no-files-found: error
 
+      - name: Build web app
+        run: npx vite build --mode pwa --outDir dist-pwa
+
       - name: Run unit tests
         run: npm run test
 

@@ -1,10 +1,10 @@
 import {
-  DEFAULT_CHART_FEED_URL,
   DEFAULT_CHART_SIZE,
   type ChartNode,
   type ChartSource,
 } from '../../contracts/chartNode'
 import { createId } from '../../utils/id'
+import { defaultChartFeedUrl } from '../selfHost/hostServer'
 
 /** Symbol a new chart starts with; change it in the chart's options. */
 export const DEFAULT_CHART_SYMBOL = 'AAPL'
@@ -19,7 +19,7 @@ export function createChartNode(input: {
     id: createId(),
     type: 'chart',
     source: {
-      url: input.source?.url ?? DEFAULT_CHART_FEED_URL,
+      url: input.source?.url ?? defaultChartFeedUrl(),
       symbol: input.source?.symbol ?? DEFAULT_CHART_SYMBOL,
     },
     // Empty: a new chart follows its group (or the defaults) for everything.

@@ -35,7 +35,9 @@ npm run build:pwa   # into dist-pwa/, served from any folder over HTTPS
 ```
 
 The [Docs and web app workflow](../.github/workflows/pages.yml) publishes it
-to GitHub Pages under `app/` on every push to `main`.
+to GitHub Pages under `app/` on every push to `main`. To run it from your
+own server together with sync, feeds and charts, see
+[SELF_HOSTING.md](SELF_HOSTING.md).
 
 ## Device sync
 
@@ -46,8 +48,9 @@ sync**, then set it up in the **Sync** tab. There are two ways:
 
 On the first device choose **Create sync**. Linkhaven shows a **sync code**
 (`lh2-…`) and a QR code under "Add a device"; enter it on each other device
-with **Join**. The server address comes prefilled once the public server is
-set up, or you run your own (`npm run server`, see [SERVER.md](SERVER.md)).
+with **Join**. Choose the server in the Sync tab: **Public server**, or
+**Self-hosted** for your own (see [SELF_HOSTING.md](SELF_HOSTING.md)). A web
+app opened from your own server uses it by itself (**This server**).
 Everything is encrypted on the device; the server stores only data it
 can't read.
 

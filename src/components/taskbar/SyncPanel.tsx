@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { renderSVG } from 'uqr'
 
-import { DEFAULT_SYNC_SERVER_URL } from '../../features/sync/serverTransport'
+import { getHostServer } from '../../features/selfHost/hostServer'
+import {
+  DEFAULT_SYNC_SERVER_URL,
+  normalizeSyncServerUrl,
+} from '../../features/sync/serverTransport'
 import {
   DEFAULT_SYNC_DEVICE_NAME,
   useSyncStore,
@@ -145,12 +149,58 @@ function WebDavConnectForm() {
 
 type Provider = 'server' | 'webdav'
 
+const SELF_HOSTING_GUIDE =
+  'https://schulzoli.github.io/Linkhaven/self-hosting.html'
+
+type ServerChoice = {
+  id: 'host' | 'public' | 'own'
+  label: string
+  url: string
+}
+
+function sameServer(a: string, b: string) {
+  try {
+    return normalizeSyncServerUrl(a) === normalizeSyncServerUrl(b)
+  } catch {
+    return false
+  }
+}
+
+/** This server (self-hosted web app), the public one, or one you enter. */
+function getServerChoices(): ServerChoice[] {
+  const host = getHostServer()
+  const choices: ServerChoice[] = []
+
+  if (host?.sync) {
+    choices.push({ id: 'host', label: 'This server', url: host.origin })
+  }
+
+  if (
+    DEFAULT_SYNC_SERVER_URL &&
+    !(host?.sync && sameServer(host.origin, DEFAULT_SYNC_SERVER_URL))
+  ) {
+    choices.push({
+      id: 'public',
+      label: 'Public server',
+      url: DEFAULT_SYNC_SERVER_URL,
+    })
+  }
+
+  choices.push({ id: 'own', label: 'Self-hosted', url: '' })
+
+  return choices
+}
+
 function ServerConnectForm() {
   const connectServer = useSyncStore((state) => state.connectServer)
   const busy = useSyncStore((state) => state.status.kind === 'busy')
-  const [serverUrl, setServerUrl] = useState(DEFAULT_SYNC_SERVER_URL)
+  const [choices] = useState(getServerChoices)
+  const [choiceId, setChoiceId] = useState(choices[0].id)
+  const [ownUrl, setOwnUrl] = useState('')
   const [deviceName, setDeviceName] = useState(DEFAULT_SYNC_DEVICE_NAME)
   const [code, setCode] = useState('')
+  const choice = choices.find((entry) => entry.id === choiceId) ?? choices[0]
+  const serverUrl = choice.id === 'own' ? ownUrl : choice.url
   const ready = serverUrl.trim() !== '' && !busy
 
   const handleJoin = (event: FormEvent) => {
@@ -168,18 +218,53 @@ function ServerConnectForm() {
         grouped={false}
         title="Linkhaven sync server"
       >
-        <label className={panelStyles.field}>
-          <span className={panelStyles.fieldLabel}>Server address</span>
-          <input
-            aria-label="Sync server address"
-            autoComplete="url"
-            inputMode="url"
-            onChange={(event) => setServerUrl(event.currentTarget.value)}
-            placeholder="https://sync.example.com"
-            spellCheck={false}
-            value={serverUrl}
-          />
-        </label>
+        {choices.length > 1 ? (
+          <div
+            aria-label="Sync server"
+            className={panelStyles.segmented}
+            role="group"
+          >
+            {choices.map((entry) => (
+              <button
+                aria-pressed={choice.id === entry.id}
+                className={panelStyles.segment}
+                key={entry.id}
+                onClick={() => setChoiceId(entry.id)}
+                type="button"
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {choice.id === 'own' ? (
+          <>
+            <label className={panelStyles.field}>
+              <span className={panelStyles.fieldLabel}>Server address</span>
+              <input
+                aria-label="Sync server address"
+                autoComplete="url"
+                inputMode="url"
+                onChange={(event) => setOwnUrl(event.currentTarget.value)}
+                placeholder="https://linkhaven.example.com"
+                spellCheck={false}
+                value={ownUrl}
+              />
+            </label>
+            <p className={panelStyles.rowHint}>
+              Run your own server with one Docker container, on a NAS, a home
+              server or a VPS:{' '}
+              <a href={SELF_HOSTING_GUIDE} rel="noreferrer" target="_blank">
+                self-hosting guide
+              </a>
+              .
+            </p>
+          </>
+        ) : (
+          <p className={panelStyles.rowHint} data-testid="sync-server-url">
+            {choice.url}
+          </p>
+        )}
         <label className={panelStyles.field}>
           <span className={panelStyles.fieldLabel}>This device’s name</span>
           <input
@@ -221,7 +306,7 @@ function ServerConnectForm() {
             aria-label="Sync code"
             autoComplete="off"
             onChange={(event) => setCode(event.currentTarget.value)}
-            placeholder="lh1-…"
+            placeholder="lh2-…"
             spellCheck={false}
             value={code}
           />

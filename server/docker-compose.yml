@@ -1,7 +1,11 @@
 # Linkhaven server behind Caddy, which gets and renews the HTTPS
 # certificate automatically. See doc/SERVER.md.
 #
+# The public sync server (sync only):
 #   LINKHAVEN_DOMAIN=sync.example.com docker compose -f server/docker-compose.yml up -d
+#
+# Self-hosted with everything (web app, sync, news feeds, charts):
+#   LINKHAVEN_DOMAIN=links.example.com SELF_HOSTED=on docker compose -f server/docker-compose.yml up -d
 services:
   linkhaven:
     build:
@@ -10,9 +14,11 @@ services:
     restart: unless-stopped
     environment:
       TRUST_PROXY: 'on'
-      # The public instance: sync only. Set to 'on' to offer them too.
-      NEWS_PROXY: ${NEWS_PROXY:-off}
-      CHARTS: ${CHARTS:-off}
+      # The public instance: sync only. SELF_HOSTED=on turns on the web app,
+      # the news feed proxy and the chart feed too (or set each one).
+      WEB_APP: ${WEB_APP:-${SELF_HOSTED:-off}}
+      NEWS_PROXY: ${NEWS_PROXY:-${SELF_HOSTED:-off}}
+      CHARTS: ${CHARTS:-${SELF_HOSTED:-off}}
       SYNC_MAX_VAULT_MB: ${SYNC_MAX_VAULT_MB:-100}
       SYNC_IDLE_DAYS: ${SYNC_IDLE_DAYS:-365}
       LINKHAVEN_ALLOWED_ORIGINS: ${LINKHAVEN_ALLOWED_ORIGINS:-}

@@ -1,11 +1,23 @@
-# The Linkhaven server: device sync, news feed proxy and chart feed.
+# The Linkhaven server: web app, device sync, news feed proxy and chart feed.
 # Build from the repository root:  docker build -f server/Dockerfile .
+
+# 1. The web app (PWA build), served by the server for self-hosting.
+FROM node:22-alpine AS web
+WORKDIR /src
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY . .
+RUN npx vite build --mode pwa --outDir /web
+
+# 2. The server.
 FROM node:22-alpine
 
 WORKDIR /app
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY server/ ./
+COPY --from=web /web ./web
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \

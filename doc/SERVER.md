@@ -4,12 +4,13 @@ One small Node.js server for every optional service Linkhaven can use. Each
 part can be switched off, and it runs the same on your own computer, a NAS
 or a public host.
 
-| Path                       | Service                                                         |
-| -------------------------- | --------------------------------------------------------------- |
-| `/sync/v1/…`               | Device sync: stores end-to-end encrypted vaults                 |
-| `/rss`                     | News feed proxy (RSS/Atom feeds without CORS), see NEWS_FEED.md |
-| `/feed`, `/sse`, `/search` | Chart feed (live market data), see CHART_FEED.md                |
-| `/health`                  | Which services are on                                           |
+| Path                       | Service                                                              |
+| -------------------------- | -------------------------------------------------------------------- |
+| `/sync/v1/…`               | Device sync: stores end-to-end encrypted vaults                      |
+| `/rss`                     | News feed proxy (RSS/Atom feeds without CORS), see NEWS_FEED.md      |
+| `/feed`, `/sse`, `/search` | Chart feed (live market data), see CHART_FEED.md                     |
+| `/health`                  | Which services are on                                                |
+| `/`                        | The web app, when a build is there ([self-hosting](SELF_HOSTING.md)) |
 
 ## Run it locally
 
@@ -24,6 +25,11 @@ nodes can point at the same server (`http://127.0.0.1:8790/rss`,
 
 The separate `npm run feed:news` and `npm run feed:charts` scripts still
 work as before.
+
+## Self-host everything
+
+To run the web app from the same server, with sync, feeds and charts, see
+[SELF_HOSTING.md](SELF_HOSTING.md).
 
 ## Run the public instance
 
@@ -55,21 +61,25 @@ still enter another server.
 
 ## Configuration
 
-| Variable                    | Default          | Meaning                                                        |
-| --------------------------- | ---------------- | -------------------------------------------------------------- |
-| `PORT` / `HOST`             | 8790 / 127.0.0.1 | Where to listen (the Docker image uses 0.0.0.0)                |
-| `SYNC`                      | on               | Device sync API                                                |
-| `SYNC_DATA_DIR`             | ./data           | Where vaults are stored                                        |
-| `SYNC_MAX_VAULT_MB`         | 100              | Space per vault (all devices of one sync together)             |
-| `SYNC_MAX_FILE_MB`          | 25               | Largest single file (one image)                                |
-| `SYNC_IDLE_DAYS`            | 365              | Delete vaults no device used for this long (0 = never)         |
-| `NEWS_PROXY` / `CHARTS`     | on               | The other services (the Compose file turns them off)           |
-| `LINKHAVEN_ALLOWED_ORIGINS` | –                | Extra web app origins, comma-separated                         |
-| `TRUST_PROXY`               | off              | Read the client IP from `X-Forwarded-For` (behind Caddy/nginx) |
+| Variable                    | Default             | Meaning                                                        |
+| --------------------------- | ------------------- | -------------------------------------------------------------- |
+| `PORT` / `HOST`             | 8790 / 127.0.0.1    | Where to listen (the Docker image uses 0.0.0.0)                |
+| `SYNC`                      | on                  | Device sync API                                                |
+| `SYNC_DATA_DIR`             | ./data              | Where vaults are stored                                        |
+| `SYNC_MAX_VAULT_MB`         | 100                 | Space per vault (all devices of one sync together)             |
+| `SYNC_MAX_FILE_MB`          | 25                  | Largest single file (one image)                                |
+| `SYNC_IDLE_DAYS`            | 365                 | Delete vaults no device used for this long (0 = never)         |
+| `NEWS_PROXY` / `CHARTS`     | on                  | The other services (the Compose file turns them off)           |
+| `WEB_APP`                   | on                  | Serve the web app at `/` (the Compose file turns it off)       |
+| `WEB_APP_DIR`               | `web/`, `dist-pwa/` | The web app build (the Docker image has it in `web/`)          |
+| `SELF_HOSTED`               | off                 | Compose only: turns on the web app, news proxy and charts      |
+| `LINKHAVEN_ALLOWED_ORIGINS` | –                   | Extra web app origins, comma-separated                         |
+| `TRUST_PROXY`               | off                 | Read the client IP from `X-Forwarded-For` (behind Caddy/nginx) |
 
 Browsers may only use the server from Linkhaven itself: the extension, the
-web app on `https://schulzoli.github.io` and pages on localhost. Add your own
-web app address with `LINKHAVEN_ALLOWED_ORIGINS`.
+web app on `https://schulzoli.github.io`, the web app this server serves
+itself, and pages on localhost. Add other web app addresses with
+`LINKHAVEN_ALLOWED_ORIGINS`.
 
 ## How sync works
 

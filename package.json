@@ -18,6 +18,7 @@
     "feed:charts": "node server/chart-feed/chart-feed-server.mjs",
     "feed:news": "node server/news-feed/news-feed-server.mjs",
     "server": "node server/linkhaven-server.mjs",
+    "selfhost": "npm run build:pwa && node server/linkhaven-server.mjs",
     "build:extension": "node extension/build.mjs",
     "docs:build": "node scripts/build-docs.mjs",
     "deploy": "node extension/deploy.mjs",

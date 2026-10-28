@@ -270,7 +270,7 @@ export function createSyncHandler({
     response.setHeader('vary', 'origin')
 
     if (origin) {
-      if (!isAllowedOrigin(origin)) {
+      if (!isAllowedOrigin(origin, request)) {
         sendJson(response, 403, { error: 'Origin not allowed' })
         return true
       }

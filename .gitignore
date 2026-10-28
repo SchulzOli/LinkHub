@@ -42,3 +42,4 @@ edge.env
 opera.env
 
 .todo/*
+server/.env

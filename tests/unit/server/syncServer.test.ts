@@ -184,6 +184,7 @@ describe('Linkhaven server', () => {
       ...readServerConfig({}),
       dataDir,
       charts: false,
+      webApp: false,
       idleDays: 0,
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -255,6 +256,7 @@ describe('Linkhaven server', () => {
       sync: true,
       newsProxy: true,
       charts: false,
+      webApp: false,
     })
   })
 })
