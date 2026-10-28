@@ -3,6 +3,7 @@ import panelStyles from '../ui/panel/Panel.module.css'
 
 import type { WorkspaceSummary } from '../../contracts/workspaceDirectory'
 import { useNetworkFeaturesStore } from '../../state/useNetworkFeaturesStore'
+import { AppIconsSetting } from './options/AppIconsSetting'
 import type { LinkCheckStatus } from './options/useLinkCheck'
 
 import { DeleteIcon } from '../ui/DeleteIcon'
@@ -371,6 +372,7 @@ export function OptionsDataSection({
                 : 'Check Links'}
             </button>
           </SettingRow>
+          <AppIconsSetting />
         </PanelSection>
 
         {dataStatus.message ? (

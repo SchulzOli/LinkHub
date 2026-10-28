@@ -219,8 +219,9 @@ Linkhaven is local-first.
 - localStorage is used as a lightweight snapshot and fallback layer for workspace state and workspace-directory metadata
 - Local usage insights stay on the current device and power the in-app Statistics view only
 - Out of the box Linkhaven is a pure link dashboard that makes no network requests and needs no server: no browser permissions, no charts or feeds, no icon lookups, no AI
-- Every feature that uses the network or reads browser data is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync
-- With **Website icons** on, creating a link card fetches the site's `/favicon.ico` once and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback
+- Every feature that uses the network or reads browser data is off by default and has its own switch with live status under **Menu → Privacy**: website icons, Google favicons, app icons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync
+- With **Website icons** on, creating a link card fetches the site's `/favicon.ico` once and caches it locally; with **Google favicons** on, Google's public favicon service is the fallback (never asked about local addresses)
+- With **App icons** on, homelab cards (Jellyfin, Radarr, Home Assistant, …) are matched to an app by name, address or default port on the device, and only that icon is loaded from the [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) collection on jsDelivr; **Data → Find app icons** does the same for existing cards
 - Chart nodes connect only to the feed server URL set on the node (by default the optional local server on `127.0.0.1`)
 - News feed nodes load the feeds you add through the feed proxy set on the node (by default the optional local proxy on `127.0.0.1`), or directly when the proxy is cleared; article images load from the news sites (can be turned off per node)
 - **Check Links** in the Data tab sends a `HEAD` request to each link card's URL, only when you start it

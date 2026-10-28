@@ -97,7 +97,11 @@ export async function enableNetworkFeatures(
   page: Page,
   features: Partial<
     Record<
-      'siteFavicons' | 'googleFavicons' | 'chartsAndFeeds' | 'linkCheck',
+      | 'siteFavicons'
+      | 'googleFavicons'
+      | 'appIcons'
+      | 'chartsAndFeeds'
+      | 'linkCheck',
       boolean
     >
   >,

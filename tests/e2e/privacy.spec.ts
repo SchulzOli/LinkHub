@@ -80,12 +80,12 @@ test('turns each network feature on separately and keeps the choice', async ({
   await page.getByRole('tab', { name: 'Privacy' }).click()
 
   await page.getByLabel('Charts and news feeds').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 7 on')
+  await expect(page.getByTestId('privacy-summary')).toHaveText('1 of 8 on')
   await expect(page.getByTestId('privacy-status-chartsAndFeeds')).toContainText(
     'On',
   )
   await page.getByLabel('Link check').check()
-  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 7 on')
+  await expect(page.getByTestId('privacy-summary')).toHaveText('2 of 8 on')
   await page.keyboard.press('Escape')
 
   await expect(page.getByRole('button', { name: 'Add chart' })).toBeVisible()
@@ -100,6 +100,7 @@ test('turns each network feature on separately and keeps the choice', async ({
   await expect(page.getByLabel('Link check')).toBeChecked()
   await expect(page.getByLabel('Website icons')).not.toBeChecked()
   await expect(page.getByLabel('Google favicons')).not.toBeChecked()
+  await expect(page.getByLabel('App icons')).not.toBeChecked()
 })
 
 test('loads website icons only after they are turned on', async ({

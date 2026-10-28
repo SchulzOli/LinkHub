@@ -1,6 +1,8 @@
 import { resolveSupportedImageUploadMimeType } from '../../contracts/imageAsset'
 import type { FaviconSources } from '../../contracts/networkFeatures'
 import { saveImageAsset } from '../../storage/imageRepository'
+import { fetchAppIconBlob } from '../appIcons/appIcons'
+import { isPrivateHost } from '../links/urlValidation'
 
 /**
  * Tries to fetch a favicon for the given domain.
@@ -35,7 +37,8 @@ export async function fetchFaviconBlob(
     }
   }
 
-  if (current().google) {
+  // Google only knows public sites; for the rest it sends a placeholder.
+  if (current().google && !isPrivateHost(hostname)) {
     const googleResult = await tryFetchFavicon(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
       fetchFn,
@@ -47,6 +50,37 @@ export async function fetchFaviconBlob(
   }
 
   return null
+}
+
+/**
+ * The icon for a new or changed card: a matching self-hosted app icon
+ * first (when allowed), else the site's favicon chain above.
+ */
+export async function fetchCardIcon(
+  card: { url: string; title: string; localUrl?: string },
+  sources: FaviconSources | (() => FaviconSources),
+  fetchFn: typeof globalThis.fetch = globalThis.fetch,
+): Promise<{ blob: Blob; label: string; kind: FetchedIconKind } | null> {
+  const current = () => (typeof sources === 'function' ? sources() : sources)
+  let hostname: string
+
+  try {
+    hostname = new URL(card.url).hostname
+  } catch {
+    return null
+  }
+
+  if (current().apps) {
+    const appIcon = await fetchAppIconBlob(card, fetchFn)
+
+    if (appIcon) {
+      return { blob: appIcon.blob, label: appIcon.icon.name, kind: 'app' }
+    }
+  }
+
+  const blob = await fetchFaviconBlob(hostname, current, fetchFn)
+
+  return blob ? { blob, label: hostname, kind: 'favicon' } : null
 }
 
 async function tryFetchFavicon(
@@ -107,6 +141,15 @@ function deriveFaviconFilename(hostname: string, blob: Blob): string {
   return `favicon-${hostname}.${extension}`
 }
 
+/** Icons Linkhaven fetched itself; they show as icons, not as photos. */
+export type FetchedIconKind = 'favicon' | 'app'
+
+const FETCHED_ICON_NAME = /^(Favicon|App icon) \(/
+
+export function isFetchedIconName(name: string) {
+  return FETCHED_ICON_NAME.test(name)
+}
+
 /**
  * Stores a fetched favicon blob as an image asset in IndexedDB.
  * Returns the new image asset ID on success, or `null` on failure.
@@ -114,6 +157,7 @@ function deriveFaviconFilename(hostname: string, blob: Blob): string {
 export async function storeFaviconAsImageAsset(
   hostname: string,
   blob: Blob,
+  kind: FetchedIconKind = 'favicon',
 ): Promise<string | null> {
   try {
     const normalizedMime = normalizeFaviconMimeType(blob.type)
@@ -128,7 +172,7 @@ export async function storeFaviconAsImageAsset(
 
     const asset = await saveImageAsset({
       file,
-      name: `Favicon (${hostname})`,
+      name: `${kind === 'app' ? 'App icon' : 'Favicon'} (${hostname})`,
     })
 
     return asset.id

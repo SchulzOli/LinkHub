@@ -19,6 +19,7 @@ type PrivacyPanelProps = {
 const FEATURE_LABELS: Record<NetworkFeatureKey, string> = {
   siteFavicons: 'Website icons',
   googleFavicons: 'Google favicons',
+  appIcons: 'App icons',
   chartsAndFeeds: 'Charts and news feeds',
   linkCheck: 'Link check',
   autoDashboard: 'Auto dashboard',
@@ -79,6 +80,14 @@ export function PrivacyPanel({ menuId, tabListId }: PrivacyPanelProps) {
         : workspaceOfflineOnly
           ? 'On, but this workspace is set to “Favicons offline-only”'
           : 'On · may contact www.google.com',
+    },
+    {
+      key: 'appIcons',
+      description:
+        'Icons for self-hosted apps such as Jellyfin, Radarr or Home Assistant, matched by name on this device. Only the matching icon is loaded from cdn.jsdelivr.net (dashboard-icons), once, and kept here. New cards get it by themselves; Data → Find app icons updates existing ones.',
+      status: features.appIcons
+        ? 'On · may contact cdn.jsdelivr.net for new cards'
+        : 'Off · jsDelivr is never contacted',
     },
     {
       key: 'chartsAndFeeds',

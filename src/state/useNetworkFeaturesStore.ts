@@ -90,6 +90,7 @@ function pickFeatures(state: NetworkFeatures): NetworkFeatures {
   return {
     siteFavicons: state.siteFavicons,
     googleFavicons: state.googleFavicons,
+    appIcons: state.appIcons,
     chartsAndFeeds: state.chartsAndFeeds,
     linkCheck: state.linkCheck,
     autoDashboard: state.autoDashboard,
@@ -144,9 +145,14 @@ if (typeof window !== 'undefined') {
 export function resolveFaviconSources(
   workspaceOfflineOnly: boolean,
 ): FaviconSources {
-  const { siteFavicons, googleFavicons } = useNetworkFeaturesStore.getState()
+  const { siteFavicons, googleFavicons, appIcons } =
+    useNetworkFeaturesStore.getState()
 
-  return { site: siteFavicons, google: googleFavicons && !workspaceOfflineOnly }
+  return {
+    site: siteFavicons,
+    google: googleFavicons && !workspaceOfflineOnly,
+    apps: appIcons,
+  }
 }
 
 export function useFaviconSources(workspaceOfflineOnly: boolean) {

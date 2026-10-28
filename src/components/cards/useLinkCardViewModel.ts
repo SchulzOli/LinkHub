@@ -31,6 +31,8 @@ type UseLinkCardViewModelArgs = {
     fillColor: string
   }
   resolvedCardImageUrl: string | null | undefined
+  /** A fetched icon (favicon, app icon): shown as an icon, not full-bleed. */
+  resolvedCardImageIsIcon?: boolean
   resolvedShadowStyle: SurfaceShadowStyle
   resolvedSurfaceTransparency: SurfaceTransparency
   viewport: Viewport
@@ -61,6 +63,7 @@ export function useLinkCardViewModel({
   guide,
   resolvedCardColors,
   resolvedCardImageUrl,
+  resolvedCardImageIsIcon = false,
   resolvedShadowStyle,
   resolvedSurfaceTransparency,
   viewport,
@@ -86,20 +89,18 @@ export function useLinkCardViewModel({
   const showCardTitle = wantsCardTitle
   const visibleContentCount = Number(showCardTitle) + Number(showCardImage)
   const usesFullBleedCardImageSource =
-    Boolean(card.faviconOverrideImageId) ||
-    (typeof resolvedCardImageUrl === 'string' &&
-      resolvedCardImageUrl.startsWith('blob:'))
+    !resolvedCardImageIsIcon &&
+    (Boolean(card.faviconOverrideImageId) ||
+      (typeof resolvedCardImageUrl === 'string' &&
+        resolvedCardImageUrl.startsWith('blob:')))
   const usesEdgeToEdgeCardImage =
     showCardImage &&
     typeof resolvedCardImageUrl === 'string' &&
     resolvedCardImageUrl.length > 0 &&
     usesFullBleedCardImageSource
+  // Without an icon the card draws its default picture, laid out the same.
   const usesContainedTitleImage =
-    showCardImage &&
-    showCardTitle &&
-    typeof resolvedCardImageUrl === 'string' &&
-    resolvedCardImageUrl.length > 0 &&
-    !usesEdgeToEdgeCardImage
+    showCardImage && showCardTitle && !usesEdgeToEdgeCardImage
   const compactDimension = Math.min(size.width, size.height)
   const containedImagePadding = Math.max(
     6,
@@ -230,10 +231,7 @@ export function useLinkCardViewModel({
     ? Math.max(10, Math.round(compactDimension * 0.05))
     : 0
   const containedCardImageSize =
-    showCardImage &&
-    typeof resolvedCardImageUrl === 'string' &&
-    resolvedCardImageUrl.length > 0 &&
-    !usesEdgeToEdgeCardImage
+    showCardImage && !usesEdgeToEdgeCardImage
       ? Math.max(
           24,
           usesContainedTitleImage

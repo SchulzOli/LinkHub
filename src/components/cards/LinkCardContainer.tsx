@@ -24,11 +24,12 @@ import type { Viewport } from '../../contracts/workspace'
 import { createFormatPainterFromCard } from '../../features/appearance/formatPainter'
 import { useSurfaceStyles } from '../../features/appearance/useSurfaceStyles'
 import {
-  fetchFaviconBlob,
+  fetchCardIcon,
   storeFaviconAsImageAsset,
 } from '../../features/favicon/faviconCache'
 import { isPlacementBlockedByOccupiedItem } from '../../features/groups/groupLayout'
 import { useImageAssetUrl } from '../../features/images/useImageAssetUrl'
+import { useIsFetchedIcon } from '../../features/images/useIsFetchedIcon'
 import {
   normalizeLocalUrl,
   openLocalFirst,
@@ -144,6 +145,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
   const autoEditCardId =
     autoEditTarget?.kind === 'card' ? autoEditTarget.id : null
   const overrideImageUrl = useImageAssetUrl(card.faviconOverrideImageId)
+  const overrideIsIcon = useIsFetchedIcon(card.faviconOverrideImageId)
   const {
     activeColorSettings,
     defaultColorPresets,
@@ -221,6 +223,7 @@ export const LinkCardContainer = memo(function LinkCardContainer({
     guide,
     resolvedCardColors,
     resolvedCardImageUrl,
+    resolvedCardImageIsIcon: overrideIsIcon,
     resolvedShadowStyle,
     resolvedSurfaceTransparency,
     viewport,
@@ -270,16 +273,20 @@ export const LinkCardContainer = memo(function LinkCardContainer({
       // Background-fetch the favicon for the new URL
       void (async () => {
         try {
-          const hostname = new URL(normalizedUrl).hostname
-          const blob = await fetchFaviconBlob(hostname, () =>
-            resolveFaviconSources(appearance.faviconsOfflineOnly),
+          const icon = await fetchCardIcon(
+            { url: normalizedUrl, title: card.title, localUrl: card.localUrl },
+            () => resolveFaviconSources(appearance.faviconsOfflineOnly),
           )
 
-          if (!blob) {
+          if (!icon) {
             return
           }
 
-          const imageId = await storeFaviconAsImageAsset(hostname, blob)
+          const imageId = await storeFaviconAsImageAsset(
+            icon.label,
+            icon.blob,
+            icon.kind,
+          )
 
           if (imageId) {
             onUpdate(card.id, { faviconOverrideImageId: imageId })
@@ -289,7 +296,13 @@ export const LinkCardContainer = memo(function LinkCardContainer({
         }
       })()
     },
-    [card.id, onUpdate, appearance.faviconsOfflineOnly],
+    [
+      card.id,
+      card.title,
+      card.localUrl,
+      onUpdate,
+      appearance.faviconsOfflineOnly,
+    ],
   )
 
   const commitLocalUrlDraft = useCallback(

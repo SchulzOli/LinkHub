@@ -273,9 +273,9 @@
           <p>
             With its default settings Linkhaven makes no network requests at
             all. The requests below belong to website icons, Google favicons,
-            chart and news feed nodes, Check Links, the Auto dashboard's AI
-            arrangement, and device sync, which are each off by default and only
-            work after you turn them on under
+            app icons, chart and news feed nodes, Check Links, the Auto
+            dashboard's AI arrangement, and device sync, which are each off by
+            default and only work after you turn them on under
             <em>Menu → Privacy</em>, which also shows their current status.
           </p>
           <ul>
@@ -284,8 +284,18 @@
               creating a link card loads the site's icon once from the site
               itself (<code>/favicon.ico</code>) and keeps it locally. With
               <em>Google favicons</em> also on, Google's public favicon service
-              is the fallback. With both off, cards show a letter or an image
-              you uploaded.
+              is the fallback; it is never asked about local addresses such as
+              IPs or <code>.local</code> names. With both off, cards show a
+              default picture or an image you uploaded.
+            </li>
+            <li>
+              <strong>App icons.</strong> With <em>App icons</em> on, a card
+              whose name or address matches a self-hosted app (Jellyfin, Radarr,
+              Home Assistant, …) gets that app's icon. The matching happens on
+              your device; only the one icon is loaded from
+              <code>cdn.jsdelivr.net</code> (the dashboard-icons collection) and
+              kept locally. jsDelivr sees your IP address and the icon's name,
+              nothing about your cards.
             </li>
             <li>
               <strong>Chart nodes.</strong> A chart connects to the feed server

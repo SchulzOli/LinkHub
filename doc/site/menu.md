@@ -80,6 +80,7 @@ server.
 | --------------------- | ---------------------------------------------------------------------------- |
 | Website icons         | Loads each card's icon from its own site (`/favicon.ico`)                    |
 | Google favicons       | Asks Google's favicon service when a site has no icon                        |
+| App icons             | Icons for self-hosted apps (Jellyfin, Radarr, …) from dashboard-icons        |
 | Charts and news feeds | Shows the chart and feed buttons; chart and feed nodes connect to their feed |
 | Link check            | Enables **Check Links** in the Data tab                                      |
 

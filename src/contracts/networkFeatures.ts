@@ -10,6 +10,11 @@ export const NetworkFeaturesSchema = z.object({
   siteFavicons: z.boolean(),
   /** Ask Google's favicon service for icons a site doesn't serve itself. */
   googleFavicons: z.boolean(),
+  /**
+   * Icons for self-hosted apps (Jellyfin, Radarr, …) from the
+   * dashboard-icons collection, loaded once from jsDelivr.
+   */
+  appIcons: z.boolean(),
   /** Chart nodes (price feed) and news feed nodes (RSS proxy). */
   chartsAndFeeds: z.boolean(),
   /** "Check links": one request per saved link, when the user starts it. */
@@ -31,6 +36,7 @@ export type NetworkFeatureKey = keyof NetworkFeatures
 export const DEFAULT_NETWORK_FEATURES: NetworkFeatures = {
   siteFavicons: false,
   googleFavicons: false,
+  appIcons: false,
   chartsAndFeeds: false,
   linkCheck: false,
   autoDashboard: false,
@@ -60,7 +66,11 @@ export function coerceNetworkFeatures(value: unknown): NetworkFeatures {
   ) as NetworkFeatures
 }
 
-/** Where a card's icon may come from; neither = a letter, never a request. */
-export type FaviconSources = { site: boolean; google: boolean }
+/** Where a card's icon may come from; none = a letter, never a request. */
+export type FaviconSources = { site: boolean; google: boolean; apps?: boolean }
 
-export const NO_FAVICON_SOURCES: FaviconSources = { site: false, google: false }
+export const NO_FAVICON_SOURCES: FaviconSources = {
+  site: false,
+  google: false,
+  apps: false,
+}

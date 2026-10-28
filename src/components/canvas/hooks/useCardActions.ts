@@ -5,7 +5,7 @@ import type { Viewport, Workspace } from '../../../contracts/workspace'
 import { getCardColorsFromAppearance } from '../../../features/appearance/cardColorPalette'
 import { getCardPixelDimensions } from '../../../features/appearance/themeTokens'
 import {
-  fetchFaviconBlob,
+  fetchCardIcon,
   storeFaviconAsImageAsset,
 } from '../../../features/favicon/faviconCache'
 import { isPlacementBlockedByOccupiedItem } from '../../../features/groups/groupLayout'
@@ -130,16 +130,19 @@ export function useCardActions({
       // Background-fetch the favicon, store as image asset, and wire it up
       void (async () => {
         try {
-          const hostname = new URL(card.url).hostname
-          const blob = await fetchFaviconBlob(hostname, () =>
+          const icon = await fetchCardIcon(card, () =>
             resolveFaviconSources(workspace.appearance.faviconsOfflineOnly),
           )
 
-          if (!blob) {
+          if (!icon) {
             return
           }
 
-          const imageId = await storeFaviconAsImageAsset(hostname, blob)
+          const imageId = await storeFaviconAsImageAsset(
+            icon.label,
+            icon.blob,
+            icon.kind,
+          )
 
           if (imageId) {
             updateCard(card.id, { faviconOverrideImageId: imageId })

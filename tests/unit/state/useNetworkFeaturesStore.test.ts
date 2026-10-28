@@ -36,6 +36,7 @@ describe('network features', () => {
     expect(DEFAULT_NETWORK_FEATURES).toEqual({
       siteFavicons: false,
       googleFavicons: false,
+      appIcons: false,
       chartsAndFeeds: false,
       linkCheck: false,
       autoDashboard: false,
@@ -48,6 +49,7 @@ describe('network features', () => {
     ).toEqual({
       siteFavicons: false,
       googleFavicons: false,
+      appIcons: false,
       chartsAndFeeds: false,
       linkCheck: true,
       autoDashboard: false,
@@ -66,6 +68,7 @@ describe('network features', () => {
     ).toEqual({
       siteFavicons: false,
       googleFavicons: false,
+      appIcons: false,
       chartsAndFeeds: true,
       linkCheck: false,
       autoDashboard: false,
@@ -114,6 +117,7 @@ describe('network features', () => {
     ).toEqual({
       siteFavicons: false,
       googleFavicons: false,
+      appIcons: false,
       chartsAndFeeds: false,
       linkCheck: true,
       autoDashboard: false,
@@ -153,14 +157,26 @@ describe('network features', () => {
   })
 
   it('allows no icon source until its switch is on', () => {
-    expect(resolveFaviconSources(false)).toEqual({ site: false, google: false })
+    expect(resolveFaviconSources(false)).toEqual({
+      site: false,
+      google: false,
+      apps: false,
+    })
 
     useNetworkFeaturesStore.getState().setFeature('siteFavicons', true)
     useNetworkFeaturesStore.getState().setFeature('googleFavicons', true)
 
-    expect(resolveFaviconSources(false)).toEqual({ site: true, google: true })
+    expect(resolveFaviconSources(false)).toEqual({
+      site: true,
+      google: true,
+      apps: false,
+    })
     // The workspace's own offline-only option still rules Google out.
-    expect(resolveFaviconSources(true)).toEqual({ site: true, google: false })
+    expect(resolveFaviconSources(true)).toEqual({
+      site: true,
+      google: false,
+      apps: false,
+    })
   })
 
   it('does not connect a chart while charts are off', () => {

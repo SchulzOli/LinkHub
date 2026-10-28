@@ -13,6 +13,7 @@ import type { LinkCard as LinkCardModel } from '../../contracts/linkCard'
 import type { FaviconSources } from '../../contracts/networkFeatures'
 import type { SurfaceShadowStyle } from '../../contracts/surfaceEffects'
 import { createDefaultLinkImageDataUrl } from '../../features/favicon/faviconCache'
+import { isPrivateHost } from '../../features/links/urlValidation'
 import type { ResizeDirection } from '../../features/placement/useResizePlacement'
 import type { InteractionMode } from '../../state/useWorkspaceStore'
 import {
@@ -118,7 +119,7 @@ export const LinkCardView = memo(function LinkCardView({
 
                     fallbacks = [
                       ...(faviconSources.site ? [`${origin}/favicon.ico`] : []),
-                      ...(faviconSources.google
+                      ...(faviconSources.google && !isPrivateHost(hostname)
                         ? [
                             `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`,
                           ]

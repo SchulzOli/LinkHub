@@ -123,6 +123,7 @@ The extension stores all user data locally in IndexedDB plus localStorage fallba
 Out of the box the extension makes no network requests and needs no server: it is a pure, local link dashboard. Every request below belongs to a feature that is off by default and only works after the user turns it on in Menu → Privacy:
 
 - Website icons: when the user creates a link card, the extension loads `https://<site>/favicon.ico` and caches the icon locally. With "Google favicons" also on, it falls back to Google's public favicon service (https://www.google.com/s2/favicons). With both off, cards show a letter or an image the user uploaded.
+- App icons (optional, off by default): a card whose title or address matches a self-hosted app (Jellyfin, Radarr, …) gets that app's icon, matched on the device against a bundled list of names; only that one icon is loaded from https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons and cached locally.
 - Chart nodes (optional, user-added): connect to the WebSocket or SSE feed URL set on the node. The default is `ws://127.0.0.1:8787/feed`, a server the user runs locally from the open-source repository.
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
@@ -184,7 +185,7 @@ Important behavior:
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
 - The extension does not upload workspace data, templates, themes, or images to external servers, except encrypted when the user sets up device sync.
-- With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
+- With the default settings the extension makes no network requests at all. Website icons, Google favicons, app icons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
 - The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard. The optional host permission is requested only for the one sync server address the user enters for device sync.
 
 If the reviewer wants to validate the packaged build, use:
