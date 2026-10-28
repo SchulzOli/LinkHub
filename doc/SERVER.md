@@ -73,37 +73,66 @@ web app address with `LINKHAVEN_ALLOWED_ORIGINS`.
 
 ## How sync works
 
-There are no accounts. The first device creates a **sync code**: 32 random
-bytes shown as `lh1-XXXX-…` (and as a QR code). Every device derives three
-things from it with HKDF:
+There are no accounts. Everything is encrypted on the devices; the server
+stores files it can't read and tokens it only knows as SHA-256 hashes.
 
-- the **vault id**, under which the server files the data
-- an **access token**, which the server checks on every request (it stores
-  only its SHA-256 hash)
-- the **encryption key** (AES-GCM), which never leaves the device
+**Creating and joining.** The first device creates a **sync code**
+(`lh2-XXXX-…`, also shown as a QR code): the vault id plus a random join
+secret. From the join secret, HKDF derives a **join token** and a **join
+key**. The join token lets a device register with the server and read one
+file, the join keyring, and nothing else. The join key opens that keyring,
+which holds the data keys.
 
-The server only ever sees the vault id, the token and encrypted files. It
-can't read workspaces, link addresses, titles or images, and it can't tell
-who a vault belongs to. Without the code, the data can't be recovered.
+**Every device has its own access.** A joining device makes its own random
+**device token** and its own **ECDH key pair** (P-256; the private key
+can't be exported). It registers both with the server, together with its
+name encrypted with a shared label key. From then on it uses its device
+token, and its keyring on the server is sealed to its own public key, so
+only that device can open it.
 
-Per vault the server keeps `vault.json` (token hash, file sizes, ETags,
-created and last-used time) and the encrypted files. It writes no access
-logs. Limits protect a public instance: 900 requests per 10 minutes and 20
-new vaults per hour per IP address, plus the size limits above.
+**Data keys have epochs.** Files are encrypted with AES-GCM under the
+current data key, and every file names its epoch.
 
-"Disconnect and delete server data" in the Sync tab deletes the vault for
-all devices; each device keeps its own data.
+**Removing a device** (Sync tab → Devices → Remove), done on any other
+device:
+
+1. The server deletes the device's token and keyring: from then on it gets
+   403 for everything.
+2. A new data key (epoch + 1) and a new join secret, so a **new sync code**,
+   are made and sealed to each remaining device's public key. The old code
+   stops working.
+3. The state and every image are re-encrypted with the new key.
+
+The removed device keeps its own local copy, but it can't reach the vault,
+can't rejoin with the old code, and even with a copy of the server's files
+its old key opens nothing written after the removal. The other devices pick
+up the new key and code on their next sync.
+
+**What the server keeps** per vault in `vault.json`: the hashes of the join
+token and of each device token, each device's public key, encrypted name,
+and created and last-seen time (to the hour), and the size and ETag of each
+encrypted file. It writes no access logs. Limits protect a public instance:
+900 requests per 10 minutes and 20 new syncs per hour per IP address, at
+most 20 devices per sync, plus the size limits above.
+
+"Disconnect" removes only this device from the sync. "Disconnect and delete
+server data" deletes the vault for all devices; each device keeps its own
+data.
 
 ### API
 
 ```
 GET    /sync/v1/info
-GET    /sync/v1/vaults/<vaultId>/files/<path>   → 200 + ETag | 404
-PUT    /sync/v1/vaults/<vaultId>/files/<path>   If-Match / If-None-Match: *  → 201 | 204 | 412
+POST   /sync/v1/vaults/<vaultId>/devices             join token: add a device ({ create } for a new sync)
+GET    /sync/v1/vaults/<vaultId>/devices             the device list
+DELETE /sync/v1/vaults/<vaultId>/devices/<deviceId>  remove a device
+PUT    /sync/v1/vaults/<vaultId>/join-token          the new code's join token
+GET    /sync/v1/vaults/<vaultId>/files/<path>        → 200 + ETag | 404
+PUT    /sync/v1/vaults/<vaultId>/files/<path>        If-Match / If-None-Match: *  → 201 | 204 | 412
 DELETE /sync/v1/vaults/<vaultId>/files/<path>
 DELETE /sync/v1/vaults/<vaultId>
-Authorization: Bearer <access token>
+Authorization: Bearer <device token | join token>
 ```
 
-The API is the same small subset of WebDAV the app already uses (GET, PUT,
-DELETE with ETags), so one sync engine serves both.
+The file routes are the same small subset of WebDAV the app already uses
+(GET, PUT, DELETE with ETags), so one sync engine serves both.

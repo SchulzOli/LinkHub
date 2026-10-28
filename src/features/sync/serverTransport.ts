@@ -162,3 +162,102 @@ export function createServerTransport(input: {
     },
   }
 }
+
+export type ServerDevice = {
+  deviceId: string
+  publicKey: string
+  /** Encrypted with the keyring's label key. */
+  label: string
+  createdAt: number
+  lastSeenAt: number
+  current: boolean
+}
+
+/** Thrown when the server no longer knows this device (it was removed). */
+export class SyncDeviceRemovedError extends Error {
+  constructor() {
+    super('This device was removed from the sync.')
+    this.name = 'SyncDeviceRemovedError'
+  }
+}
+
+/** The device and sync-code routes of the server's sync API. */
+export function createServerApi(input: {
+  serverUrl: string
+  vaultId: string
+  fetch?: SyncFetch
+}) {
+  const base = new URL(
+    `sync/v1/vaults/${input.vaultId}/`,
+    normalizeSyncServerUrl(input.serverUrl),
+  ).toString()
+  const doFetch = input.fetch ?? ((...args) => fetch(...args))
+
+  const call = async (
+    method: string,
+    path: string,
+    token: string,
+    body?: unknown,
+  ) => {
+    let response: Response
+
+    try {
+      response = await doFetch(new URL(path, base).toString(), {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        cache: 'no-store',
+        credentials: 'omit',
+      })
+    } catch {
+      throw new SyncHttpError(
+        0,
+        'The sync server could not be reached. Check the address and your connection.',
+      )
+    }
+
+    if (!response.ok && response.status !== 404) {
+      throw new SyncHttpError(response.status, describeStatus(response.status))
+    }
+
+    return response
+  }
+
+  return {
+    async registerDevice(
+      joinToken: string,
+      device: {
+        deviceId: string
+        deviceToken: string
+        publicKey: string
+        label: string
+        create?: boolean
+      },
+    ) {
+      const response = await call('POST', 'devices', joinToken, device)
+
+      if (response.status === 404) {
+        throw new SyncHttpError(
+          404,
+          'There is no sync for this code on this server. Check the code and the server address.',
+        )
+      }
+    },
+    async listDevices(deviceToken: string): Promise<ServerDevice[]> {
+      const response = await call('GET', 'devices', deviceToken)
+
+      return response.status === 404
+        ? []
+        : ((await response.json()) as { devices: ServerDevice[] }).devices
+    },
+    async removeDevice(deviceToken: string, deviceId: string) {
+      await call('DELETE', `devices/${deviceId}`, deviceToken)
+    },
+    async setJoinToken(deviceToken: string, joinToken: string) {
+      await call('PUT', 'join-token', deviceToken, { joinToken })
+    },
+  }
+}

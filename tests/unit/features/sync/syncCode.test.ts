@@ -1,60 +1,98 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  createSyncSecret,
-  deriveSyncVaultAccess,
+  createSyncCodeParts,
+  deriveJoinAccess,
   formatSyncCode,
   parseSyncCode,
 } from '../../../../src/features/sync/syncCode'
 import {
-  decryptSyncBytes,
-  encryptSyncBytes,
-} from '../../../../src/features/sync/syncCrypto'
+  generateDeviceKeyPair,
+  keyringCipher,
+  openForDevice,
+  sealForDevice,
+  type SyncKeyring,
+} from '../../../../src/features/sync/syncKeys'
 
 describe('sync codes', () => {
   it('round-trips and forgives how people type codes', () => {
-    const secret = createSyncSecret()
-    const code = formatSyncCode(secret)
+    const parts = createSyncCodeParts()
+    const code = formatSyncCode(parts)
 
-    expect(code).toMatch(/^lh1(-[0-9A-Z]{1,4}){13}$/)
-    expect([...parseSyncCode(code)]).toEqual([...secret])
+    expect(code).toMatch(/^lh2(-[0-9A-Z]{1,4}){15}$/)
+    expect(parseSyncCode(code).vaultId).toBe(parts.vaultId)
+    expect([...parseSyncCode(code).joinSecret]).toEqual([...parts.joinSecret])
 
     const sloppy = ` ${code.toLowerCase().replace(/-/g, ' ')} `
       .replace(/0/g, 'o')
       .replace(/1/g, 'l')
 
-    expect([...parseSyncCode(sloppy)]).toEqual([...secret])
-    expect(() => parseSyncCode('lh1-1234')).toThrow()
+    expect(parseSyncCode(sloppy).vaultId).toBe(parts.vaultId)
+    expect(() => parseSyncCode('lh2-1234')).toThrow()
     expect(() => parseSyncCode(`${code}U`)).toThrow()
   })
 
-  it('derives the same vault on every device and separate keys per code', async () => {
-    const secret = createSyncSecret()
-    const first = await deriveSyncVaultAccess(secret)
-    const again = await deriveSyncVaultAccess(new Uint8Array(secret))
-    const other = await deriveSyncVaultAccess(createSyncSecret())
+  it('derives the same join access from the same code', async () => {
+    const parts = createSyncCodeParts()
+    const first = await deriveJoinAccess(parts.joinSecret)
+    const again = await deriveJoinAccess(new Uint8Array(parts.joinSecret))
 
-    expect(first.vaultId).toMatch(/^[a-f0-9]{32}$/)
-    expect(first.token).toMatch(/^[A-Za-z0-9_-]{43}$/)
-    expect(again.vaultId).toBe(first.vaultId)
-    expect(again.token).toBe(first.token)
-    expect(other.vaultId).not.toBe(first.vaultId)
-    // The token the server sees is not the key that encrypts.
-    expect(first.token).not.toContain(first.vaultId)
+    expect(first.joinToken).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    expect(again.joinToken).toBe(first.joinToken)
+  })
+})
 
-    const sealed = await encryptSyncBytes(
-      first.key,
-      'state.bin',
-      new TextEncoder().encode('secret'),
+describe('sync keys', () => {
+  it('seals a keyring that only the addressed device can open', async () => {
+    const phone = await generateDeviceKeyPair()
+    const laptop = await generateDeviceKeyPair()
+    const sealed = await sealForDevice(
+      phone.publicKey,
+      'keyring/phone',
+      new TextEncoder().encode('keys'),
     )
 
     expect(
       new TextDecoder().decode(
-        await decryptSyncBytes(again.key, 'state.bin', sealed),
+        await openForDevice(phone.privateKey, 'keyring/phone', sealed),
       ),
-    ).toBe('secret')
+    ).toBe('keys')
     await expect(
-      decryptSyncBytes(other.key, 'state.bin', sealed),
+      openForDevice(laptop.privateKey, 'keyring/phone', sealed),
     ).rejects.toThrow()
+  })
+
+  it('reads files of older epochs and fetches newer keys when needed', async () => {
+    const epoch1: SyncKeyring = {
+      epoch: 1,
+      keys: { 1: crypto.getRandomValues(new Uint8Array(32)) },
+      labelKey: new Uint8Array(32),
+    }
+    const epoch2: SyncKeyring = {
+      ...epoch1,
+      epoch: 2,
+      keys: { ...epoch1.keys, 2: crypto.getRandomValues(new Uint8Array(32)) },
+    }
+    const writer = keyringCipher({
+      getKeyring: () => epoch2,
+      refreshKeyring: async () => epoch2,
+    })
+    let current = epoch1
+    const reader = keyringCipher({
+      getKeyring: () => current,
+      refreshKeyring: async () => (current = epoch2),
+    })
+    const sealed = await writer.encrypt('state.bin', new Uint8Array([7]))
+
+    expect([...(await reader.decrypt('state.bin', sealed))]).toEqual([7])
+    expect(current).toBe(epoch2)
+
+    // A device that only ever had epoch 1 can't read epoch 2 files.
+    const removed = keyringCipher({
+      getKeyring: () => epoch1,
+      refreshKeyring: async () => epoch1,
+    })
+
+    await expect(removed.decrypt('state.bin', sealed)).rejects.toThrow()
   })
 })

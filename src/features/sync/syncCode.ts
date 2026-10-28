@@ -1,21 +1,25 @@
-import { bytesToBase64 } from './syncCrypto'
+import { bytesToBase64Url, bytesToHex, randomBytes } from './syncKeys'
 
 /**
- * A sync code is 32 random bytes, written for people: 52 characters in
- * Crockford base32, in groups of four (`lh1-7XK2-…`). Everything a device
- * needs comes from it, so there are no accounts and no passphrase:
+ * A sync code lets a new device join a sync on a Linkhaven server: the
+ * vault id (16 bytes) and a join secret (20 bytes), written for people in
+ * Crockford base32 groups of four (`lh2-7XK2-…`, also shown as a QR code).
  *
- * - the vault id the server files the data under
- * - the access token that proves a device may read and write the vault
- * - the AES key that encrypts everything before it leaves the device
+ * From the join secret, HKDF derives:
  *
- * Each is derived with HKDF under its own label, so the server, which only
- * sees the vault id and the token, learns nothing about the key.
+ * - the join token, with which the server lets a device register (and
+ *   nothing else)
+ * - the join key, which opens the keyring a new device starts from
+ *
+ * Every device then gets its own token and keys. Removing a device makes
+ * a new code, so an old one stops working.
  */
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
-const PREFIX = 'lh1'
-const CODE_BYTES = 32
+const PREFIX = 'lh2'
+const VAULT_ID_BYTES = 16
+const JOIN_SECRET_BYTES = 20
+const CODE_BYTES = VAULT_ID_BYTES + JOIN_SECRET_BYTES
 
 export class SyncCodeError extends Error {
   constructor() {
@@ -70,60 +74,65 @@ function decodeBase32(text: string) {
   return new Uint8Array(bytes)
 }
 
-export function formatSyncCode(secret: Uint8Array) {
-  const groups = encodeBase32(secret).match(/.{1,4}/g) ?? []
+export type SyncCodeParts = { vaultId: string; joinSecret: Uint8Array }
+
+function hexToBytes(hex: string) {
+  return new Uint8Array(
+    (hex.match(/.{2}/g) ?? []).map((pair) => Number.parseInt(pair, 16)),
+  )
+}
+
+export function formatSyncCode({ vaultId, joinSecret }: SyncCodeParts) {
+  const bytes = new Uint8Array(CODE_BYTES)
+
+  bytes.set(hexToBytes(vaultId), 0)
+  bytes.set(joinSecret, VAULT_ID_BYTES)
+
+  const groups = encodeBase32(bytes).match(/.{1,4}/g) ?? []
 
   return [PREFIX, ...groups].join('-')
 }
 
 /** Reads a typed or pasted code; forgiving about case, spaces and O/0, I/1. */
-export function parseSyncCode(input: string) {
+export function parseSyncCode(input: string): SyncCodeParts {
   const cleaned = input
     .trim()
     .toUpperCase()
-    .replace(/^LH[1IL]/, '')
+    .replace(/^LH2/, '')
     .replace(/[\s-]/g, '')
     .replace(/O/g, '0')
     .replace(/[IL]/g, '1')
 
-  const secret = decodeBase32(cleaned)
+  const bytes = decodeBase32(cleaned)
 
-  if (secret.length !== CODE_BYTES) {
+  if (bytes.length !== CODE_BYTES) {
     throw new SyncCodeError()
   }
 
-  return secret
+  return {
+    vaultId: bytesToHex(bytes.slice(0, VAULT_ID_BYTES)),
+    joinSecret: bytes.slice(VAULT_ID_BYTES),
+  }
 }
 
-export function createSyncSecret() {
-  return crypto.getRandomValues(new Uint8Array(CODE_BYTES))
+export function createSyncCodeParts(): SyncCodeParts {
+  return {
+    vaultId: bytesToHex(randomBytes(VAULT_ID_BYTES)),
+    joinSecret: randomBytes(JOIN_SECRET_BYTES),
+  }
+}
+
+export function createJoinSecret() {
+  return randomBytes(JOIN_SECRET_BYTES)
 }
 
 const encoder = new TextEncoder()
 
-function hex(bytes: Uint8Array) {
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
-function base64Url(bytes: Uint8Array) {
-  return bytesToBase64(bytes)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
-}
-
-export type SyncVaultAccess = {
-  vaultId: string
-  token: string
-  key: CryptoKey
-}
-
-export async function deriveSyncVaultAccess(
-  secret: Uint8Array,
-): Promise<SyncVaultAccess> {
+/** The join token (for the server) and join key (for the join keyring). */
+export async function deriveJoinAccess(joinSecret: Uint8Array) {
   const material = await crypto.subtle.importKey(
     'raw',
-    secret as BufferSource,
+    joinSecret as BufferSource,
     'HKDF',
     false,
     ['deriveBits', 'deriveKey'],
@@ -132,18 +141,17 @@ export async function deriveSyncVaultAccess(
     name: 'HKDF',
     hash: 'SHA-256',
     salt: new Uint8Array(0),
-    info: encoder.encode(`linkhaven sync v1 ${label}`),
+    info: encoder.encode(`linkhaven sync v2 ${label}`),
   })
-  const bits = async (label: string, length: number) =>
-    new Uint8Array(
-      await crypto.subtle.deriveBits(params(label), material, length),
-    )
 
   return {
-    vaultId: hex(await bits('vault id', 128)),
-    token: base64Url(await bits('access token', 256)),
-    key: await crypto.subtle.deriveKey(
-      params('encryption key'),
+    joinToken: bytesToBase64Url(
+      new Uint8Array(
+        await crypto.subtle.deriveBits(params('join token'), material, 256),
+      ),
+    ),
+    joinKey: await crypto.subtle.deriveKey(
+      params('join key'),
       material,
       { name: 'AES-GCM', length: 256 },
       false,

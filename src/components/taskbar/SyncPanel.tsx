@@ -286,10 +286,72 @@ function SyncCodeView({ code }: { code: string }) {
   )
 }
 
+function formatSeen(value: number) {
+  const minutes = Math.round((Date.now() - value) / 60000)
+
+  if (minutes < 60) {
+    return 'Active in the last hour'
+  }
+
+  return `Last synced ${new Date(value).toLocaleDateString()}`
+}
+
+function DeviceList() {
+  const devices = useSyncStore((state) => state.devices)
+  const loadDevices = useSyncStore((state) => state.loadDevices)
+  const removeDevice = useSyncStore((state) => state.removeDevice)
+  const busy = useSyncStore((state) => state.status.kind === 'busy')
+
+  useEffect(() => {
+    void loadDevices()
+  }, [loadDevices])
+
+  return (
+    <PanelSection
+      description="Every device has its own access. Removing one locks it out at once; your data is then re-encrypted with a new key it doesn't have."
+      meta={devices ? `${devices.length}` : undefined}
+      testId="sync-devices"
+      title="Devices"
+    >
+      {(devices ?? []).map((device) => (
+        <SettingRow
+          hint={formatSeen(device.lastSeenAt)}
+          key={device.deviceId}
+          label={device.name}
+          testId={`sync-device-${device.current ? 'current' : device.deviceId}`}
+        >
+          {device.current ? (
+            <span className={panelStyles.chip}>This device</span>
+          ) : (
+            <button
+              aria-label={`Remove ${device.name}`}
+              className={`${panelStyles.button} ${panelStyles.buttonQuiet}`}
+              disabled={busy}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Remove “${device.name}” from the sync? It loses access right away and its copy stops syncing. Your other devices get a new key and the sync gets a new code.`,
+                  )
+                ) {
+                  void removeDevice(device.deviceId)
+                }
+              }}
+              type="button"
+            >
+              Remove
+            </button>
+          )}
+        </SettingRow>
+      ))}
+    </PanelSection>
+  )
+}
+
 function ConnectedView({ connection }: { connection: SyncConnection }) {
   const status = useSyncStore((state) => state.status)
   const sync = useSyncStore((state) => state.sync)
   const disconnect = useSyncStore((state) => state.disconnect)
+  const syncCode = useSyncStore((state) => state.syncCode)
   const [showCode, setShowCode] = useState(false)
   const busy = status.kind === 'busy'
   const isServer = connection.provider === 'server'
@@ -331,14 +393,16 @@ function ConnectedView({ connection }: { connection: SyncConnection }) {
         </SettingRow>
       </PanelSection>
 
-      {connection.provider === 'server' ? (
+      {isServer ? <DeviceList /> : null}
+
+      {isServer ? (
         <PanelSection
-          description="Enter or scan this code on another device to sync it too."
+          description="Enter or scan this code on another device to sync it too. Removing a device gives the sync a new code."
           grouped={false}
           title="Add a device"
         >
-          {showCode ? (
-            <SyncCodeView code={connection.code} />
+          {showCode && syncCode ? (
+            <SyncCodeView code={syncCode} />
           ) : (
             <div className={panelStyles.actions}>
               <button

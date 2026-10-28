@@ -45,13 +45,20 @@ sync**, then set it up in the **Sync** tab. There are two ways:
 ### Through a Linkhaven server (no account)
 
 On the first device choose **Create sync**. Linkhaven shows a **sync code**
-(`lh1-…`) and a QR code under "Add a device"; enter it on each other device
-with **Join**. The code is all a device needs: the server address comes
-prefilled once the public server is set up, or you run your own
-(`npm run server`, see [SERVER.md](SERVER.md)). Everything is encrypted on
-the device with a key from the code; the server stores only data it can't
-read. Keep the code safe: anyone with it can read and change your synced
-workspaces, and without it they can't be recovered.
+(`lh2-…`) and a QR code under "Add a device"; enter it on each other device
+with **Join**. The server address comes prefilled once the public server is
+set up, or you run your own (`npm run server`, see [SERVER.md](SERVER.md)).
+Everything is encrypted on the device; the server stores only data it
+can't read.
+
+**Devices** lists every device in the sync and when it last synced. Each
+device has its own access, so you can **Remove** a lost or old one: it is
+locked out at once, your data is re-encrypted with a new key it doesn't
+have, and the sync gets a new code (the old one stops working). Your other
+devices carry on by themselves.
+
+Keep the code safe: whoever has it can add a device to your sync. If you
+lose every device and the code, the data can't be recovered.
 
 ### Through your own WebDAV folder
 

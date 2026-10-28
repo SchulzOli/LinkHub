@@ -331,8 +331,10 @@
               Everything is encrypted on your device before it is uploaded, with
               a key from your sync code or sync passphrase; neither is ever
               sent. A Linkhaven sync server stores only these encrypted files, a
-              random vault id, a hash of the access token derived from your
-              code, file sizes and the times of the last changes. It keeps no
+              random sync id, hashes of the access tokens, each device's public
+              key and encrypted name, when each device last synced (to the hour)
+              and file sizes. Removing a device in the Sync tab deletes its
+              access and re-encrypts your data with a new key. It keeps no
               access logs and cannot tell whose data it holds. Vaults no device
               used for 12 months are deleted, and "Disconnect and delete server
               data" removes yours at once. Your WebDAV login is kept only on

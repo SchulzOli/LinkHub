@@ -2,13 +2,19 @@
  * Stores sync vaults on disk. A vault is a folder of opaque, end-to-end
  * encrypted files written by Linkhaven devices; the server can't read them.
  *
- *   <dataDir>/vaults/<vaultId>/vault.json   token hash, sizes, ETags
- *   <dataDir>/vaults/<vaultId>/files/<name> the encrypted files
+ *   <dataDir>/vaults/<vaultId>/vault.json   tokens (hashed), devices, ETags
+ *   <dataDir>/vaults/<vaultId>/files/<hash> the encrypted files
  *
- * There are no accounts: the first write to a vault claims it with the
- * SHA-256 of its access token, and every later request must present the
- * same token. Writes are atomic (temp file + rename) and serialised per
- * vault, so ETags always match the stored content.
+ * There are no accounts. Two kinds of access token exist, both stored only
+ * as SHA-256 hashes:
+ *
+ * - the join token comes from the sync code; it can only register a new
+ *   device and read the join keyring (`keyring/join`)
+ * - every device has its own token for everything else, so one device can
+ *   be removed without touching the others
+ *
+ * Writes are atomic (temp file + rename) and serialised per vault, so ETags
+ * always match the stored content.
  */
 import { createHash, timingSafeEqual } from 'node:crypto'
 import {
@@ -30,12 +36,30 @@ export class VaultError extends Error {
 }
 
 const VAULT_ID = /^[a-f0-9]{32}$/
-const SEEN_RESOLUTION_MS = 24 * 60 * 60 * 1000
-/** `state.bin`, `images/<uuid>.bin` and the like; no paths that escape. */
+const DEVICE_ID = /^[a-f0-9]{32}$/
+const TOKEN = /^[A-Za-z0-9_-]{32,128}$/
+/** `state.bin`, `images/<uuid>.bin`, `keyring/<device>` and the like. */
 const FILE_PATH = /^(?:[a-z0-9-]+\/)?[A-Za-z0-9._%-]{1,160}$/
+const SEEN_RESOLUTION_MS = 60 * 60 * 1000
+const MAX_LABEL_LENGTH = 1024
+const MAX_PUBLIC_KEY_LENGTH = 256
+
+export const JOIN_KEYRING_PATH = 'keyring/join'
+
+export function keyringPath(deviceId) {
+  return `keyring/${deviceId}`
+}
 
 export function isValidVaultId(value) {
   return typeof value === 'string' && VAULT_ID.test(value)
+}
+
+export function isValidDeviceId(value) {
+  return typeof value === 'string' && DEVICE_ID.test(value)
+}
+
+export function isValidToken(value) {
+  return typeof value === 'string' && TOKEN.test(value)
 }
 
 export function isValidFilePath(value) {
@@ -50,6 +74,17 @@ function sha256(data) {
   return createHash('sha256').update(data).digest('hex')
 }
 
+function sameHash(expectedHex, token) {
+  if (!expectedHex) {
+    return false
+  }
+
+  const expected = Buffer.from(expectedHex, 'hex')
+  const given = Buffer.from(sha256(token ?? ''), 'hex')
+
+  return expected.length === given.length && timingSafeEqual(expected, given)
+}
+
 /** File names on disk: the path, made flat and safe. */
 function diskName(path) {
   return sha256(path)
@@ -59,6 +94,7 @@ export function createVaultStore({
   dataDir,
   maxVaultBytes = 100 * 1024 * 1024,
   maxFileBytes = 25 * 1024 * 1024,
+  maxDevices = 20,
   now = () => Date.now(),
 }) {
   const vaultsDir = join(dataDir, 'vaults')
@@ -106,24 +142,72 @@ export function createVaultStore({
   const writeMeta = (vaultId, meta) =>
     writeAtomic(join(vaultDir(vaultId), 'vault.json'), JSON.stringify(meta))
 
-  const checkToken = (meta, token) => {
-    const expected = Buffer.from(meta.tokenHash, 'hex')
-    const given = Buffer.from(sha256(token ?? ''), 'hex')
-
-    if (expected.length !== given.length || !timingSafeEqual(expected, given)) {
-      throw new VaultError(403, 'Wrong access token for this vault.')
+  /**
+   * Who is asking: a registered device, or someone with the join token.
+   * Anyone else gets 403 (a removed device included).
+   */
+  const authorize = (meta, token) => {
+    for (const [deviceId, device] of Object.entries(meta.devices)) {
+      if (sameHash(device.tokenHash, token)) {
+        return { kind: 'device', deviceId }
+      }
     }
+
+    if (sameHash(meta.joinTokenHash, token)) {
+      return { kind: 'join' }
+    }
+
+    throw new VaultError(403, 'This device is not part of this sync.')
   }
 
-  /** The vault, checked against the token; null when it doesn't exist. */
+  /** Marks a device as seen, at most once an hour (fewer disk writes). */
+  const markSeen = (meta, access) => {
+    if (access.kind !== 'device') {
+      return false
+    }
+
+    const device = meta.devices[access.deviceId]
+
+    if (now() - device.lastSeenAt < SEEN_RESOLUTION_MS) {
+      return false
+    }
+
+    device.lastSeenAt = now()
+    meta.lastSeenAt = now()
+
+    return true
+  }
+
   const openVault = async (vaultId, token) => {
     const meta = await readMeta(vaultId)
 
-    if (meta) {
-      checkToken(meta, token)
+    if (!meta) {
+      throw new VaultError(404, 'There is no sync with this code.')
     }
 
-    return meta
+    return { meta, access: authorize(meta, token) }
+  }
+
+  const requireDevice = (access) => {
+    if (access.kind !== 'device') {
+      throw new VaultError(403, 'Join the sync first.')
+    }
+  }
+
+  const removeFile = async (vaultId, meta, path) => {
+    const entry = meta.files[path]
+
+    if (!entry) {
+      return false
+    }
+
+    await rm(join(vaultDir(vaultId), 'files', diskName(path)), {
+      force: true,
+    })
+    delete meta.files[path]
+    meta.bytes -= entry.size
+
+    return true
   }
 
   return {
@@ -131,10 +215,141 @@ export function createVaultStore({
       return (await readMeta(vaultId)) !== null
     },
 
+    /**
+     * Registers a device with the join token. With `create`, the vault is
+     * new and this claims the join token for it.
+     */
+    async registerDevice(vaultId, joinToken, device) {
+      if (
+        !isValidToken(joinToken) ||
+        !isValidDeviceId(device.deviceId) ||
+        !isValidToken(device.deviceToken) ||
+        typeof device.publicKey !== 'string' ||
+        device.publicKey.length === 0 ||
+        device.publicKey.length > MAX_PUBLIC_KEY_LENGTH ||
+        typeof device.label !== 'string' ||
+        device.label.length > MAX_LABEL_LENGTH
+      ) {
+        throw new VaultError(400, 'Invalid device.')
+      }
+
+      return withLock(vaultId, async () => {
+        let meta = await readMeta(vaultId)
+        const created = !meta
+
+        if (!meta && !device.create) {
+          throw new VaultError(404, 'There is no sync with this code.')
+        }
+
+        if (meta && device.create) {
+          throw new VaultError(409, 'This sync already exists.')
+        }
+
+        if (!meta) {
+          meta = {
+            version: 2,
+            joinTokenHash: sha256(joinToken),
+            createdAt: now(),
+            lastSeenAt: now(),
+            bytes: 0,
+            devices: {},
+            files: {},
+          }
+          await mkdir(join(vaultDir(vaultId), 'files'), { recursive: true })
+        } else if (authorize(meta, joinToken).kind !== 'join') {
+          throw new VaultError(403, 'Use the sync code to add a device.')
+        }
+
+        if (meta.devices[device.deviceId]) {
+          throw new VaultError(409, 'This device is already registered.')
+        }
+
+        if (Object.keys(meta.devices).length >= maxDevices) {
+          throw new VaultError(409, 'This sync already has the most devices.')
+        }
+
+        meta.devices[device.deviceId] = {
+          tokenHash: sha256(device.deviceToken),
+          publicKey: device.publicKey,
+          label: device.label,
+          createdAt: now(),
+          lastSeenAt: now(),
+        }
+        meta.lastSeenAt = now()
+        await writeMeta(vaultId, meta)
+
+        return { created }
+      })
+    },
+
+    async listDevices(vaultId, token) {
+      return withLock(vaultId, async () => {
+        const { meta, access } = await openVault(vaultId, token)
+
+        requireDevice(access)
+
+        if (markSeen(meta, access)) {
+          await writeMeta(vaultId, meta)
+        }
+
+        return Object.entries(meta.devices).map(([deviceId, device]) => ({
+          deviceId,
+          publicKey: device.publicKey,
+          label: device.label,
+          createdAt: device.createdAt,
+          lastSeenAt: device.lastSeenAt,
+          current: deviceId === access.deviceId,
+        }))
+      })
+    },
+
+    /** Removes a device: its token stops working at once. */
+    async removeDevice(vaultId, token, deviceId) {
+      return withLock(vaultId, async () => {
+        const { meta, access } = await openVault(vaultId, token)
+
+        requireDevice(access)
+
+        if (!meta.devices[deviceId]) {
+          return false
+        }
+
+        delete meta.devices[deviceId]
+        await removeFile(vaultId, meta, keyringPath(deviceId))
+        await writeMeta(vaultId, meta)
+
+        return true
+      })
+    },
+
+    /** Replaces the join token, so an old sync code can't add devices. */
+    async setJoinToken(vaultId, token, joinToken) {
+      if (!isValidToken(joinToken)) {
+        throw new VaultError(400, 'Invalid join token.')
+      }
+
+      return withLock(vaultId, async () => {
+        const { meta, access } = await openVault(vaultId, token)
+
+        requireDevice(access)
+        meta.joinTokenHash = sha256(joinToken)
+        await writeMeta(vaultId, meta)
+      })
+    },
+
     async read(vaultId, path, token) {
       return withLock(vaultId, async () => {
-        const meta = await openVault(vaultId, token)
-        const entry = meta?.files[path]
+        const { meta, access } = await openVault(vaultId, token)
+
+        if (access.kind === 'join' && path !== JOIN_KEYRING_PATH) {
+          throw new VaultError(403, 'Join the sync first.')
+        }
+
+        const entry = meta.files[path]
+
+        if (markSeen(meta, access)) {
+          await writeMeta(vaultId, meta)
+        }
 
         if (!entry) {
           return null
@@ -144,19 +359,13 @@ export function createVaultStore({
           join(vaultDir(vaultId), 'files', diskName(path)),
         )
 
-        // Keeps idle-vault cleanup accurate without a write per read.
-        if (now() - meta.lastSeenAt > SEEN_RESOLUTION_MS) {
-          meta.lastSeenAt = now()
-          await writeMeta(vaultId, meta)
-        }
-
         return { data, etag: entry.etag }
       })
     },
 
     /**
-     * Writes a file. `ifMatch`: only while the file has this ETag; `'*'`
-     * absent = must not exist (If-None-Match: *); undefined = always.
+     * Writes a file. `ifMatch`: only while the file has this ETag;
+     * `ifNoneMatch: '*'`: only while it doesn't exist.
      */
     async write(vaultId, path, token, data, { ifMatch, ifNoneMatch } = {}) {
       if (data.length > maxFileBytes) {
@@ -164,23 +373,9 @@ export function createVaultStore({
       }
 
       return withLock(vaultId, async () => {
-        let meta = await openVault(vaultId, token)
+        const { meta, access } = await openVault(vaultId, token)
 
-        if (!meta) {
-          if (!token || token.length < 32) {
-            throw new VaultError(400, 'A new vault needs an access token.')
-          }
-
-          meta = {
-            version: 1,
-            tokenHash: sha256(token),
-            createdAt: now(),
-            lastSeenAt: now(),
-            bytes: 0,
-            files: {},
-          }
-          await mkdir(join(vaultDir(vaultId), 'files'), { recursive: true })
-        }
+        requireDevice(access)
 
         const current = meta.files[path]
 
@@ -194,7 +389,7 @@ export function createVaultStore({
         const bytes = meta.bytes - (current?.size ?? 0) + data.length
 
         if (bytes > maxVaultBytes) {
-          throw new VaultError(507, 'This sync vault is full.')
+          throw new VaultError(507, 'This sync is full.')
         }
 
         const etag = `"${sha256(data).slice(0, 32)}"`
@@ -205,7 +400,7 @@ export function createVaultStore({
         )
         meta.files[path] = { etag, size: data.length, updatedAt: now() }
         meta.bytes = bytes
-        meta.lastSeenAt = now()
+        markSeen(meta, access)
         await writeMeta(vaultId, meta)
 
         return { etag, created: !current }
@@ -214,34 +409,26 @@ export function createVaultStore({
 
     async remove(vaultId, path, token) {
       return withLock(vaultId, async () => {
-        const meta = await openVault(vaultId, token)
-        const entry = meta?.files[path]
+        const { meta, access } = await openVault(vaultId, token)
 
-        if (!entry) {
-          return false
+        requireDevice(access)
+
+        const removed = await removeFile(vaultId, meta, path)
+
+        if (removed) {
+          await writeMeta(vaultId, meta)
         }
 
-        await rm(join(vaultDir(vaultId), 'files', diskName(path)), {
-          force: true,
-        })
-        delete meta.files[path]
-        meta.bytes -= entry.size
-        meta.lastSeenAt = now()
-        await writeMeta(vaultId, meta)
-
-        return true
+        return removed
       })
     },
 
     /** Deletes the whole vault (the user's "delete data on server"). */
     async destroy(vaultId, token) {
       return withLock(vaultId, async () => {
-        const meta = await openVault(vaultId, token)
+        const { access } = await openVault(vaultId, token)
 
-        if (!meta) {
-          return false
-        }
-
+        requireDevice(access)
         await rm(vaultDir(vaultId), { recursive: true, force: true })
 
         return true

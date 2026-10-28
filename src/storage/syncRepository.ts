@@ -1,12 +1,18 @@
 import { openDB } from 'idb'
 
+import {
+  parseKeyring,
+  serializeKeyring,
+  type SyncKeyring,
+} from '../features/sync/syncKeys'
 import type { SyncBase } from '../features/sync/syncMerge'
 
 /**
  * Device sync keeps its own small database, apart from the workspace data:
  * the connection, the derived encryption key (a non-extractable CryptoKey,
  * so a WebDAV passphrase is never stored) and the hashes of the last sync.
- * For a Linkhaven server the sync code is kept too, to add more devices.
+ * For a Linkhaven server: the device's own token, private key and keyring
+ * (which holds the current sync code, to add more devices).
  * None of it is ever exported or synced.
  */
 
@@ -27,20 +33,21 @@ export type WebDavSyncConnection = SyncConnectionBase & {
   password: string
 }
 
-/** A Linkhaven server; everything comes from the sync code. */
+/**
+ * A Linkhaven server. The device's own token is here; its private key and
+ * keyring are stored separately (see below).
+ */
 export type ServerSyncConnection = SyncConnectionBase & {
   provider: 'server'
   /** The server's base address. */
   url: string
   vaultId: string
-  token: string
-  /** Kept so it can be shown again to add another device. */
-  code: string
+  deviceToken: string
 }
 
 export type SyncConnection = WebDavSyncConnection | ServerSyncConnection
 
-type SyncDbValue = SyncConnection | CryptoKey | SyncBase
+type SyncDbValue = SyncConnection | CryptoKey | SyncBase | Uint8Array
 
 function openSyncDb() {
   return openDB(DB_NAME, 1, {
@@ -67,6 +74,24 @@ export const saveSyncConnection = (value: SyncConnection) =>
   write('connection', value)
 export const loadSyncKey = () => read<CryptoKey>('key')
 export const saveSyncKey = (value: CryptoKey) => write('key', value)
+/** The device's private ECDH key (server sync); it can't be exported. */
+export const loadDeviceKey = () => read<CryptoKey>('deviceKey')
+export const saveDeviceKey = (value: CryptoKey) => write('deviceKey', value)
+
+/** The device's keyring (server sync): data keys and the current code. */
+export async function loadSyncKeyring() {
+  const raw = await read<Uint8Array>('keyring')
+
+  try {
+    return raw ? parseKeyring(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export const saveSyncKeyring = (value: SyncKeyring) =>
+  write('keyring', serializeKeyring(value))
+
 export const loadSyncBase = async () => (await read<SyncBase>('base')) ?? {}
 export const saveSyncBase = (value: SyncBase) => write('base', value)
 

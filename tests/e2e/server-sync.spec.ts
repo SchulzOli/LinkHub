@@ -44,7 +44,7 @@ async function openDevice(browser: Browser) {
   return page
 }
 
-async function openSyncTab(page: Page) {
+async function openSyncTab(page: Page, deviceName: string) {
   await page.getByRole('button', { name: 'Open menu' }).click()
 
   const menu = page.getByRole('dialog')
@@ -53,6 +53,7 @@ async function openSyncTab(page: Page) {
   await page.getByLabel('Device sync').check()
   await menu.getByRole('tab', { name: 'Sync' }).click()
   await page.getByLabel('Sync server address').fill(serverUrl)
+  await page.getByLabel('Device name').fill(deviceName)
 }
 
 test.skip(
@@ -63,6 +64,8 @@ test.skip(
 test('two devices sync through the Linkhaven server with a sync code', async ({
   browser,
 }) => {
+  test.setTimeout(90_000)
+
   // Device A: a card, then create a sync.
   const laptop = await openDevice(browser)
 
@@ -72,7 +75,7 @@ test('two devices sync through the Linkhaven server with a sync code', async ({
   await laptop.getByRole('button', { name: 'Create' }).click()
   await dismissVisibleEditPanels(laptop)
 
-  await openSyncTab(laptop)
+  await openSyncTab(laptop, 'Laptop')
   await laptop.getByTestId('sync-create').click()
   await expect(laptop.getByTestId('sync-status')).toContainText('Synced', {
     timeout: 20000,
@@ -81,13 +84,13 @@ test('two devices sync through the Linkhaven server with a sync code', async ({
 
   const code = (await laptop.getByTestId('sync-code').textContent())!.trim()
 
-  expect(code).toMatch(/^lh1-/)
+  expect(code).toMatch(/^lh2-/)
   await expect(laptop.getByRole('img', { name: /QR code/ })).toBeVisible()
 
   // Device B: a wrong code is caught, the right one brings the card over.
   const phone = await openDevice(browser)
 
-  await openSyncTab(phone)
+  await openSyncTab(phone, 'Phone')
   await phone
     .getByLabel('Sync code')
     .fill(code.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A')))
@@ -106,13 +109,39 @@ test('two devices sync through the Linkhaven server with a sync code', async ({
     phone.getByTestId(/link-card-/).filter({ hasText: 'Team docs' }),
   ).toHaveCount(1)
 
-  // Removing the server data ends the sync for everyone.
+  // The laptop sees both devices and removes the phone.
+  await laptop.getByTestId('sync-now').click()
+  await expect(laptop.getByTestId('sync-devices')).toContainText('Phone')
+  laptop.once('dialog', (dialog) => void dialog.accept())
+  await laptop.getByRole('button', { name: /^Remove / }).click()
+  await expect(laptop.getByTestId('sync-status')).toContainText(
+    'Device removed',
+    { timeout: 20000 },
+  )
+  await expect(laptop.getByTestId('sync-devices')).not.toContainText('Phone')
+
+  // The sync has a new code now (the code view is still open).
+  await expect(laptop.getByTestId('sync-code')).toHaveText(/^lh2-/)
+  await expect(laptop.getByTestId('sync-code')).not.toHaveText(code)
+
+  // The phone finds out on its next sync and keeps its own data.
   await phone.getByRole('button', { name: 'Open menu' }).click()
   await phone.getByRole('dialog').getByRole('tab', { name: 'Sync' }).click()
-  phone.once('dialog', (dialog) => void dialog.accept())
-  await phone.getByTestId('sync-delete-server-data').click()
+  await phone.getByTestId('sync-now').click()
   await expect(phone.getByTestId('sync-status')).toContainText(
-    'deleted the synced data',
+    'removed from the sync',
   )
   await expect(phone.getByTestId('sync-create')).toBeVisible()
+  await phone.keyboard.press('Escape')
+  await expect(
+    phone.getByTestId(/link-card-/).filter({ hasText: 'Team docs' }),
+  ).toHaveCount(1)
+
+  // Deleting the server data ends the sync for everyone.
+  laptop.once('dialog', (dialog) => void dialog.accept())
+  await laptop.getByTestId('sync-delete-server-data').click()
+  await expect(laptop.getByTestId('sync-status')).toContainText(
+    'deleted the synced data',
+  )
+  await expect(laptop.getByTestId('sync-create')).toBeVisible()
 })

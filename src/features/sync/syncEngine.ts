@@ -4,14 +4,11 @@ import {
   bytesToBase64,
   createSyncKeyCheck,
   createSyncSalt,
-  decryptSyncBytes,
-  decryptSyncJson,
   deriveSyncKey,
-  encryptSyncBytes,
-  encryptSyncJson,
   SYNC_KDF_ITERATIONS,
   verifySyncKeyCheck,
 } from './syncCrypto'
+import type { SyncCipher } from './syncKeys'
 import {
   applyRemoteSyncRecords,
   collectLocalSyncRecords,
@@ -47,7 +44,7 @@ type SyncMeta = {
   check: string
 }
 
-type RemoteState = {
+export type RemoteState = {
   format: 'linkhaven.sync-state'
   version: 1
   updatedAt: string
@@ -134,18 +131,22 @@ export async function connectSyncFolder(
   return { key, created: true }
 }
 
-async function readRemoteState(transport: SyncTransport, key: CryptoKey) {
+const textEncoder = new TextEncoder()
+const textDecoder = new TextDecoder()
+
+export async function readRemoteState(
+  transport: SyncTransport,
+  cipher: SyncCipher,
+) {
   const file = await transport.read(SYNC_STATE_PATH)
 
   if (!file) {
     return { records: {} as SyncRecordMap, etag: null }
   }
 
-  const state = (await decryptSyncJson(
-    key,
-    SYNC_STATE_PATH,
-    file.data,
-  )) as RemoteState
+  const state = JSON.parse(
+    textDecoder.decode(await cipher.decrypt(SYNC_STATE_PATH, file.data)),
+  ) as RemoteState
 
   if (state.format !== 'linkhaven.sync-state' || state.version !== 1) {
     throw new SyncFormatError()
@@ -165,16 +166,17 @@ export type SyncResult = {
 
 export async function runSyncOnce(input: {
   transport: SyncTransport
-  key: CryptoKey
+  /** Encrypts and decrypts every file (one key, or a server keyring). */
+  cipher: SyncCipher
   base: SyncBase
   deviceId: string
 }): Promise<SyncResult> {
-  const { transport, key, deviceId } = input
+  const { transport, cipher, deviceId } = input
 
   for (let attempt = 1; ; attempt += 1) {
     const activeHashAtStart = await hashActiveWorkspace()
     const local = await collectLocalSyncRecords()
-    const remote = await readRemoteState(transport, key)
+    const remote = await readRemoteState(transport, cipher)
     const plan = mergeSyncRecords(local, remote.records, input.base)
     const remoteChanged =
       plan.pushRemote.length > 0 || plan.deleteRemote.length > 0
@@ -193,8 +195,7 @@ export async function runSyncOnce(input: {
 
           await transport.write(
             path,
-            await encryptSyncBytes(
-              key,
+            await cipher.encrypt(
               path,
               new Uint8Array(await blob.arrayBuffer()),
             ),
@@ -213,7 +214,10 @@ export async function runSyncOnce(input: {
 
         await transport.write(
           SYNC_STATE_PATH,
-          await encryptSyncJson(key, SYNC_STATE_PATH, state),
+          await cipher.encrypt(
+            SYNC_STATE_PATH,
+            textEncoder.encode(JSON.stringify(state)),
+          ),
           // Servers without ETags fall back to a plain write.
           { ifMatch: remote.etag },
         )
@@ -241,7 +245,7 @@ export async function runSyncOnce(input: {
         }
 
         return new File(
-          [(await decryptSyncBytes(key, path, file.data)) as BlobPart],
+          [(await cipher.decrypt(path, file.data)) as BlobPart],
           asset.originalFilename,
           { type: asset.mimeType },
         )

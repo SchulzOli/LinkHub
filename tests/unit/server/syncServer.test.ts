@@ -15,8 +15,13 @@ import {
 import { createVaultStore } from '../../../server/sync/vaultStore.mjs'
 
 const VAULT = 'a'.repeat(32)
-const TOKEN = 'T'.repeat(43)
-const OTHER_TOKEN = 'U'.repeat(43)
+const JOIN = 'J'.repeat(43)
+const LAPTOP = { deviceId: 'b'.repeat(32), deviceToken: 'L'.repeat(43) }
+const PHONE = { deviceId: 'c'.repeat(32), deviceToken: 'P'.repeat(43) }
+
+function device(base: { deviceId: string; deviceToken: string }) {
+  return { ...base, publicKey: 'pk', label: 'encrypted-label' }
+}
 
 describe('sync vault store', () => {
   let dataDir: string
@@ -29,25 +34,89 @@ describe('sync vault store', () => {
     await rm(dataDir, { recursive: true, force: true })
   })
 
-  it('claims a vault with its first token and refuses others', async () => {
+  it('creates a vault with the first device and lets others join', async () => {
     const store = createVaultStore({ dataDir })
 
-    await store.write(VAULT, 'state.bin', TOKEN, Buffer.from('one'))
+    await expect(
+      store.registerDevice(VAULT, JOIN, device(PHONE)),
+    ).rejects.toMatchObject({ status: 404 })
+
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
+    await expect(
+      store.registerDevice(VAULT, 'X'.repeat(43), device(PHONE)),
+    ).rejects.toMatchObject({ status: 403 })
+    await store.registerDevice(VAULT, JOIN, device(PHONE))
+
+    const devices = await store.listDevices(VAULT, LAPTOP.deviceToken)
+
+    expect(
+      devices.map((entry: { deviceId: string }) => entry.deviceId),
+    ).toEqual([LAPTOP.deviceId, PHONE.deviceId])
+  })
+
+  it('gives the join token nothing but the join keyring', async () => {
+    const store = createVaultStore({ dataDir })
+
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
+    await store.write(
+      VAULT,
+      'keyring/join',
+      LAPTOP.deviceToken,
+      Buffer.from('k'),
+    )
+    await store.write(VAULT, 'state.bin', LAPTOP.deviceToken, Buffer.from('s'))
+
+    expect(
+      (await store.read(VAULT, 'keyring/join', JOIN)).data.toString(),
+    ).toBe('k')
+    await expect(store.read(VAULT, 'state.bin', JOIN)).rejects.toMatchObject({
+      status: 403,
+    })
+    await expect(
+      store.write(VAULT, 'state.bin', JOIN, Buffer.from('x')),
+    ).rejects.toMatchObject({ status: 403 })
+  })
+
+  it('locks a removed device out and retires the old sync code', async () => {
+    const store = createVaultStore({ dataDir })
+
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
+    await store.registerDevice(VAULT, JOIN, device(PHONE))
+    await store.write(
+      VAULT,
+      `keyring/${PHONE.deviceId}`,
+      PHONE.deviceToken,
+      Buffer.from('k'),
+    )
+
+    expect(
+      await store.removeDevice(VAULT, LAPTOP.deviceToken, PHONE.deviceId),
+    ).toBe(true)
+    await store.setJoinToken(VAULT, LAPTOP.deviceToken, 'N'.repeat(43))
 
     await expect(
-      store.read(VAULT, 'state.bin', OTHER_TOKEN),
+      store.read(VAULT, 'state.bin', PHONE.deviceToken),
     ).rejects.toMatchObject({ status: 403 })
-    expect((await store.read(VAULT, 'state.bin', TOKEN)).data.toString()).toBe(
-      'one',
-    )
+    // The old code can't bring the phone back.
+    await expect(
+      store.registerDevice(VAULT, JOIN, device(PHONE)),
+    ).rejects.toMatchObject({ status: 403 })
+    // Its keyring went with it.
+    expect(
+      await store.read(VAULT, `keyring/${PHONE.deviceId}`, LAPTOP.deviceToken),
+    ).toBeNull()
   })
 
   it('writes only while the ETag still matches', async () => {
     const store = createVaultStore({ dataDir })
+
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
+
+    const token = LAPTOP.deviceToken
     const first = await store.write(
       VAULT,
       'state.bin',
-      TOKEN,
+      token,
       Buffer.from('a'),
       {
         ifNoneMatch: '*',
@@ -55,16 +124,15 @@ describe('sync vault store', () => {
     )
 
     await expect(
-      store.write(VAULT, 'state.bin', TOKEN, Buffer.from('b'), {
+      store.write(VAULT, 'state.bin', token, Buffer.from('b'), {
         ifNoneMatch: '*',
       }),
     ).rejects.toMatchObject({ status: 412 })
-
-    await store.write(VAULT, 'state.bin', TOKEN, Buffer.from('b'), {
+    await store.write(VAULT, 'state.bin', token, Buffer.from('b'), {
       ifMatch: first.etag,
     })
     await expect(
-      store.write(VAULT, 'state.bin', TOKEN, Buffer.from('c'), {
+      store.write(VAULT, 'state.bin', token, Buffer.from('c'), {
         ifMatch: first.etag,
       }),
     ).rejects.toMatchObject({ status: 412 })
@@ -73,20 +141,23 @@ describe('sync vault store', () => {
   it('enforces the vault quota and frees space on delete', async () => {
     const store = createVaultStore({ dataDir, maxVaultBytes: 10 })
 
-    await store.write(VAULT, 'images/a.bin', TOKEN, Buffer.alloc(6))
-    await expect(
-      store.write(VAULT, 'images/b.bin', TOKEN, Buffer.alloc(6)),
-    ).rejects.toMatchObject({ status: 507 })
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
 
-    await store.remove(VAULT, 'images/a.bin', TOKEN)
-    await store.write(VAULT, 'images/b.bin', TOKEN, Buffer.alloc(6))
+    const token = LAPTOP.deviceToken
+
+    await store.write(VAULT, 'images/a.bin', token, Buffer.alloc(6))
+    await expect(
+      store.write(VAULT, 'images/b.bin', token, Buffer.alloc(6)),
+    ).rejects.toMatchObject({ status: 507 })
+    await store.remove(VAULT, 'images/a.bin', token)
+    await store.write(VAULT, 'images/b.bin', token, Buffer.alloc(6))
   })
 
   it('removes vaults nobody used for a long time', async () => {
     let now = 1_000_000
     const store = createVaultStore({ dataDir, now: () => now })
 
-    await store.write(VAULT, 'state.bin', TOKEN, Buffer.from('x'))
+    await store.registerDevice(VAULT, JOIN, { ...device(LAPTOP), create: true })
     now += 10_000
 
     expect(await store.removeIdleVaults(60_000)).toBe(0)
@@ -101,10 +172,10 @@ describe('Linkhaven server', () => {
   let server: ReturnType<typeof createLinkhavenServer>
   let base: string
 
-  const api = (path: string, init: RequestInit = {}) =>
+  const api = (path: string, token: string, init: RequestInit = {}) =>
     fetch(`${base}/sync/v1/vaults/${VAULT}${path}`, {
       ...init,
-      headers: { authorization: `Bearer ${TOKEN}`, ...init.headers },
+      headers: { authorization: `Bearer ${token}`, ...init.headers },
     })
 
   beforeEach(async () => {
@@ -124,36 +195,40 @@ describe('Linkhaven server', () => {
     await rm(dataDir, { recursive: true, force: true })
   })
 
-  it('stores and returns encrypted files with ETags', async () => {
-    const created = await api('/files/state.bin', {
+  it('registers devices and serves their encrypted files', async () => {
+    const created = await api('/devices', JOIN, {
+      method: 'POST',
+      body: JSON.stringify({ ...device(LAPTOP), create: true }),
+    })
+
+    expect(created.status).toBe(201)
+
+    const put = await api('/files/state.bin', LAPTOP.deviceToken, {
       method: 'PUT',
       headers: { 'if-none-match': '*' },
       body: new Uint8Array([1, 2, 3]),
     })
 
-    expect(created.status).toBe(201)
+    expect(put.status).toBe(201)
 
-    const etag = created.headers.get('etag')!
-    const read = await api('/files/state.bin')
+    const read = await api('/files/state.bin', LAPTOP.deviceToken)
 
-    expect(read.headers.get('etag')).toBe(etag)
+    expect(read.headers.get('etag')).toBe(put.headers.get('etag'))
     expect([...new Uint8Array(await read.arrayBuffer())]).toEqual([1, 2, 3])
+    expect((await api('/files/..%2Fescape', LAPTOP.deviceToken)).status).toBe(
+      404,
+    )
 
-    const stale = await api('/files/state.bin', {
-      method: 'PUT',
-      headers: { 'if-match': '"stale"' },
-      body: new Uint8Array([4]),
-    })
+    const list = await (await api('/devices', LAPTOP.deviceToken)).json()
 
-    expect(stale.status).toBe(412)
-    expect((await api('/files/missing.bin')).status).toBe(404)
-    expect((await api('/files/..%2Fescape')).status).toBe(404)
+    expect(list.devices).toMatchObject([
+      { deviceId: LAPTOP.deviceId, current: true, label: 'encrypted-label' },
+    ])
+
     expect(
-      (await fetch(`${base}/sync/v1/vaults/${VAULT}/files/state.bin`)).status,
-    ).toBe(401)
-
-    expect((await api('', { method: 'DELETE' })).status).toBe(204)
-    expect((await api('/files/state.bin')).status).toBe(404)
+      (await api('', LAPTOP.deviceToken, { method: 'DELETE' })).status,
+    ).toBe(204)
+    expect((await api('/files/state.bin', LAPTOP.deviceToken)).status).toBe(404)
   })
 
   it('answers Linkhaven pages and refuses other sites', async () => {
