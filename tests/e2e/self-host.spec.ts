@@ -42,6 +42,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  server.closeAllConnections()
   await new Promise((resolve) => server.close(resolve))
   await rm(dataDir, { recursive: true, force: true })
 })
