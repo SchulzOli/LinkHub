@@ -93,7 +93,12 @@ test('two devices sync through the Linkhaven server with a sync code', async ({
   await openSyncTab(phone, 'Phone')
   await phone
     .getByLabel('Sync code')
-    .fill(code.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A')))
+    .fill(
+      code.replace(
+        /^(lh2-.)./,
+        (_, head) => `${head}${code[5] === 'A' ? 'B' : 'A'}`,
+      ),
+    )
   await phone.getByTestId('sync-join').click()
   await expect(phone.getByTestId('sync-status')).toContainText(
     'no sync for this code',

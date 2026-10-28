@@ -17,7 +17,7 @@
 
 > max 250 characters
 
-Your new tab as an infinite canvas: organize links, groups, images, live charts and RSS news feeds on a drag-and-drop board. Themes, templates, multiple workspaces. Everything stays local.
+Your new tab as an infinite canvas: links, groups, notes, images, live charts and RSS feeds on a drag-and-drop board. Themes, templates, workspaces. Local-first, with optional end-to-end encrypted sync.
 
 ---
 
@@ -74,7 +74,7 @@ Drag, group, resize and style link cards on a zoomable infinite board — and pu
 Pan, zoom and navigate freely. Snap-to-grid keeps everything aligned. Multi-select, copy, paste, undo and a format painter let you work fast.
 
 **Link Cards**
-Create cards from any URL; with website icons turned on, favicons are fetched once and cached locally. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
+Create cards from any URL; with website icons turned on, favicons are fetched once and cached locally, otherwise a clean default image is used. Give a card an optional local address (e.g. http://192.168.1.10:8123 next to https://home.example.com) and Linkhaven opens the local one when you're at home. Resize cards from 2×2 up to 12×12 grid cells, toggle title and image, use your own images, and style each card with fill, border, corner radius, transparency and shadow.
 
 **Groups**
 Collect cards in collapsible groups and nest groups inside groups. Collapsing a group hides everything inside it, including charts and feeds.
@@ -85,8 +85,14 @@ Chart nodes plot a time series from a WebSocket or Server-Sent Events feed: rang
 **News Feeds**
 Feed nodes merge several RSS or Atom feeds into one list. Filter by words, sort by date, source or title, limit to a time window, and switch sources on or off. Each article opens in a new tab. Paste a website address and Linkhaven finds its feed.
 
+**Notes**
+Sketch on a note with mouse, pen or finger, Excalidraw style, and double-click to type in a handwriting font. Pen, eraser, five ink colors and three sizes.
+
 **Pictures**
 Drop images onto the canvas as picture nodes and manage them in a built-in gallery.
+
+**Touch**
+Pan with one finger, pinch to zoom, double-tap to zoom in, on tablets and touch screens.
 
 **Appearance**
 Six built-in themes — Excalidraw, Blueprint, Minimal, Nord, Sunset and Neon — each in light and dark. Save your own theme, import or export it, and edit every color token.
@@ -100,8 +106,11 @@ Create, rename, reorder and switch between boards from the workspace rail. Expor
 **Statistics**
 See link opens, canvas opens and storage use per board — computed and kept on your device.
 
+**Device sync and web app (optional)**
+Keep your boards in step across computers and phones: create a sync, then add devices with a sync code or QR code. Everything is encrypted on your device before it leaves; the server only stores data it can't read. Lost a device? Remove it from the device list and it is locked out at once. Use the public Linkhaven server, your own, or a WebDAV folder. On phones, Linkhaven installs as a web app.
+
 **Privacy**
-No account. No cloud sync. No analytics. No ads. Your boards stay in your browser.
+No account. No analytics. No ads. Off by default: every feature that uses the network waits until you turn it on in Menu → Privacy.
 
 ---
 
@@ -109,7 +118,7 @@ No account. No cloud sync. No analytics. No ads. Your boards stay in your browse
 
 Linkhaven is a new-tab override extension. It replaces the browser new tab page with a local-first link canvas application.
 
-The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account, sign-in, or remote sync service is involved.
+The extension stores all user data locally in IndexedDB plus localStorage fallback snapshots, including workspaces, workspace names, link cards, groups, picture and note nodes, gallery images, templates, themes, appearance preferences, and local usage statistics used by the in-app Statistics view. No user account or sign-in is involved; the optional device sync described below is end-to-end encrypted and off by default.
 
 Out of the box the extension makes no network requests and needs no server: it is a pure, local link dashboard. Every request below belongs to a feature that is off by default and only works after the user turns it on in Menu → Privacy:
 
@@ -117,10 +126,11 @@ Out of the box the extension makes no network requests and needs no server: it i
 - Chart nodes (optional, user-added): connect to the WebSocket or SSE feed URL set on the node. The default is `ws://127.0.0.1:8787/feed`, a server the user runs locally from the open-source repository.
 - News feed nodes (optional, user-added): load the RSS/Atom URLs the user enters, through the feed proxy URL set on the node (default `http://127.0.0.1:8788/rss`, also local) or directly. Article images load directly from the news sites when "Images" is on in the feed options.
 - Check Links (user-triggered, Data tab): one `HEAD` request per link card URL.
+- Local links (only on cards where the user entered a second, local address): when the card is clicked, one request to that local address to see whether it answers (up to ~0.9 s); nothing is requested before a click.
 
 - Auto dashboard (optional, off by default): builds a workspace from the pages the user opens most. It can read the browser's top sites and history only after the user turns on that source and grants the optional `topSites` / `history` permission; this data is processed locally. If the user also turns on "AI arrangement" and enters their own Anthropic API key, the titles and URLs of the candidate pages are sent to the Anthropic API (https://api.anthropic.com) to group them.
 
-- Device sync (optional, off by default): exchanges workspaces, themes and images with a Linkhaven sync server or a WebDAV folder the user enters (e.g. their own Nextcloud). Everything is encrypted on the device (AES-GCM, key derived from the user's sync code or passphrase) before upload; the server stores only ciphertext, a random vault id and a hash of the access token. Access to that server's address is requested via the optional host permission when the user presses Connect, and released on Disconnect.
+- Device sync (optional, off by default): exchanges workspaces, themes and images with a Linkhaven sync server or a WebDAV folder the user enters (e.g. their own Nextcloud). Everything is encrypted on the device (AES-GCM) before upload; the server stores only ciphertext, a random vault id, hashes of the access tokens, each device's public key and its encrypted name. Access to that server's address is requested via the optional host permission when the user presses Connect, and released on Disconnect.
 
 Apart from the optional AI arrangement above, no workspace content, statistics or personal data are sent anywhere. The extension requests no permissions at install time (`history` and `topSites` are optional and requested only from the Auto dashboard settings), has no content scripts and loads no remote code.
 
@@ -173,7 +183,7 @@ Important behavior:
 - No account or sign-in is required.
 - All user data is stored locally in browser storage.
 - Local usage statistics remain on device and are not sent to third-party analytics systems.
-- The extension does not upload workspace data, templates, themes, or images to external servers.
+- The extension does not upload workspace data, templates, themes, or images to external servers, except encrypted when the user sets up device sync.
 - With the default settings the extension makes no network requests at all. Website icons, Google favicons, chart and news feed nodes, Check Links, the Auto dashboard and its AI arrangement, and device sync are off by default; once turned on in Menu → Privacy they contact only the addresses described above.
 - The extension does not inject scripts into websites. The optional `history` and `topSites` permissions are only requested when the user turns on those sources for the Auto dashboard. The optional host permission is requested only for the one sync server address the user enters for device sync.
 
@@ -188,60 +198,6 @@ npm run build:extension
 
 ## Privacy Policy
 
-This policy applies to the Linkhaven browser extension and to hosted web builds of Linkhaven that use the same local-first storage model.
+Privacy policy URL for all three stores: https://schulzoli.github.io/Linkhaven/privacy/
 
-### What Linkhaven stores
-
-Linkhaven may store the content you create or import directly inside your browser so the app can function between sessions.
-
-- Workspaces and workspace names
-- Link cards, groups, pictures, chart and news feed nodes (feed addresses and display settings), layout positions, and board settings
-- Uploaded images and image gallery items
-- Templates, custom themes, and appearance preferences
-- Local usage statistics such as canvas opens and link opens
-- Import and export metadata needed to restore your data correctly
-
-### Where that data is stored
-
-Linkhaven stores data locally in browser-managed storage on the current device, including browser storage mechanisms such as IndexedDB and local storage when required for the product to work.
-
-Your Linkhaven data stays isolated to the browser profile and device where you use it, unless you explicitly export it yourself.
-
-### What Linkhaven does not do
-
-- It does not require an account or sign-in.
-- It does not upload your workspace content or local usage statistics to Linkhaven servers.
-- It does not include third-party advertising.
-- It does not use third-party analytics or behavioral tracking.
-- It does not sell or share your workspace data with external parties.
-
-### External requests
-
-Out of the box Linkhaven makes no network requests. Website icons, Google favicons, chart and news feed nodes, and Check Links are off until you turn them on in Menu → Privacy.
-
-- Website icons: when you create a link card, Linkhaven loads the site's icon once from the site itself and keeps it locally. With "Google favicons" on, Google's public favicon service is the fallback.
-- Chart nodes connect to the feed server address set on the chart (by default a server on your own computer).
-- News feed nodes load the RSS or Atom addresses you add, through the feed proxy set on the node (by default on your own computer) or directly. With "Images" on, article images load from the news sites.
-- Check Links sends a HEAD request to each link card's address when you start it.
-
-None of these requests upload your canvas content, templates, themes, imported files, gallery images, or usage statistics.
-
-### Imports and exports
-
-If you choose to export data, Linkhaven creates files on your device only when you explicitly trigger the export action. If you choose to import data, Linkhaven reads the file you selected so it can restore that content into local browser storage.
-
-These import and export actions are user-initiated. Linkhaven does not perform automatic cloud backup or remote synchronization.
-
-### Browser and store providers
-
-Your browser vendor, extension store provider, or hosting provider may collect their own operational, telemetry, or transaction data under their own policies. That data handling is outside the Linkhaven application itself.
-
-### Changes to this policy
-
-If Linkhaven's data handling changes materially, this page should be updated before or at the same time as the corresponding product release.
-
-### Contact
-
-For privacy-related questions, use the contact information provided in the Linkhaven store listing, project repository, or release page where Linkhaven is distributed.
-
-Last updated: 2026-10-04
+The source is [public/privacy/index.html](../public/privacy/index.html); it is published with the docs site.

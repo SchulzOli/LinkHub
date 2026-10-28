@@ -71,6 +71,11 @@ function decodeBase32(text: string) {
     }
   }
 
+  // A canonical code leaves its padding bits zero; anything else is a typo.
+  if (bits >= 5 || (value & ((1 << bits) - 1)) !== 0) {
+    throw new SyncCodeError()
+  }
+
   return new Uint8Array(bytes)
 }
 

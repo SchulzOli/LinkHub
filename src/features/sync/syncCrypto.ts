@@ -165,22 +165,6 @@ export async function decryptSyncBytes(
   return plain
 }
 
-export async function encryptSyncJson(
-  key: CryptoKey,
-  path: string,
-  value: unknown,
-) {
-  return encryptSyncBytes(key, path, encoder.encode(JSON.stringify(value)))
-}
-
-export async function decryptSyncJson(
-  key: CryptoKey,
-  path: string,
-  data: Uint8Array,
-): Promise<unknown> {
-  return JSON.parse(decoder.decode(await decryptSyncBytes(key, path, data)))
-}
-
 /** Stored next to the salt, so a wrong passphrase is caught at once. */
 export async function createSyncKeyCheck(key: CryptoKey) {
   return bytesToBase64(

@@ -30,6 +30,16 @@ describe('sync codes', () => {
     expect(parseSyncCode(sloppy).vaultId).toBe(parts.vaultId)
     expect(() => parseSyncCode('lh2-1234')).toThrow()
     expect(() => parseSyncCode(`${code}U`)).toThrow()
+
+    // The last character holds padding bits; a changed one is caught too.
+    const last = code.at(-1)!
+    const lastIndex = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'.indexOf(last)
+
+    expect(() =>
+      parseSyncCode(
+        code.slice(0, -1) + '0123456789ABCDEFGHJKMNPQRSTVWXYZ'[lastIndex ^ 1],
+      ),
+    ).toThrow()
   })
 
   it('derives the same join access from the same code', async () => {

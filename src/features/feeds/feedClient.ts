@@ -208,7 +208,3 @@ export function fetchFeedSource(
 
   return promise
 }
-
-export function clearFeedCache() {
-  cache.clear()
-}

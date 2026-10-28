@@ -120,10 +120,3 @@ export function replacePlacementGuide(
 ): Workspace {
   return updateWorkspaceTimestamp({ ...workspace, placementGuide })
 }
-
-export function replaceViewport(
-  workspace: Workspace,
-  viewport: Viewport,
-): Workspace {
-  return updateWorkspaceTimestamp({ ...workspace, viewport })
-}

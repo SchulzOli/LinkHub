@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Linkhaven",
   "version": "1.0.3",
-  "description": "Your new tab as a link canvas: links, groups, live charts and news feeds, stored locally.",
+  "description": "Your new tab as a link canvas: links, groups, notes, charts and news feeds. Local-first, with optional encrypted sync.",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -19,7 +19,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "linkhub@extension",
-      "strict_min_version": "109.0",
+      "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"]
       }

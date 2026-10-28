@@ -103,10 +103,6 @@ export function resolveSupportedImageUploadMimeType(input: {
   )
 }
 
-export function isSupportedImageUploadMimeType(mimeType: string) {
-  return resolveSupportedImageUploadMimeType({ mimeType }) !== null
-}
-
 export function getImageFileExtensionForMimeType(mimeType: string) {
   const resolvedMimeType = resolveSupportedImageUploadMimeType({ mimeType })
 

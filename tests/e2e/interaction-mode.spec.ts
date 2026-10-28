@@ -156,6 +156,11 @@ test('switches between edit and view behavior', async ({ page, context }) => {
   const edgeClickBox = await card.boundingBox()
   if (!edgeClickBox) throw new Error('card missing bounding box in view mode')
 
+  // Answer the opened tab locally, so the test needs no network.
+  await context.route('https://example.com/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<title>Example</title>' }),
+  )
+
   const pagePromise = context.waitForEvent('page')
   await card.click({ position: { x: 6, y: edgeClickBox.height - 6 } })
   const openedPage = await pagePromise

@@ -207,13 +207,3 @@ export function syncGroupParentMembershipForIds(
         }
   })
 }
-
-export function getGroupChildCardIds(cards: LinkCard[], groupId: string) {
-  return cards.filter((card) => card.groupId === groupId).map((card) => card.id)
-}
-
-export function getGroupChildGroupIds(groups: CardGroup[], groupId: string) {
-  return groups
-    .filter((group) => group.parentGroupId === groupId)
-    .map((group) => group.id)
-}

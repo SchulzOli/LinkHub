@@ -146,14 +146,6 @@ export function getVisibleGroups(groups: CardGroup[]) {
     })
 }
 
-export function getCollapsedGroupIds(
-  groups: Array<Pick<CardGroup, 'id' | 'collapsed'>>,
-) {
-  return new Set(
-    groups.filter((group) => group.collapsed === true).map((group) => group.id),
-  )
-}
-
 export function getVisibleCards(cards: LinkCard[], groups: CardGroup[]) {
   const groupsById = getGroupsById(groups)
 

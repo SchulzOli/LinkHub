@@ -346,7 +346,3 @@ export const BUILTIN_THEMES: readonly ThemeDocument[] = [
     neonColors,
   ),
 ]
-
-export function findBuiltinTheme(themeId: string) {
-  return BUILTIN_THEMES.find((theme) => theme.id === themeId) ?? null
-}
